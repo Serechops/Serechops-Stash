@@ -1,4 +1,4 @@
-# Serechoo-Stash
+# Serechops-Stash
 An Index page for all Stash related plugins.
 
 # Renamer:
