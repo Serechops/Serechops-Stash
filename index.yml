@@ -54,13 +54,13 @@
   sha256: 9bcf239ed3b6ca631aa71a06efb581c66471f88f7185684de2e5e6c479cafa4e
 
 - id: Movie-Fy Suite Plugins
-  name: Additional Movie-Fy Plugins
+  name: Movie-Fy Suite Plugins
   metadata:
     description: Converts the bulk of the Movie-Fy tasks to plugins.
   version: 0.2a
   date: "2024-04-05 09:00:00"
   path: Movie-Fy.zip
-  sha256: 
+  sha256: 944ae44c5672c04170faec58686214b9af7811f773895cbd95242407a951ed5e
   
 - id: Renamer
   name: Renamer
