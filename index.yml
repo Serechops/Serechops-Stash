@@ -57,10 +57,10 @@
   name: Additional Movie-Fy Plugins
   metadata:
     description: Converts the bulk of the Movie-Fy tasks to plugins.
-  version: 0.2
-  date: "2024-04-01 08:00:00"
+  version: 0.2a
+  date: "2024-04-05 09:00:00"
   path: Movie-Fy.zip
-  sha256: 523350b75e3507b7c236f0d2f28d767d21209703766cb68d1b7c1b4b1909e7ba
+  sha256: 
   
 - id: Renamer
   name: Renamer
