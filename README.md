@@ -54,35 +54,73 @@ config = {
 }
 ```
 
-The first section describes how you want the studio, title, performers, and date of the filename wrapped. By default, your filenames will look like this when renamed:
+# Renamer Settings File
 
-`[Studio]-[Title]-[Performers]-[Date].extension`
+This settings file (`renamer_settings.py`) controls the behavior of the Renamer script. Follow the instructions below to properly modify the settings file according to your preferences.
 
-Change the wrapper denoted in the single quotes:
+## Configuration Options
 
-`ie. studio '[]' can be changed to studio '()' and same goes for each key`
+### Config Dictionary
 
-The next section involves the order of how that filename is structured:
+The `config` dictionary contains various settings that influence how the Renamer script operates. Here are the available configuration options:
 
-### Modify the order as needed to change the key order in the filename.
-key_order:
-  - studio
-  - title
-  - performers
-  - date
+- `wrapper_styles`: Define wrapper styles for different parts of the filename.
+- `separator`: Define the separator to use between different parts of the filename.
+- `key_order`: Define the order of keys in the filename.
+- `exclude_keys`: Specify keys to exclude from the formed filename.
+- `move_files`: Define whether files should be moved when renaming.
+- `rename_files`: Define whether files should be renamed when moved.
+- `dry_run`: Define whether the script should run in dry run mode.
 
-You can change the order of this list however you see fit, for example:
-### Modify the order as needed to change the key order in the filename.
-key_order:
-  - title
-  - studio
-  - date
-  - performers
+### Wrapper Styles
 
-Finally, the `move-files` is set to false by default. If you set this to true, in the current iteration, it will create a new directory based on the studio name within the current parent directory of wherever your scene is located.
+Modify the values for each key under `wrapper_styles` to change how each part of the filename is wrapped. Use square brackets `[]`, curly brackets `{}`, parentheses `()`, or an empty string for None.
 
-`ie. C:\Stash_Server\Videos\Myscene.mp4 renamed and moved to --> C:\Stash_Server\Studio of Scene\[Studio of Scene]-[Title of Scene]-[Performers]-[Date].mp4`
+### Separator
 
+Modify the value of `separator` to specify the character used between different parts of the filename. Valid separators include hyphen `-`, underscore `_`, or space ` `.
+
+### Key Order
+
+Modify the `key_order` list to specify the order of keys in the filename. List the valid keys that can be included in the `key_order`.
+
+### Exclude Keys
+
+Modify the `exclude_keys` list to specify keys that should be excluded from the filename formation process.
+
+### Move Files, Rename Files, and Dry Run
+
+Modify the boolean values of `move_files`, `rename_files`, and `dry_run` to control the behavior of the script.
+
+## Example Configuration
+
+```python
+config = {
+    "wrapper_styles": {
+        "studio": '[]',
+        "title": '[]',
+        "performers": '[]',
+        "date": '[]',
+        "height": '[]',
+        "video_codec": '[]',
+        "frame_rate": '[]'
+    },
+    "separator": '-',
+    "key_order": [
+        "studio",
+        "title",
+        "performers",
+        "date",
+        "height",
+        "video_codec",
+        "frame_rate"
+    ],
+    "exclude_keys": [],
+    "move_files": False,
+    "rename_files": True,
+    "dry_run": True
+}
+```
 # Find Marker Tag Images: 
 
 A script that will compare the names of your tag images and scene markers and update the animated previews of any matched scene markers to be your tag images. 
