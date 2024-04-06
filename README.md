@@ -11,9 +11,10 @@ An Index page for all Stash related plugins.
 ### Using Renamer 
 `*Note: All changes are made when a Scene is updated and saved. Start small, make sure you get the changes you want in place first, then Rename away!`
 
-When you have installed the `Renamer` plugin, hop into your plugins directory, Renamer folder > open settings.yml with your favorite code/text editor and you'll see this:
+When you have installed the `Renamer` plugin, hop into your plugins directory, Renamer folder > open renamer_settings.py with your favorite code/text editor and you'll see this:
 
-```# Config dictionary
+```
+# Config dictionary
 config = {
     # Define wrapper styles for different parts of the filename.
     # Use '[]' for square brackets, '{}' for curly brackets, '()' for parentheses, or an empty string for None.
