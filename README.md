@@ -13,41 +13,44 @@ An Index page for all Stash related plugins.
 
 When you have installed the `Renamer` plugin, hop into your plugins directory, Renamer folder > open settings.yml with your favorite code/text editor and you'll see this:
 
-```# Define wrapper styles for different parts of the filename.
-# Use '[]' for square brackets, '{}' for curly brackets, '()' for parentheses, or an empty string for None.
-
-# Modify these values to change how each part of the filename is wrapped.
-wrapper_styles:
-  studio: '[]'  # Define how the studio name should be wrapped. Use '[]' for square brackets, '{}' for curly brackets, '()' for parentheses, or an empty string for None.
-  title: '[]'   # Define how the title should be wrapped. Use '[]' for square brackets, '{}' for curly brackets, '()' for parentheses, or an empty string for None.
-  performers: '[]'  # Define how the performers should be wrapped. Use '[]' for square brackets, '{}' for curly brackets, '()' for parentheses, or an empty string for None.
-  date: '[]'    # Define how the date should be wrapped. Use '[]' for square brackets, '{}' for curly brackets, '()' for parentheses, or an empty string for None.
-
-# Define the separator to use between different parts of the filename.
-# Use '-' for hyphen, '_' for underscore, or ' ' for space.
-
-# Modify this value to change the separator between parts of the filename.
-separator: '-'  # Define the separator to use between different parts of the filename. Use '-' for hyphen, '_' for underscore, or ' ' for space.
-
-# Define the order of keys in the filename.
-# Use a list to specify the order of keys.
-# Valid keys are 'studio', 'title', 'performers', and 'date'.
-#Example change of key_order would be:
-#keyorder:
-# - studio
-# - title
-# - date
-# - performers
-
-# Modify the order as needed to change the key order in the filename.
-key_order:
-  - studio
-  - title
-  - performers
-  - date
-
-# Define whether files should be moved when renaming
-move_files: false
+```# Config dictionary
+config = {
+    # Define wrapper styles for different parts of the filename.
+    # Use '[]' for square brackets, '{}' for curly brackets, '()' for parentheses, or an empty string for None.
+    "wrapper_styles": {
+        "studio": '[]',        # Modify these values to change how each part of the filename is wrapped.
+        "title": '[]',         # Use '[]' for square brackets, '{}' for curly brackets, '()' for parentheses, or an empty string for None.
+        "performers": '[]',    # Modify these values to change how each part of the filename is wrapped.
+        "date": '[]',          # Use '[]' for square brackets, '{}' for curly brackets, '()' for parentheses, or an empty string for None.
+        "height": '[]',        # Modify these values to change how each part of the filename is wrapped.
+        "video_codec": '[]',   # Use '[]' for square brackets, '{}' for curly brackets, '()' for parentheses, or an empty string for None.
+        "frame_rate": '[]'     # Modify these values to change how each part of the filename is wrapped.
+    },
+    # Define the separator to use between different parts of the filename.
+    # Use '-' for hyphen, '_' for underscore, or ' ' for space.
+    "separator": '-',  
+    # Define the order of keys in the filename.
+    # Use a list to specify the order of keys.
+    # Valid keys are 'studio', 'title', 'performers', 'date', 'height', 'video_codec', and 'frame_rate'.
+    "key_order": [
+        "studio",
+        "title",
+        "performers",
+        "date",
+        "height",
+        "video_codec",
+        "frame_rate"
+    ],
+    # Define keys to exclude from the formed filename
+    # Specify keys to exclude from the filename formation process. (ie. "exclude_keys": ["studio", "date"],)
+    "exclude_keys": [],
+    # Define whether files should be moved when renaming
+    "move_files": False,
+    # Define whether files should be renamed when moved
+    "rename_files": True,
+    # Define whether the script should run in dry run mode
+    "dry_run": True
+}
 ```
 
 The first section describes how you want the studio, title, performers, and date of the filename wrapped. By default, your filenames will look like this when renamed:
