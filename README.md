@@ -107,15 +107,15 @@ config = {
     },
     "separator": '-',
     "key_order": [
-        "studio",
         "title",
-        "performers",
+        "studio",
         "date",
+        "performers",
         "height",
         "video_codec",
         "frame_rate"
     ],
-    "exclude_keys": [],
+    "exclude_keys": ["studio", "date"],
     "move_files": False,
     "rename_files": True,
     "dry_run": True
