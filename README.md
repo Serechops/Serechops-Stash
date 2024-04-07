@@ -71,7 +71,7 @@ This settings file (`renamer_settings.py`) controls the behavior of the Renamer 
 
 The `config` dictionary contains various settings that influence how the Renamer script operates. Here are the available configuration options:
 
-- `wrapper_styles`: Define wrapper styles for different parts of the filename.
+- `wrapper_styles`: Wrapper style defines what brackets, if any, to use around each key value. Where available brackets are '{}', '[]', '()', or none.
 - `separator`: Define the separator to use between different parts of the filename.
 - `key_order`: Define the order of keys in the filename.
 - `exclude_keys`: Specify keys to exclude from the formed filename.
