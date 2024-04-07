@@ -47,7 +47,8 @@ buildPlugin()
     description=$(grep "^description:" "$f" | head -n 1 | cut -d' ' -f2- | sed -e 's/\r//' -e 's/^"\(.*\)"$/\1/')
     ymlVersion=$(grep "^version:" "$f" | head -n 1 | cut -d' ' -f2- | sed -e 's/\r//' -e 's/^"\(.*\)"$/\1/')
     version="$ymlVersion-$version"
-    dep=$(grep "^# requires:" "$f" | cut -c 12-)
+    # set IFS
+    IFS=$'\n' dep=$(grep "^# requires:" "$f" | cut -c 12- | sed -e 's/\r//')
 
     # write to spec index
     echo "- id: $plugin_id
