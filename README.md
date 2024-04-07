@@ -137,7 +137,7 @@ config = {
     "dry_run": True,
     "max_tag_keys": 10,
     "tag_whitelist": ["Boots"],
-    "exclude_paths": []
+    "exclude_paths": [r"/path/to/exclude1"]
 }
 ```
 # Find Marker Tag Images: 
