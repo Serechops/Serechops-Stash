@@ -66,7 +66,7 @@
   name: Renamer
   metadata:
     description: Automatically renames and moves files on Scene Update.
-  version: 0.3
+  version: 0.3a
   date: "2024-04-06 17:00:00"
   path: Renamer.zip
-  sha256: 
+  sha256: ada3853f5fbba4e37d90e2daa7dc99b2e0aa422ff43e903712c0107408564b69
