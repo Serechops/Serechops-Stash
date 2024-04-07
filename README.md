@@ -78,6 +78,9 @@ The `config` dictionary contains various settings that influence how the Renamer
 - `move_files`: Define whether files should be moved when renaming.
 - `rename_files`: Define whether files should be renamed when moved.
 - `dry_run`: Define whether the script should run in dry run mode.
+- `max_tag_keys`: Define the maximum number of tag keys to include in the filename.
+- `tag_whitelist`: Define a whitelist of allowed tags.
+- `exclude_paths`: Define paths to exclude from modifications.
 
 ### Wrapper Styles
 
@@ -99,6 +102,10 @@ Modify the `exclude_keys` list to specify keys that should be excluded from the 
 
 Modify the boolean values of `move_files`, `rename_files`, and `dry_run` to control the behavior of the script.
 
+### Exclude Paths
+
+Specify custom paths that you would like untouched by Renamer. 
+
 ## Example Configuration
 
 ```python
@@ -110,22 +117,27 @@ config = {
         "date": '[]',
         "height": '[]',
         "video_codec": '[]',
-        "frame_rate": '[]'
+        "frame_rate": '[]',
+        "tag": '[]'
     },
     "separator": '-',
     "key_order": [
-        "title",
         "studio",
-        "date",
+        "title",
         "performers",
+        "date",
         "height",
         "video_codec",
-        "frame_rate"
+        "frame_rate",
+        "tags"
     ],
-    "exclude_keys": ["studio", "date"],
+    "exclude_keys": [],
     "move_files": False,
     "rename_files": True,
-    "dry_run": True
+    "dry_run": True,
+    "max_tag_keys": 10,
+    "tag_whitelist": ["Boots"],
+    "exclude_paths": []
 }
 ```
 # Find Marker Tag Images: 
