@@ -85,6 +85,7 @@ The `config` dictionary contains various settings that influence how the Renamer
 ### Wrapper Styles
 
 Modify the values for each key under `wrapper_styles` to change how each part of the filename is wrapped. Use square brackets `[]`, curly brackets `{}`, parentheses `()`, or an empty string for None.
+ Example: Studio-Title-Date.mp4 with a wrapper_styles of '[]' for each key --> [Studio]-[Title]-[Date].mp4
 
 ### Separator
 
