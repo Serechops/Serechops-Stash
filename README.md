@@ -21,11 +21,11 @@ config = {
     "wrapper_styles": {
         "studio": '[]',        # Modify these values to change how each part of the filename is wrapped.
         "title": '[]',         # Use '[]' for square brackets, '{}' for curly brackets, '()' for parentheses, or an empty string for None.
-        "performers": '[]',    # Modify these values to change how each part of the filename is wrapped.
-        "date": '[]',          # Use '[]' for square brackets, '{}' for curly brackets, '()' for parentheses, or an empty string for None.
-        "height": '[]',        # Modify these values to change how each part of the filename is wrapped.
-        "video_codec": '[]',   # Use '[]' for square brackets, '{}' for curly brackets, '()' for parentheses, or an empty string for None.
-        "frame_rate": '[]'     # Modify these values to change how each part of the filename is wrapped.
+        "performers": '[]',    # Example: `Studio-Title-Performers-Date.extension` --> The default wrapper_styles are all '[]' so will wrap each portion of the filename in '[]'
+        "date": '[]',          # Thus, your default title will look something like this: `[Studio]-[Title]-[Performers]-[Date].extension`    
+        "height": '[]',       
+        "video_codec": '[]',   
+        "frame_rate": '[]'     
     },
     # Define the separator to use between different parts of the filename.
     # Use '-' for hyphen, '_' for underscore, or ' ' for space.
