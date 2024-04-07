@@ -1,6 +1,8 @@
 # Serechops-Stash
 An Index page for all Stash related plugins.
 
+`https://serechops.github.io/Serechops-Stash/index.yml`
+
 # Renamer:
 
 ### Requirements

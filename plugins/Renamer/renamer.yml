@@ -1,0 +1,18 @@
+name: Renamer
+description: Renames scene files based on scene details and updates associated scenes with a "Renamed" tag.
+version: 0.11
+url: https://github.com/Serechops/Serechops-Stash
+exec:
+  - python
+  - "{pluginDir}/renamer.py"
+interface: raw
+hooks:
+  - name: RenameFiles
+    description: Renames scene files and updates associated scenes.
+    triggeredBy:
+      - Scene.Update.Post
+tasks:
+  - name: Rename Files Task
+    description: Renames scene files and updates associated scenes.
+    defaultArgs:
+      mode: rename_files_task

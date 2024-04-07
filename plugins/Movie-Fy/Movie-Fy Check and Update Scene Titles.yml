@@ -1,0 +1,13 @@
+name: Movie-Fy Check and Update Scene Titles
+description: Check and update titles for scenes in the Movie studio
+version: 0.1
+url: https://github.com/Serechops/Serechops-Stash
+exec:
+  - python
+  - "{pluginDir}/Movie-Fy Check and Update Scene Titles.py"
+interface: raw
+tasks:
+  - name: 'Check and Update Scene Titles'
+    description: Check and update titles for scenes in the Movie studio
+    defaultArgs:
+      studio_name: "Movie"

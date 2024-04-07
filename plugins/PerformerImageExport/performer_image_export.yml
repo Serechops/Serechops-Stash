@@ -1,0 +1,12 @@
+name: Stash Performer Image Extractor
+description: Extracts all performers from your localdb to a local directory for easy editing.
+version: 0.1
+exec:
+  - python
+  - "{pluginDir}/stash_performer_image_export.py"
+interface: raw
+tasks:
+  - name: Export Performer Images
+    description: Export your entire collection of performer images to your plugins directory ie. "{plugins}\Performer Image Export"
+    defaultArgs:
+      mode: manual

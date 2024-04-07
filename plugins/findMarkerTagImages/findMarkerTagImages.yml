@@ -1,0 +1,13 @@
+name: Find Marker Tag Images
+description: Script to update tag images based on scene markers
+version: 0.1
+url: https://github.com/Serechops/Serechops-Stash
+exec:
+  - python
+  - "{pluginDir}/findMarkerTagImages.py"
+interface: raw
+tasks:
+  - name: 'Update Tag Images with Marker Previews'
+    description: Runs the script to update tag images
+    defaultArgs:
+      mode: run_script

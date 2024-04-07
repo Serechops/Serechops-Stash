@@ -1,0 +1,13 @@
+name: Duplicate Scene Marker Cleaner
+description: Automatically detects and removes duplicate scene markers based on scene ID, seconds, and title upon scene updates or via manual trigger.
+version: 0.1
+url: https://github.com/Serechops/Serechops-Stash
+exec:
+  - python
+  - "{pluginDir}/markerDupes.py"
+interface: raw
+tasks:
+  - name: 'Manual Duplicate Marker Cleanup'
+    description: Delete any duplicate markers.
+    defaultArgs:
+      mode: manual_cleanup
