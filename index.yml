@@ -1,11 +1,11 @@
 - id: Glassy
   name: Glassy - A Stash Theme
   metadata:
-    description: Glassy - A Window To Your Collection - A Stash Theme By Serechoo
-  version: 0.9.0
-  date: "2024-03-13 20:00:00"
+    description: Glassy - A Window To Your Collection - A Stash Theme By Serechops
+  version: 0.9.1
+  date: "2024-04-07 01:30:00"
   path: Glassy.zip
-  sha256: 
+  sha256: b249c620baad440d456068c47a84ab79993165fb46d4ca67bbb7b31e53e07a2e
 
 - id: Find Marker Tag Image
   name: Find Marker Tag Image
