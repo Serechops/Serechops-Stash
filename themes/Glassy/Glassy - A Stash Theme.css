@@ -7,6 +7,10 @@
 	color: white;
 }
 
+.justify-content-center .studio-card .studio-card-image {
+    width: 10vw; /*FF Fix for Studio Images*/
+}
+
 div#tasks-panel {
     transform: translateY(10px);
 }
@@ -161,8 +165,14 @@ div.modal-content {
 
 /* Navigation Bar Styling */
 nav.bg-dark {
-    background: rgba(0, 0, 0, 0.6) !important;
+    background: rgba(0, 0, 0, 0.5); /* Adjust the alpha value as needed */
+    backdrop-filter: blur(5px); /* Adjust the blur radius as needed */
 }
+
+a.minimal {
+    outline: 0.25px solid black;
+}
+
 
 .bg-dark {
 	background: none !important;
@@ -934,7 +944,33 @@ svg.svg-inline--fa.fa-video.fa-icon.nav-menu-icon.d-block.d-xl-inline.mb-2.mb-xl
 	
 }
 
+
+/* Performer Detail Heart Color Change */
+ 
+span.name-icons button.minimal.not-favorite.btn.btn-primary svg.svg-inline--fa.fa-heart.fa-icon path {
+    fill: white; /* For SVG icons */
+} 
+
+span.name-icons button.minimal.favorite.btn.btn-primary svg.svg-inline--fa.fa-heart.fa-icon path {
+    fill: red; /* For SVG icons */
+}
+
 /*Mobile Overhaul*/
+
+/*Brings back the Studio Image Size in Mobile*/
+@media only screen and (max-width: 767px) {
+
+.justify-content-center .studio-card .studio-card-image {
+    width: 100%; 
+}
+}
+
+/*Adjusts text size of headers in mobile*/
+@media only screen and (max-width: 768px) {
+    h1, h2, h3, h4, h5, h6 {
+        font-size: 14px !important; /* Adjust the font size for mobile devices */
+    }
+}
 
 /* Media query for mobile devices */
 @media only screen and (max-width: 767px) {
