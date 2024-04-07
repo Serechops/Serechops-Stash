@@ -1,9 +1,9 @@
 name: Movie-Fy
 description: Movie-Fy meta-package
-# requires: Movie-Fy Bulk Movie URL Scrape
-# requires: Movie-Fy Check and Update Scene Titles
-# requires: Movie-Fy Create Movie Studio
-# requires: Movie-Fy Scene Studio Bulk Update
-# requires: Movie-Fy Update Movie Scene Covers
+# requires: "Movie-Fy Bulk Movie URL Scrape"
+# requires: "Movie-Fy Check and Update Scene Titles"
+# requires: "Movie-Fy Create Movie Studio"
+# requires: "Movie-Fy Scene Studio Bulk Update"
+# requires: "Movie-Fy Update Movie Scene Covers"
 version: 0
 url: https://github.com/Serechops/Serechops-Stash
