@@ -1,4 +1,4 @@
-Stash Plugin Index
+# Stash Plugin Index
 
 Please add this index as a new source in your Stash > Settings > Plugins: https://serechops.github.io/Serechops-Stash/index.yml
 
