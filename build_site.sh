@@ -11,16 +11,10 @@
 
 outdir="$1"
 if [ -z "$outdir" ]; then
-    outdir="."
+    outdir="./"
 fi
 
-echo "Output directory: $outdir"
-
-# Skip removal if the output directory is the current directory
-if [ "$outdir" != "./" ]; then
-    rm -rf "$outdir"
-fi
-
+rm -rf "$outdir"
 mkdir -p "$outdir"
 
 buildPlugin() 
@@ -43,10 +37,8 @@ buildPlugin()
     
     # create the zip file
     # copy other files
-    zipfile="$outdir/$plugin_id.zip"
+    zipfile=$(realpath "$outdir/$plugin_id.zip")
     
-    echo "Creating zipfile: $zipfile"
-
     pushd "$dir" > /dev/null
     zip -r "$zipfile" . > /dev/null
     popd > /dev/null
@@ -58,13 +50,7 @@ buildPlugin()
     # set IFS
     IFS=$'\n' dep=$(grep "^# requires:" "$f" | cut -c 12- | sed -e 's/\r//')
 
-    # Write to the index.yml file
-    if [ "$outdir" != "./" ]; then
-        index_file="$outdir/index.yml"
-    else
-        index_file="./index.yml"
-    fi
-
+    # write to spec index
     echo "- id: $plugin_id
   name: $name
   metadata:
@@ -72,20 +58,17 @@ buildPlugin()
   version: $version
   date: $updated
   path: $plugin_id.zip
-  sha256: $(sha256sum "$zipfile" | cut -d' ' -f1)" >> "$index_file"
-
-    echo "Added entry to $index_file"
+  sha256: $(sha256sum "$zipfile" | cut -d' ' -f1)" >> "$outdir"/index.yml
 
     # handle dependencies
     if [ ! -z "$dep" ]; then
-        echo "  requires:" >> "$index_file"
+        echo "  requires:" >> "$outdir"/index.yml
         for d in ${dep//,/ }; do
-            echo "    - $d" >> "$index_file"
+            echo "    - $d" >> "$outdir"/index.yml
         done
     fi
 
-    echo "" >> "$index_file"
-    echo "Finished processing $plugin_id"
+    echo "" >> "$outdir"/index.yml
 }
 
 find ./plugins -mindepth 1 -name *.yml | while read file; do
@@ -94,5 +77,3 @@ done
 find ./themes -mindepth 1 -name *.yml | while read file; do
     buildPlugin "$file"
 done
-
-echo "Script execution completed"
