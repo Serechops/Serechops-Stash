@@ -1,0 +1,122 @@
+- id: pluginsBackup
+  name: Backup Plugins
+  metadata:
+    description: Creates a backup of the 'plugins' directory.
+  version: 1.02-11427e3
+  date: 2024-04-07 00:34:14
+  path: pluginsBackup.zip
+  sha256: 1a6bc115ff4767f3b93d900f862894d4389fd4488c11a162a1218efd02afc95a
+
+- id: performer_image_export
+  name: Stash Performer Image Extractor
+  metadata:
+    description: Extracts all performers from your localdb to a local directory for easy editing.
+  version: 0.1-11427e3
+  date: 2024-04-07 00:34:14
+  path: performer_image_export.zip
+  sha256: 2f65f14c356afb3f15ed03d0b343983020867b33a2057215ca4367c10cecaaeb
+
+- id: renamer
+  name: Renamer
+  metadata:
+    description: Renames scene files based on scene details and updates associated scenes with a "Renamed" tag.
+  version: 0.11-11427e3
+  date: 2024-04-07 00:34:14
+  path: renamer.zip
+  sha256: 72e279b3978cb03277f4848dcdbb8dfc76d63e938a3aed877a4f1776c325a03b
+
+- id: findMarkerTagImages
+  name: Find Marker Tag Images
+  metadata:
+    description: Script to update tag images based on scene markers
+  version: 0.1-11427e3
+  date: 2024-04-07 00:34:14
+  path: findMarkerTagImages.zip
+  sha256: 6b4a28c0276cef758c8fc81d8ee9c64a12eecf085b04642bd5cf9c9df6473edf
+
+- id: markerDupes
+  name: Duplicate Scene Marker Cleaner
+  metadata:
+    description: Automatically detects and removes duplicate scene markers based on scene ID, seconds, and title upon scene updates or via manual trigger.
+  version: 0.1-11427e3
+  date: 2024-04-07 00:34:14
+  path: markerDupes.zip
+  sha256: 1ec5ef714d5c994df844da5c147d02091b6239b68afe77b9f052085c73b55c8a
+
+- id: Movie-Fy Update Movie Scene Covers
+  name: Movie-Fy Update Movie Scene Covers
+  metadata:
+    description: Update scene cover images with movie cover images.
+  version: 0.1-709161a
+  date: 2024-04-07 01:49:01
+  path: Movie-Fy Update Movie Scene Covers.zip
+  sha256: 14be42a5b8dcb2b821e71835635c51c761a34c7ed02a6c7b200afff617a66582
+
+- id: Movie-Fy Scene Studio Bulk Update
+  name: Movie-Fy Scene Studio Bulk Update
+  metadata:
+    description: Bulk update scene studios based on movie studios.
+  version: 0.1-709161a
+  date: 2024-04-07 01:49:01
+  path: Movie-Fy Scene Studio Bulk Update.zip
+  sha256: 14be42a5b8dcb2b821e71835635c51c761a34c7ed02a6c7b200afff617a66582
+
+- id: Movie-Fy Check and Update Scene Titles
+  name: Movie-Fy Check and Update Scene Titles
+  metadata:
+    description: Check and update titles for scenes in the Movie studio
+  version: 0.1-709161a
+  date: 2024-04-07 01:49:01
+  path: Movie-Fy Check and Update Scene Titles.zip
+  sha256: 14be42a5b8dcb2b821e71835635c51c761a34c7ed02a6c7b200afff617a66582
+
+- id: Movie-Fy Create Movie Studio
+  name: Movie-Fy Create Movie Studio
+  metadata:
+    description: Creates a new Movie Studio to be used with Mass_Movie_Create
+  version: 0.1-709161a
+  date: 2024-04-07 01:49:01
+  path: Movie-Fy Create Movie Studio.zip
+  sha256: 14be42a5b8dcb2b821e71835635c51c761a34c7ed02a6c7b200afff617a66582
+
+- id: Movie-Fy Bulk Movie URL Scrape
+  name: Movie-Fy Bulk Movie Scraper 
+  metadata:
+    description: Update your movie metadata in bulk.
+  version: 0.1-709161a
+  date: 2024-04-07 01:49:01
+  path: Movie-Fy Bulk Movie URL Scrape.zip
+  sha256: 14be42a5b8dcb2b821e71835635c51c761a34c7ed02a6c7b200afff617a66582
+
+- id: Movie-Fy
+  name: Movie-Fy
+  metadata:
+    description: Movie-Fy meta-package
+  version: 0-709161a
+  date: 2024-04-07 01:49:01
+  path: Movie-Fy.zip
+  sha256: 14be42a5b8dcb2b821e71835635c51c761a34c7ed02a6c7b200afff617a66582
+  requires:
+    -  Movie-Fy Bulk Movie URL Scrape
+    -  Movie-Fy Check and Update Scene Titles
+    -  Movie-Fy Create Movie Studio
+    -  Movie-Fy Scene Studio Bulk Update
+    -  Movie-Fy Update Movie Scene Covers
+
+- id: performerGallery
+  name: Performer Gallery Scraper Plugin
+  metadata:
+    description: A plugin to scrape galleries from porngals4.com for specific performers and create zip archives.
+  version: 1.0-03c4c40
+  date: 2024-04-07 01:34:35
+  path: performerGallery.zip
+  sha256: 73746d39d9c587c9dab5478dc5e73d1a5e832764624495c635f43b63cb0f52d3
+
+- id: Glassy
+  name: Glassy - A Stash Theme
+  metadata:
+    description: Glassy - A Window To Your Collection - A Stash Theme By Serechops
+  version: 0.9.0-dfed8c8
+  date: 2024-04-07 21:05:43
+  path: Glassy.zip
+  sha256: 7e31710cfc8d6000bfa1092497d4d74655fd01f770aca26f7c70597e0d95cd4d
