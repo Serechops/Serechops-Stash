@@ -16,7 +16,11 @@ fi
 
 echo "Output directory: $outdir"
 
-rm -rf "$outdir"
+# Skip removal if the output directory is the current directory
+if [ "$outdir" != "./" ]; then
+    rm -rf "$outdir"
+fi
+
 mkdir -p "$outdir"
 
 buildPlugin() 
