@@ -1,6 +1,6 @@
-# Serechops-Stash
+# Serechops-Stash - An Index page for all Stash related plugins
 
-An Index page for all Stash related plugins. Please add this index as a new source in Stash: https://serechops.github.io/Serechops-Stash/index.yml
+Please add this index as a new source in your Stash > Settings > Plugins: https://serechops.github.io/Serechops-Stash/index.yml
 
 # Renamer
 
