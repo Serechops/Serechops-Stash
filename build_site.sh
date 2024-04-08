@@ -3,7 +3,12 @@
 # This script has been specially modified to exclude the branch, in order to maintain backwards compatibility
 # feederbox826//2024-04-06
 
-# Set the output directory to the root directory if not specified
+# builds a repository of scrapers
+# outputs to _site with the following structure:
+# index.yml
+# <scraper_id>.zip
+# Each zip file contains the scraper.yml file and any other files in the same directory
+
 outdir="$1"
 if [ -z "$outdir" ]; then
     outdir="./"
@@ -26,18 +31,18 @@ buildPlugin()
         return
     fi
     
-    # Get the scraper id from the directory
+    # get the scraper id from the directory
     dir=$(dirname "$f")
     plugin_id=$(basename "$f" .yml)
 
     echo "Processing $plugin_id"
 
-    # Create a directory for the version
+    # create a directory for the version
     version=$(git log -n 1 --pretty=format:%h -- "$dir"/*)
     updated=$(TZ=UTC0 git log -n 1 --date="format-local:%F %T" --pretty=format:%ad -- "$dir"/*)
     
-    # Create the zip file
-    # Copy other files
+    # create the zip file
+    # copy other files
     zipfile="$outdir/$plugin_id.zip"
     
     echo "Creating zipfile: $zipfile"
@@ -46,14 +51,20 @@ buildPlugin()
     zip -r "$zipfile" . > /dev/null
     popd > /dev/null
 
-    # Set metadata
     name=$(grep "^name:" "$f" | head -n 1 | cut -d' ' -f2- | sed -e 's/\r//' -e 's/^"\(.*\)"$/\1/')
     description=$(grep "^description:" "$f" | head -n 1 | cut -d' ' -f2- | sed -e 's/\r//' -e 's/^"\(.*\)"$/\1/')
     ymlVersion=$(grep "^version:" "$f" | head -n 1 | cut -d' ' -f2- | sed -e 's/\r//' -e 's/^"\(.*\)"$/\1/')
     version="$ymlVersion-$version"
+    # set IFS
+    IFS=$'\n' dep=$(grep "^# requires:" "$f" | cut -c 12- | sed -e 's/\r//')
 
-    # Write to the index.yml file in the root directory
-    index_file="$outdir/index.yml"
+    # Write to the index.yml file
+    if [ "$outdir" != "./" ]; then
+        index_file="$outdir/index.yml"
+    else
+        index_file="./index.yml"
+    fi
+
     echo "- id: $plugin_id
   name: $name
   metadata:
@@ -65,7 +76,7 @@ buildPlugin()
 
     echo "Added entry to $index_file"
 
-    # Handle dependencies
+    # handle dependencies
     if [ ! -z "$dep" ]; then
         echo "  requires:" >> "$index_file"
         for d in ${dep//,/ }; do
@@ -77,12 +88,9 @@ buildPlugin()
     echo "Finished processing $plugin_id"
 }
 
-# Iterate over plugin files and build
 find ./plugins -mindepth 1 -name *.yml | while read file; do
     buildPlugin "$file"
 done
-
-# Iterate over theme files and build
 find ./themes -mindepth 1 -name *.yml | while read file; do
     buildPlugin "$file"
 done
