@@ -11,7 +11,7 @@
 
 outdir="$1"
 if [ -z "$outdir" ]; then
-    outdir="./"
+    outdir="."
 fi
 
 echo "Output directory: $outdir"
