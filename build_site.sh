@@ -11,7 +11,7 @@
 
 outdir="$1"
 if [ -z "$outdir" ]; then
-    outdir="./"
+    outdir="_site"
 fi
 
 rm -rf "$outdir"
