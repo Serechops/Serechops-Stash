@@ -10,6 +10,10 @@ The [Renamer](https://github.com/Serechops/Serechops-Stash/tree/main/plugins/Ren
 
 The [Movie-Fy](https://github.com/Serechops/Serechops-Stash/tree/main/plugins/Movie-Fy#movie-fy) tool is designed to assist in managing and creating movies within Stash.
 
+# Glassy Theme
+
+Explore [Glassy](https://github.com/Serechops/Serechops-Stash/tree/main/themes/Glassy#glassy---a-window-to-your-collection) and give your collection a fresh look!
+
 # Find Marker Tag Images: 
 
 The [Find Marker Tag Images](https://github.com/Serechops/Serechops-Stash/tree/main/plugins/findMarkerTagImages#find-marker-tag-images) plugin will compare the names of your tag images and scene markers and update the animated previews of any matched scene markers to be your tag images. 
