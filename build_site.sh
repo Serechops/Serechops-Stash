@@ -9,10 +9,13 @@
 # <scraper_id>.zip
 # Each zip file contains the scraper.yml file and any other files in the same directory
 
-outdir="$1"
-if [ -z "$outdir" ]; then
-    outdir="_main"
+main_branch=$(git symbolic-ref refs/remotes/origin/HEAD | sed 's@^refs/remotes/origin/@@')
+if [ -z "$main_branch" ]; then
+    echo "Error: Unable to determine main branch."
+    exit 1
 fi
+
+outdir="$main_branch"
 
 echo "Output directory: $outdir"
 
