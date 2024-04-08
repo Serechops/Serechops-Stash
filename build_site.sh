@@ -17,7 +17,7 @@ fi
 echo "Output directory: $outdir"
 
 # Skip removal if the output directory is the current directory
-if [ "$outdir" != "./" ]; then
+if [ "$outdir" != "main" ]; then
     rm -rf "$outdir"
 fi
 
