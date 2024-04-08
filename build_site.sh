@@ -11,13 +11,13 @@
 
 outdir="$1"
 if [ -z "$outdir" ]; then
-    outdir="."
+    outdir="_main"
 fi
 
 echo "Output directory: $outdir"
 
 # Skip removal if the output directory is the current directory
-if [ "$outdir" != "main" ]; then
+if [ "$outdir" != "./" ]; then
     rm -rf "$outdir"
 fi
 
