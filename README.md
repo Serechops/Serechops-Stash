@@ -18,14 +18,5 @@ Enjoy!
 
 # Performer Gallery Scraper:
 
-To run this script, you need to have Node.js installed on your machine. If you don't have it yet, you can download and install it from the official Node.js website: https://nodejs.org/en/download/current
+The [Performer Gallery Scraper](https://github.com/Serechops/Serechops-Stash/tree/main/plugins/performerGallery) will scan your Stash for all of your performers and scrape solo galleries of them to help round out your Stash profile images and galleries of them.
 
-Once you install the plugin via the plugin manager, navigate to your plugins/Performer Gallery Scraper directory and open a terminal. 
-
-Run the command `npm install` within this directory to install all the required dependencies for this plugin to work.
-
-Navigate to the `Settings > Tasks` page and run the `Performer Gallery Scraper Plugin > Scrape Performers` task. **This may take a while depending on the number of performers you have in your Stash. It is recommended to run this overnight.**
-
-The final result will be a `Galleries` folder created with all of the performer zips inside. This will be located in your main Stash server folder as it gets created from where the script is being triggered, which in this case, is by the Stash process itself.
-
-Enjoy!
