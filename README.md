@@ -1,7 +1,7 @@
 # Serechops-Stash
+
 An Index page for all Stash related plugins. Please add this index as a new source in Stash: https://serechops.github.io/Serechops-Stash/index.yml
 
-`https://serechops.github.io/Serechops-Stash/index.yml`
 # Renamer
 
 The [Renamer](https://github.com/Serechops/Serechops-Stash/tree/main/plugins/Renamer#renamer) plugin is very similar to renameOnUpdate. It will automatically rename files based on user-defined settings whenever a scene is updated.
