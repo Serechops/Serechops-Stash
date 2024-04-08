@@ -1,0 +1,17 @@
+name: Manual Build Index
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Run build script
+        run: |
+          chmod +x build_site.sh
+          ./build_site.sh _site
