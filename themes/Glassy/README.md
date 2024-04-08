@@ -1,5 +1,7 @@
 # Glassy - A Window To Your Collection
 
+[Glassy](serechops-stash/.github/assets/Glassy.webp)
+
 ## General Styling
 All text elements benefit from a subtle text shadow, providing a sense of depth and readability against various backgrounds.
 
