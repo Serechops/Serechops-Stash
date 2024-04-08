@@ -1,4 +1,4 @@
-name: Manual Build Site
+name: Manual Build Index
 
 on:
   workflow_dispatch:
@@ -6,16 +6,8 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    container:
-      image: ubuntu/latest
-      options: --privileged
 
     steps:
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '20.x'
-
       - name: Checkout repository
         uses: actions/checkout@v2
 
