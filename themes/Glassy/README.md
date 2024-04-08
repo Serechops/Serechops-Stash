@@ -1,6 +1,6 @@
 # Glassy - A Window To Your Collection
 
-[Glassy](serechops-stash/.github/assets/Glassy.webp)
+![Alt Text](https://media4.giphy.com/media/v1.Y2lkPTc5MGI3NjExb21nc3Y5bzd1bGlobmpvcGljbjZhczczMXZwNGxqb2FqYjJ2dTcwMCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/BsnEEZS4UCnwgFinLQ/giphy.gif)
 
 ## General Styling
 All text elements benefit from a subtle text shadow, providing a sense of depth and readability against various backgrounds.
