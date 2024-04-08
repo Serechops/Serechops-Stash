@@ -11,7 +11,7 @@
 
 outdir="$1"
 if [ -z "$outdir" ]; then
-    outdir="_site"
+    outdir="./"
 fi
 
 echo "Output directory: $outdir"
