@@ -1,0 +1,13 @@
+name: Movie-Fy Update Movie Scene Covers
+description: Update scene cover images with movie cover images.
+version: 0.1
+url: https://github.com/Serechops/Serechops-Stash
+exec:
+  - python
+  - "{pluginDir}/Movie-Fy Update Movie Scene Covers.py"
+interface: raw
+tasks:
+  - name: 'Update Scene Cover Images'
+    description: Update scene cover images with movie cover images
+    defaultArgs:
+      mode: update_scene_cover_images

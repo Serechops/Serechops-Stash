@@ -1,0 +1,14 @@
+name: Movie-Fy Scene Studio Bulk Update
+description: Bulk update scene studios based on movie studios.
+version: 0.1
+url: https://github.com/Serechops/Serechops-Stash
+exec:
+  - python
+  - "{pluginDir}/Movie-Fy Scene Studio Bulk Update.py"
+interface: raw
+tasks:
+  - name: 'Update Scene Studios'
+    description: Update scene studios based on movie studios
+    defaultArgs:
+      mode: update_scene_studios
+

@@ -1,0 +1,14 @@
+name: Movie-Fy Bulk Movie Scraper 
+description: Update your movie metadata in bulk.
+version: 0.1
+url: https://github.com/Serechops/Serechops-Stash
+exec:
+  - python
+  - "{pluginDir}/Movie-Fy Bulk Movie URL Scrape.py"
+interface: raw
+tasks:
+  - name: 'Run Movie-Fy Bulk Movie Scraper'
+    description: Scrape movie metadata and update records
+    defaultArgs:
+      mode: run_movie_scraper
+

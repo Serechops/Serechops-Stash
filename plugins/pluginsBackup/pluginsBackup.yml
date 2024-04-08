@@ -1,0 +1,15 @@
+name: Backup Plugins
+description: Creates a backup of the 'plugins' directory.
+version: 1.02
+url: https://github.com/Serechops/Serechops-Stash
+exec:
+  - python
+  - "{pluginDir}/pluginsBackup.py"
+interface: raw
+settings: {}
+hooks: []
+tasks:
+  - name: 'Backup Plugins Task'
+    description: Creates a backup of the plugins directory
+    defaultArgs:
+      mode: backup

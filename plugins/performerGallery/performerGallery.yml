@@ -1,0 +1,11 @@
+name: Performer Gallery Scraper Plugin
+description: A plugin to scrape galleries from porngals4.com for specific performers and create zip archives.
+version: 1.0
+url: https://github.com/Serechops/Serechops-Stash
+exec:
+  - python
+  - "{pluginDir}/performerGallery.py"
+interface: raw
+tasks:
+  - name: 'Scrape Performers'
+    description: Scrape galleries for all performers

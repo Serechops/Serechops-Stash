@@ -1,0 +1,13 @@
+name: Movie-Fy Create Movie Studio
+description: Creates a new Movie Studio to be used with Mass_Movie_Create
+version: 0.1
+url: https://github.com/Serechops/Serechops-Stash
+exec:
+  - python
+  - "{pluginDir}/Movie-Fy Create Movie Studio.py"
+interface: raw
+tasks:
+  - name: 'Create Movie Studio'
+    description: Creates a new Movie Studio or retrieves an existing one **Only needs to be run once.**
+    defaultArgs:
+      mode: create_movie_studio
