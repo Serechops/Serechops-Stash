@@ -279,6 +279,22 @@ def rename_scene(scene_id, wrapper_styles, separator, key_order, stash_directory
         else:
             move_or_rename_files(scene_details, new_filename, original_parent_directory, move_files, rename_files, dry_run)
 
+    # If rename_files is True, attempt renaming even if move_files is False
+    if rename_files:
+        original_file_name = Path(original_file_path).name
+        new_file_path = original_parent_directory / (new_filename + Path(original_file_name).suffix)
+        if original_file_name != new_filename:
+            try:
+                if not dry_run:
+                    os.rename(original_file_path, new_file_path)
+                    log.info(f"Renamed file: {original_file_path} -> {new_file_path}")
+                    logger.info(f"Renamed file: {original_file_path} -> {new_file_path}")
+                else:
+                    log.info(f"Dry run: Would have renamed file: {original_file_path} -> {new_file_path}")
+                    logger.info(f"Dry run: Would have renamed file: {original_file_path} -> {new_file_path}")
+            except Exception as e:
+                log.error(f"Failed to rename file: {original_file_path}. Error: {e}")
+
     metadata_scan_path = original_parent_directory
     perform_metadata_scan(metadata_scan_path)
 
@@ -290,7 +306,8 @@ def rename_scene(scene_id, wrapper_styles, separator, key_order, stash_directory
         hash_suffix = hashlib.md5(new_filename.encode()).hexdigest()
         new_filename = truncated_filename + '_' + hash_suffix + Path(original_file_path).suffix
 
-    return new_filename, original_path_info, new_path_info    
+    return new_filename, original_path_info, new_path_info 
+    
 
 # Execute the GraphQL query to fetch all scenes
 scene_result = graphql_request(query_all_scenes)
