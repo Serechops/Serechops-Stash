@@ -14,4 +14,4 @@ jobs:
       - name: Run build script
         run: |
           chmod +x build_site.sh
-          ./build_site.sh _site
+          ./build_site.sh
