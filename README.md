@@ -12,9 +12,7 @@ The [Movie-Fy](https://github.com/Serechops/Serechops-Stash/tree/main/plugins/Mo
 
 # Find Marker Tag Images: 
 
-A script that will compare the names of your tag images and scene markers and update the animated previews of any matched scene markers to be your tag images. 
-As long as you have generated your scene marker animated previews, you now have a way to easily mass update and animate your tag images. 
-Enjoy!
+The [Find Marker Tag Images](https://github.com/Serechops/Serechops-Stash/tree/main/plugins/findMarkerTagImages) plugin will compare the names of your tag images and scene markers and update the animated previews of any matched scene markers to be your tag images. 
 
 # Performer Gallery Scraper:
 
