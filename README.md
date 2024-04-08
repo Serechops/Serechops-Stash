@@ -6,6 +6,10 @@ An Index page for all Stash related plugins. Please add this index as a new sour
 
 The [Renamer](https://github.com/Serechops/Serechops-Stash/tree/main/plugins/Renamer#renamer) plugin is very similar to renameOnUpdate. It will automatically rename files based on user-defined settings whenever a scene is updated.
 
+# Movie-Fy
+
+The [Movie-Fy](https://github.com/Serechops/Serechops-Stash/tree/main/plugins/Movie-Fy#movie-fy) tool is designed to assist in managing and creating movies within Stash.
+
 # Find Marker Tag Images: 
 
 A script that will compare the names of your tag images and scene markers and update the animated previews of any matched scene markers to be your tag images. 
