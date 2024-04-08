@@ -12,7 +12,7 @@ The [Movie-Fy](https://github.com/Serechops/Serechops-Stash/tree/main/plugins/Mo
 
 # Find Marker Tag Images: 
 
-The [Find Marker Tag Images](https://github.com/Serechops/Serechops-Stash/tree/main/plugins/findMarkerTagImages) plugin will compare the names of your tag images and scene markers and update the animated previews of any matched scene markers to be your tag images. 
+The [Find Marker Tag Images](https://github.com/Serechops/Serechops-Stash/tree/main/plugins/findMarkerTagImages#find-marker-tag-images) plugin will compare the names of your tag images and scene markers and update the animated previews of any matched scene markers to be your tag images. 
 
 # Performer Gallery Scraper:
 
