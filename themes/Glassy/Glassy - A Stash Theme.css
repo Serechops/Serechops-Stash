@@ -7,9 +7,165 @@
 	color: white;
 }
 
+/* Import Inter font with various weights */
+@import url('link href="https://fonts.googleapis.com/css2?family=Andika:ital,wght@0,400;0,700;1,400;1,700&family=Inter:wght@100..900&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Ubuntu:ital,wght@0,300;0,400;0,500;0,700;1,300;1,400;1,500;1,700&display=swap"');
+
+/* Use Inter font with different weights */
+body {
+  font-family: 'Andika', sans-serif;
+  font-weight: 700; /* Adjust the font weight as needed */
+}
+
+p {
+  font-family: 'Poppins', sans-serif; /* Use Poppins for paragraphs */
+}
+
+
 .justify-content-center .studio-card .studio-card-image {
     width: 10vw; /*FF Fix for Studio Images*/
 }
+
+.nav-links {
+  font-family: 'Ubuntu', sans-serif;
+  font-weight: 500; /* Adjust weight as needed */
+}
+
+
+/* Scene Card Adjustments */
+
+div.recommendation-row.scene-recommendations .scene-card.zoom-1.grid-card.card .studio-overlay {
+    position: absolute;
+    transform: translateX(180px);
+    top: 220px; /* Increase the distance from the top */
+	left: -10px;
+}
+
+.scene-card.zoom-1.grid-card.card .studio-overlay {
+    position: absolute;
+    transform: translateX(180px);
+    top: 220px; /* Increase the distance from the top */
+	left: -8px;
+}
+
+div.scene-card.zoom-1.grid-card.card {
+  height: 275px; /* Adjust the height percentage as needed */ - Shrink the card
+}
+
+div.recommendation-row.scene-recommendations .scene-card.zoom-1.grid-card.card .TruncatedText {
+  position: absolute;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  transform: translateY(-1px);
+  overflow: hidden;
+}
+
+div.scene-card.zoom-1.grid-card.card .TruncatedText {
+  position: absolute;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  transform: translateY(2px);
+  overflow: hidden;
+}
+
+
+div.scene-card.zoom-1.grid-card.card:hover .TruncatedText {
+  overflow: visible;
+  animation: revealText 1s ease; /* Adjust the animation duration and timing function as needed */
+}
+
+@keyframes revealText {
+  0% {
+    text-indent: 0;
+  }
+  10% {
+    text-indent: -10%; /* Move the text to the left quickly */
+  }
+  100% {
+    text-indent: 0; /* Move the text back to its original position */
+  }
+}
+
+div.scene-card.zoom-1.grid-card.card .card-popovers.btn-group {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  scale: 85%;
+  transform: translateY(7px) !important;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+}
+
+div.recommendation-row.scene-recommendations .scene-card.zoom-1.grid-card.card .card-popovers.btn-group {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  scale: 80%;
+  transform: translateY(10px) !important;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+}
+
+div.scene-card.zoom-1.grid-card.card .progress-bar {
+  position: absolute;
+  bottom: 0;
+  transform: translateY(100px) !important;
+}
+
+div.recommendation-row.scene-recommendations .scene-card.zoom-1.grid-card.card .progress-bar {
+  position: absolute;
+  bottom: 0;
+  transform: translateY(92px) !important;
+}
+
+.scene-card__date {
+	position: absolute;
+	bottom: 0;
+	left: 0;
+	transform: translateY(28px);
+	font-size: 12px;
+}
+
+div.recommendation-row.scene-recommendations .scene-card__date {
+	position: absolute;
+	bottom: 0;
+	left: 0;
+	transform: translateY(22px);
+	font-size: 12px;
+}
+
+.scene-card__description {
+  display: none !important; /* Hide the truncated text */
+}
+
+.scene-card h5 {
+  font-weight: 300;
+  font-size: 15px; /* Adjust the font size as needed */
+}
+
+div.scene-specs-overlay {
+  transform: translateY(54px);
+  position: absolute;
+  left: 80px;
+}
+
+div.recommendation-row.scene-recommendations .scene-specs-overlay {
+  transform: translateY(48px);
+  position: absolute;
+  left: 80px;
+}
+
+span.overlay-resolution {
+  color: gold; /* Set the text color to gold */
+  text-shadow: -1px -1px 0 black,  
+               1px -1px 0 black,  
+               -1px 1px 0 black,  
+               0.5px 0.5px 0 black; /* Add a black stroke */
+}
+
+
+/********************************************/
 
 div#tasks-panel {
     transform: translateY(10px);
@@ -22,7 +178,7 @@ h3,
 h4,
 h5,
 h6 {
-	font-weight: 700;
+	font-weight: 500;
 }
 
 p {
@@ -700,26 +856,12 @@ button.minimal.mousetrap.favorite-button.favorite.btn.btn-primary svg.svg-inline
     fill: red; /* For SVG icons */
 }
 
-div.studio-overlay {
-    position: relative;
-    bottom: 0;
-    left: 0;
-    padding-left: 10px; /* Adjust the value as needed */
-    padding-bottom: 10px; /* Adjust the value as needed */
-}
-
-
 .form-container {
     background-color: transparent;
 }
 
 svg.svg-inline--fa.fa-venus.gender-icon path {
     fill: pink;
-}
-
-.scene-specs-overlay {
-    transform: translateY(-20px); /* Adjust the value as needed */
-	
 }
 
 .scene-card__details {
@@ -801,30 +943,7 @@ button.minimal.organized-button.organized.btn.btn-secondary svg.svg-inline--fa.f
   transition: transform 0.3s ease; /* Add a smooth transition effect */
 }
 
-/* Hover styles for card-section */
-.scene-card.zoom-0.grid-card.card:hover .card-section,
-.scene-card.zoom-1.grid-card.card:hover .card-section,
-.scene-card.zoom-2.grid-card.card:hover .card-section,
-.scene-card.zoom-3.grid-card.card:hover .card-section {
-  transform: translateY(-60px); /* Translate the element upward by 50 pixels on hover */
-}
 
-.card-section:hover .image-thumbnail {
-  display: block; /* Show the element on hover */
-}
-
-/* Define keyframes for the scroll animation */
-@keyframes scrollUp {
-  0% { transform: translateY(0); }
-  100% { transform: translateY(-100%); }
-}
-
-.card-section .TruncatedText.scene-card__description:hover {
-  max-height: 300px; /* Expand the height on hover to allow scrolling */
-  overflow: visible; /* Allow content to overflow the container */
-  white-space: normal; /* Allow text to wrap */
-  animation: scrollUp 5s linear infinite; /* Apply animation with a duration of 5 seconds and repeat infinitely */
-}
 
 svg.svg-inline--fa.fa-tag.fa-icon.nav-menu-icon.d-block.d-xl-inline.mb-2.mb-xl-0 path,
 svg.svg-inline--fa.fa-triangle-exclamation.fa-icon.SceneTaggerIcon.text-warn path,
@@ -870,9 +989,7 @@ div.fade.hover-popover-content.show.popover.bs-popover-bottom {
     position: static !important;
 }
 
-.scene-card .progress-bar {
-    transform: translateY(205px);
-}
+
 
 /* New Tags Shown as Green - Scene Tagger */
 
@@ -954,6 +1071,8 @@ span.name-icons button.minimal.not-favorite.btn.btn-primary svg.svg-inline--fa.f
 span.name-icons button.minimal.favorite.btn.btn-primary svg.svg-inline--fa.fa-heart.fa-icon path {
     fill: red; /* For SVG icons */
 }
+
+
 
 /*Mobile Overhaul*/
 
