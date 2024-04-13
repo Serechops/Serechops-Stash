@@ -478,6 +478,75 @@ div.recommendation-row.scene-recommendations .scene-card.zoom-1.grid-card.card .
 
 /**********************************************************************************/
 
+
+
+/* Movie Card Redesign - Plexy */
+
+div.movie-card.grid-card.card .TruncatedText.movie-card__description {
+	visibility: hidden;
+}
+
+div.movie-card.grid-card.card .card-popovers.btn-group {
+	visibility: hidden;
+}
+
+div.movie-card.grid-card.card {
+	height: 370px;
+}
+
+div.recommendation-row.movie-recommendations .movie-card.grid-card.card {
+	height: 390px;
+}
+
+@media only screen and (max-width: 767px) {
+div.recommendation-row.movie-recommendations .movie-card.grid-card.card {
+	height: 370px;
+}
+}
+
+@media only screen and (max-width: 767px) {
+div.movie-card.grid-card.card {
+	height: 333px;
+}
+}
+
+div.movie-card.grid-card.card .TruncatedText {
+    position: relative;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+	font-size: 12px;
+}
+
+
+div.movie-card.grid-card.card .movie-card__date {
+	font-size: 12px;
+	position: absolute;
+	left: 14px;
+	transform: translateY(-5px);
+	text-color: gold;
+}
+
+span.movie-card__date {
+	color: gold;
+}
+
+/*********************************/
+
+/* Colorize and Highlight Wall & Performer Age Text */
+
+div.performer-card__age,
+span.wall-tag,
+div.wall-item-text div {
+	color: gold;
+	text-shadow: -1px -1px 0 black,  
+               1px -1px 0 black,  
+               -1px 1px 0 black,  
+               0.5px 0.5px 0 black; /* Add a black stroke */
+}
+
+/********************/
+
 div#tasks-panel {
     transform: translateY(10px);
 }
@@ -1328,36 +1397,6 @@ svg.svg-inline--fa.fa-film.fa-icon.nav-menu-icon.d-block.d-xl-inline.mb-2.mb-xl-
 svg.svg-inline--fa.fa-video.fa-icon.nav-menu-icon.d-block.d-xl-inline.mb-2.mb-xl-0 path {
 	fill: #8B9094;
 }
-
-/*Scene Card Dimension Adjustments for Movie View*/
-#movie-page .scene-card.zoom-0.grid-card.card {
-    width: 207px;
-    height: 484.89px;
-    /* Add relative units for internal elements */
-    font-size: 100%; /* Reset font size to ensure proportional scaling */
-    /* Use Flexbox for flexible layout */
-    display: flex;
-    flex-direction: column;
-}
-
-#movie-page .scene-card.zoom-0.grid-card.card .scene-card-preview-image {
-    width: 207px;
-    height: 292.89px;
-}
-
-/* Hide TruncatedText content on hover over .scene-card */
-#movie-page .scene-card.zoom-0.grid-card.card:hover .TruncatedText {
-    visibility: hidden;
-}
-
-/* Resize scene-card-preview-video container */
-#movie-page .scene-card.zoom-0.grid-card.card .scene-card-preview-video {
-    width: 207px;
-    height: 484.89px;
-	margin: 0 auto; /* Center horizontally */
-	
-}
-
 
 /* Performer Detail Heart Color Change */
  
