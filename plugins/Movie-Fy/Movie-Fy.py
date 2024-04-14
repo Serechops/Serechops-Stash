@@ -342,14 +342,21 @@ def handle_user_choice(group_scenes, movie_data):
     first_scene_title = group_scenes[0]['title']
     # Perform fuzzy search against the local JSON
     movie_matches = find_movie_info(first_scene_title, movie_data)
-    
+
     # If matches are found, proceed with handling the choices
     if movie_matches:
         handle_movie_matches(movie_matches, group_scenes, movie_data)
     else:
-        # If no matches are found, prompt for custom search
+        # If no matches are found, prompt for custom search or to skip
         print("No fuzzy search matches found.")
-        custom_search_term = input("Enter a custom search term: ")
+        custom_search_term = input("Enter a custom search term or press 's' to skip: ")
+
+        # Check if the user wants to skip this movie
+        if custom_search_term.strip().lower() == 's':
+            print("Skipping to next movie.")
+            return
+
+        # Perform a fuzzy search with the custom term
         custom_movie_matches = find_movie_info(custom_search_term, movie_data)
         handle_custom_search(custom_movie_matches, movie_data)
 
