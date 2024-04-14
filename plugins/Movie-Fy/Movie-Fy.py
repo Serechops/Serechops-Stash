@@ -358,7 +358,7 @@ def handle_user_choice(group_scenes, movie_data):
 
         # Perform a fuzzy search with the custom term
         custom_movie_matches = find_movie_info(custom_search_term, movie_data)
-        handle_custom_search(custom_movie_matches, movie_data)
+        perform_custom_search(custom_movie_matches, movie_data)
 
 # Global variable to store the scenes of the currently initiated scene group
 current_scene_group_scenes = None
