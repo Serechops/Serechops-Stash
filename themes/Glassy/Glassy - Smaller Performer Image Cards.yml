@@ -2,7 +2,5 @@ name: Glassy - Smaller Performer Image Cards
 description: A Glassy Add-On Module.
 version: 0.1
 ui:
-  requires:
-    - Glassy - A Stash Theme.css
   css:
     - Glassy - Smaller Performer Image Cards.css
