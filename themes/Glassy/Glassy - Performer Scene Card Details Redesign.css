@@ -1,0 +1,31 @@
+/* Scene Details Performer Changes*/
+
+div.scene-performers .performer-card-image {
+  object-fit: cover;
+  height: 150px; /* Adjust the height as needed */
+  border-radius: 60%; /* Make the image circular */
+  border: 2px solid #fff; /* Add a border with white color */
+}
+
+div.scene-performers .performer-card.grid-card.card span.performer-card__country-flag {
+	position: absolute;
+	right: 100px;
+	transform: translateY(-2px);
+}
+
+
+/* Hide the button popovers on the performer cards */
+div.row.justify-content-center.scene-performers .performer-card.grid-card.card .card-popovers.btn-group {
+	visibility: hidden !important;
+}
+
+div.row.justify-content-center.scene-performers .performer-card.grid-card.card {
+	scale: 97%;
+}
+
+div.row.justify-content-center.scene-performers .thumbnail-section .rating-banner {
+    display: none;
+}
+
+
+/*************************************/

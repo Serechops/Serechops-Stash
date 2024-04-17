@@ -1,6 +1,6 @@
-name: Glassy - A Stash Theme
-description: Glassy - A Window To Your Collection - A Stash Theme By Serechops
-version: 0.9.3
+name: Glassy - A Window to Your Collection
+description: A Stash Theme
+version: 0.9.4
 ui:
   css:
-  - Glassy - A Stash Theme.css
+    - Glassy - A Stash Theme.css

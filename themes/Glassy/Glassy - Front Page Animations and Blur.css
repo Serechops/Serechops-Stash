@@ -1,0 +1,77 @@
+/*Target the Specific Slick Tracks to Animate and Include a Pause on Hover*/
+.gallery-recommendations .slick-track,
+.movie-recommendations .slick-track,
+.scene-recommendations .slick-track,
+.performer-recommendations .slick-track,
+.studio-recommendations .slick-track {
+	animation: scrollLeftToRight 4800s linear infinite;
+	white-space: nowrap;
+	overflow: hidden;
+	animation-play-state: running;
+}
+
+.gallery-recommendations .slick-track:hover,
+.movie-recommendations .slick-track:hover,
+.scene-recommendations .slick-track:hover,
+.performer-recommendations .slick-track:hover,
+.studio-recommendations .slick-track:hover {
+	animation-play-state: paused;
+}
+
+
+/*Main Page - Blur Other Cards That Are Not Moused Over*/
+
+.gallery-recommendations .slick-track:hover .gallery-card.zoom-1.grid-card.card:not(:hover),
+.movie-recommendations .slick-track:hover .movie-card.grid-card.card:not(:hover),
+.scene-recommendations .slick-track:hover .scene-card.zoom-1.grid-card.card:not(:hover),
+.performer-recommendations .slick-track:hover .performer-card.grid-card.card:not(:hover),
+.studio-recommendations .slick-track:hover .studio-card.grid-card.card:not(:hover) {
+	filter: blur(2px);
+}
+
+/* Animation for Scene, Performer, and Studio Cards on Main Page */
+@keyframes scrollLeftToRight {
+
+	0%,
+	100% {
+		transform: translateX(0);
+	}
+
+	50% {
+		transform: translateX(-200%);
+	}
+}
+
+/* Hide slick-dots element on Main Page - Less Clutter */
+.slick-dots {
+	display: none !important;
+}
+
+/*Hide the Prev-Next Arrows on Main Page*/
+.slick-arrow.slick-prev,
+.slick-arrow.slick-next {
+	display: none !important;
+	width: 0 !important;
+	margin: 0 !important;
+}
+
+
+/* Media query for mobile devices */
+@media only screen and (max-width: 767px) {
+
+	/* Disable animations and hover effects on mobile */
+	.gallery-recommendations .slick-track,
+	.movie-recommendations .slick-track,
+	.scene-recommendations .slick-track,
+	.performer-recommendations .slick-track,
+	.studio-recommendations .slick-track,
+	.gallery-recommendations .slick-track:hover,
+	.movie-recommendations .slick-track:hover,
+	.scene-recommendations .slick-track:hover,
+	.performer-recommendations .slick-track:hover,
+	.studio-recommendations .slick-track:hover {
+		animation: none;
+		animation-play-state: running;
+		/* Ensure animations are not paused on hover on mobile */
+	}
+}

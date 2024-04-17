@@ -1,0 +1,29 @@
+/* Redesign Marker Wall */
+
+.wall-item-container,
+video.wall-item-media,
+a.wall-item-anchor,
+.wall-item {
+  border-radius: 30px; /* Add rounded borders */
+  
+}
+
+.wall-item-container,
+.wall-item-text,
+.row {
+	background: transparent !important;
+}
+
+/* Colorize and Highlight Wall & Performer Age Text */
+
+div.performer-card__age,
+span.wall-tag,
+div.wall-item-text div {
+	color: gold;
+	text-shadow: -1px -1px 0 black,  
+               1px -1px 0 black,  
+               -1px 1px 0 black,  
+               0.25px 0.25px 0 black; /* Add a black stroke */
+}
+
+/***********************************************************/

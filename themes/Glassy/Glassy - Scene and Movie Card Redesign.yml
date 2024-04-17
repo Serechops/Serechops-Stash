@@ -1,0 +1,8 @@
+name: Glassy - Scene and Movie Card Redesign
+description: A Glassy Add-On Module.
+version: 0.1
+ui:
+  requires:
+    - Glassy - A Stash Theme.css
+  css:
+    - Glassy - Scene and Movie Card Redesign.css
