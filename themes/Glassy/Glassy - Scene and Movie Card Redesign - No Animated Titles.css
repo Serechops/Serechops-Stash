@@ -1,0 +1,465 @@
+/* Scene Card Adjustments */
+
+/* Zoom 0 Adjustments */
+
+div.scene-card.zoom-0.grid-card.card {
+  height: 180px; /* Adjust the height percentage as needed */ - Shrink the card
+}
+
+div.scene-card.zoom-0.grid-card.card .progress-bar {
+  position: absolute;
+  bottom: 0;
+  transform: translateY(54px) !important;
+}
+
+.scene-card.zoom-0.grid-card.card .scene-card__date {
+	position: absolute;
+	bottom: 0;
+	left: 0;
+	transform: translateY(28px);
+	font-size: 14px;
+}
+
+/*Hide Popover Buttons for Zoom 0*/
+
+div.scene-card.zoom-0.grid-card.card .card-popovers.btn-group {
+  visibility: hidden;
+}
+
+div.scene-card.zoom-0.grid-card.card .TruncatedText {
+  position: absolute;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  transform: translateY(2px);
+  overflow: hidden;
+}
+
+.scene-card.zoom-0.grid-card.card .scene-specs-overlay {
+  transform: translateY(38px);
+  position: absolute;
+  bottom: 0;
+  right: 5px;
+}
+/**********************************************************************************************************/
+
+/* Zoom 1 Adjustments */
+
+div.recommendation-row.scene-recommendations .scene-card.zoom-1.grid-card.card .studio-overlay {
+    position: absolute;
+    transform: translateX(180px);
+    top: 220px; /* Increase the distance from the top */
+	left: -10px;
+}
+
+.scene-card.zoom-1.grid-card.card .studio-overlay {
+    position: absolute;
+    transform: translateX(180px);
+    top: 220px; /* Increase the distance from the top */
+	left: -8px;
+}
+
+
+
+div.scene-card.zoom-1.grid-card.card {
+  height: 275px; /* Adjust the height percentage as needed */ - Shrink the card
+}
+
+div.recommendation-row.scene-recommendations .scene-card.zoom-1.grid-card.card .TruncatedText {
+  position: absolute;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  transform: translateY(-1px);
+  overflow: hidden;
+}
+
+div.scene-card .TruncatedText {
+  position: absolute;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  transform: translateY(2px);
+  overflow: hidden;
+}
+
+div.scene-card.zoom-1.grid-card.card .card-popovers.btn-group {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  scale: 85%;
+  transform: translateY(7px) !important;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+}
+
+div.recommendation-row.scene-recommendations .scene-card.zoom-1.grid-card.card .card-popovers.btn-group {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  scale: 80%;
+  transform: translateY(10px) !important;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+}
+
+div.scene-card.zoom-1.grid-card.card .progress-bar {
+  position: absolute;
+  bottom: 0;
+  transform: translateY(100px) !important;
+}
+
+div.recommendation-row.scene-recommendations .scene-card.zoom-1.grid-card.card .progress-bar {
+  position: absolute;
+  bottom: 0;
+  transform: translateY(92px) !important;
+}
+
+.scene-card.zoom-1.grid-card.card .scene-card__date {
+	position: absolute;
+	bottom: 0;
+	left: 0;
+	transform: translateY(28px);
+	font-size: 12px;
+}
+
+div.recommendation-row.scene-recommendations .scene-card.zoom-1.grid-card.card .scene-card__date {
+	position: absolute;
+	bottom: 0;
+	left: 0;
+	transform: translateY(22px);
+	font-size: 12px;
+}
+
+.scene-card__description {
+  display: none !important; /* Hide the truncated text */
+}
+
+.scene-card h5 {
+  font-weight: 400;
+  font-size: 16px; /* Adjust the font size as needed */
+}
+
+.scene-card.zoom-1.grid-card.card .scene-specs-overlay {
+  transform: translateY(54px);
+  position: absolute;
+  left: 80px;
+}
+
+div.recommendation-row.scene-recommendations .scene-card.zoom-1.grid-card.card .scene-specs-overlay {
+  transform: translateY(48px);
+  position: absolute;
+  left: 80px;
+}
+
+span.overlay-resolution {
+  color: gold; /* Set the text color to gold */
+  text-shadow: -1px -1px 0 black,  
+               1px -1px 0 black,  
+               -1px 1px 0 black,  
+               0.5px 0.5px 0 black; /* Add a black stroke */
+}
+
+/********************************************/
+
+/* Zoom 2 Adjustments */
+
+div.scene-card.zoom-2.grid-card.card .progress-bar {
+  position: absolute;
+  bottom: 0;
+  transform: translateY(116px) !important;
+}
+
+div.scene-card.zoom-2.grid-card.card {
+  height: 350px; /* Adjust the height percentage as needed */ - Shrink the card
+}
+
+div.scene-card.zoom-2.grid-card.card .card-popovers.btn-group {
+  position: absolute;
+  bottom: 10px;
+  left: 10px;
+  transform: translateY(10px) !important;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.scene-card.zoom-2.grid-card.card .scene-card__date {
+	position: absolute;
+	bottom: 0;
+	left: 0;
+	transform: translateY(30px);
+	font-size: 15px;
+}
+
+.scene-card.zoom-2.grid-card.card .scene-specs-overlay {
+  transform: translateY(53px);
+  position: absolute;
+  left: 95px;
+}
+
+.scene-card.zoom-2.grid-card.card .studio-overlay {
+    position: absolute;
+    transform: translateX(180px);
+    top: 280px; /* Increase the distance from the top */
+    left: 60px;
+}
+
+/******************************************************************/
+
+/* Zoom 3 Adjustments */
+
+div.scene-card.zoom-3.grid-card.card .progress-bar {
+  position: absolute;
+  bottom: 0;
+  transform: translateY(148px) !important;
+}
+
+div.scene-card.zoom-3.grid-card.card {
+  height: 500px; /* Adjust the height percentage as needed */ - Shrink the card
+}
+
+div.scene-card.zoom-3.grid-card.card .card-popovers.btn-group {
+  position: absolute;
+  bottom: 10px;
+  left: 10px;
+  transform: translateY(10px) !important;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.scene-card.zoom-3.grid-card.card .scene-card__date {
+	position: absolute;
+	bottom: 0;
+	left: 0;
+	transform: translateY(30px);
+	font-size: 15px;
+}
+
+.scene-card.zoom-3.grid-card.card .scene-specs-overlay {
+  transform: translateY(53px);
+  position: absolute;
+  left: 95px;
+}
+
+.scene-card.zoom-3.grid-card.card .studio-overlay {
+    position: absolute;
+    transform: translateX(180px);
+    top: 375px; /* Increase the distance from the top */
+    left: 20px;
+}
+
+.scene-card.zoom-3.grid-card.card .studio-overlay img.image-thumbnail {
+    width: 115%; /* Increase the width */
+    height: 115%; /* Increase the height */
+}
+
+
+/****************************************************************/
+
+/* Mobile Scene Card Redesign */
+
+@media only screen and (max-width: 767px) {
+div.scene-card.zoom-1.grid-card.card .card-popovers.btn-group {
+  visibility: hidden;
+}
+}
+
+@media only screen and (max-width: 767px) {
+div.recommendation-row.scene-recommendations .scene-card.zoom-1.grid-card.card .studio-overlay {
+    position: absolute;
+    transform: translateX(180px);
+    top: 220px; /* Increase the distance from the top */
+	left: -10px;
+}
+}
+
+@media only screen and (max-width: 767px) {
+.scene-card.zoom-1.grid-card.card .studio-overlay {
+    position: absolute;
+    transform: translateX(180px);
+    top: 220px; /* Increase the distance from the top */
+	left: -8px;
+}
+}
+
+
+@media only screen and (max-width: 767px) {
+div.scene-card.zoom-1.grid-card.card {
+  height: 175px; /* Adjust the height percentage as needed */ - Shrink the card
+}
+}
+
+@media only screen and (max-width: 767px) {
+div.recommendation-row.scene-recommendations .scene-card.zoom-1.grid-card.card {
+  height: 210px; /* Adjust the height percentage as needed */ - Shrink the card
+}
+}
+
+@media only screen and (max-width: 767px) {
+div.recommendation-row.scene-recommendations .scene-card.zoom-1.grid-card.card .TruncatedText {
+  position: absolute;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  transform: translateY(-1px);
+  overflow: hidden;
+}
+}
+
+@media only screen and (max-width: 767px) {
+div.scene-card .TruncatedText {
+  position: absolute;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  transform: translateY(2px);
+  overflow: hidden;
+}
+}
+
+@media only screen and (max-width: 767px) {
+div.scene-card.zoom-1.grid-card.card .card-popovers.btn-group {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  scale: 85%;
+  transform: translateY(7px) !important;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+}
+}
+
+@media only screen and (max-width: 767px) {
+div.recommendation-row.scene-recommendations .scene-card.zoom-1.grid-card.card .card-popovers.btn-group {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  scale: 80%;
+  transform: translateY(10px) !important;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+}
+}
+
+@media only screen and (max-width: 767px) {
+div.scene-card.zoom-1.grid-card.card .progress-bar {
+  position: absolute;
+  bottom: 0;
+  transform: translateY(100px) !important;
+}
+}
+
+@media only screen and (max-width: 767px) {
+div.recommendation-row.scene-recommendations .scene-card.zoom-1.grid-card.card .progress-bar {
+  position: absolute;
+  bottom: 0;
+  transform: translateY(92px) !important;
+}
+}
+
+@media only screen and (max-width: 767px) {
+.scene-card.zoom-1.grid-card.card .scene-card__date {
+	position: absolute;
+	bottom: 0;
+	left: 0;
+	transform: translateY(28px);
+	font-size: 12px;
+}
+}
+
+@media only screen and (max-width: 767px) {
+div.recommendation-row.scene-recommendations .scene-card.zoom-1.grid-card.card .scene-card__date {
+	position: absolute;
+	bottom: 0;
+	left: 0;
+	transform: translateY(22px);
+	font-size: 12px;
+}
+}
+
+@media only screen and (max-width: 767px) {
+.scene-card__description {
+  display: none !important; /* Hide the truncated text */
+}
+}
+
+@media only screen and (max-width: 767px) {
+.scene-card h5 {
+  font-weight: 400;
+  font-size: 16px; /* Adjust the font size as needed */
+}
+}
+
+@media only screen and (max-width: 767px) {
+.scene-card.zoom-1.grid-card.card .scene-specs-overlay {
+  transform: translateY(54px);
+  position: absolute;
+  left: 85px;
+}
+}
+
+@media only screen and (max-width: 767px) {
+div.recommendation-row.scene-recommendations .scene-card.zoom-1.grid-card.card .scene-specs-overlay {
+  transform: translateY(48px);
+  position: absolute;
+  left: 85px;
+}
+}
+
+
+/**********************************************************************************/
+
+
+
+/* Movie Card Redesign - Plexy */
+
+div.movie-card.grid-card.card .TruncatedText.movie-card__description {
+	visibility: hidden;
+}
+
+div.movie-card.grid-card.card .card-popovers.btn-group {
+	visibility: hidden;
+}
+
+div.movie-card.grid-card.card {
+	height: 370px;
+}
+
+div.recommendation-row.movie-recommendations .movie-card.grid-card.card {
+	height: 390px;
+}
+
+@media only screen and (max-width: 767px) {
+div.recommendation-row.movie-recommendations .movie-card.grid-card.card {
+	height: 370px;
+}
+}
+
+@media only screen and (max-width: 767px) {
+div.movie-card.grid-card.card {
+	height: 333px;
+}
+}
+
+div.movie-card.grid-card.card .TruncatedText {
+    position: relative;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+	font-size: 12px;
+}
+
+
+div.movie-card.grid-card.card .movie-card__date {
+	font-size: 12px;
+	position: absolute;
+	left: 14px;
+	transform: translateY(-5px);
+	text-color: gold;
+}
+
+span.movie-card__date {
+	color: gold;
+}
+
+/*********************************/

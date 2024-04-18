@@ -1,0 +1,6 @@
+name: Glassy - Scene and Movie Card Redesign - No Animated Titles
+description: A Glassy Add-On Module.
+version: 0.1
+ui:
+  css:
+    - Glassy - Scene and Movie Card Redesign - No Animated Titles.css
