@@ -1,0 +1,29 @@
+/* Scene Player Page Redesign */
+
+.scene-player-container {
+  position: absolute;
+  top: 1%;
+  left: 0%;
+  max-width: 50%;
+}
+
+.scene-tabs {
+  position: absolute;
+  top: 1%;
+  right: 1%;
+  max-width: 50%;
+}
+
+.scene-divider.d-none.d-xl-block {
+  display: none !important;
+}
+
+@media only screen and (max-width: 1200px) {
+  .scene-tabs,
+  .scene-player-container {
+    position: static; /* Reset the position property for mobile */
+    max-width: none; /* Reset max-width for mobile */
+  }
+}
+
+/***************************/
