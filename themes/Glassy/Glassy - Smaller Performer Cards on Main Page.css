@@ -1,0 +1,22 @@
+/* Smaller Performer Images on Performer Page */
+
+.recommendation-row.performer-recommendations .performer-card-image {
+    object-fit: cover;
+    height: 400px;  
+    display: grid;
+}
+
+.recommendation-row.performer-recommendations .rating-banner {
+	display: none !important;
+}
+
+.recommendation-row.performer-recommendations .performer-card.grid-card.card {
+    width: 200px !important; /* Adjust the width as needed */
+    height: 500px; 
+}
+
+.recommendation-row.performer-recommendations span.performer-name {
+	font-size: 14px;
+}
+
+/***********************************************************/

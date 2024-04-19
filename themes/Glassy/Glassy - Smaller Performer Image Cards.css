@@ -16,5 +16,9 @@ div.item-list-container .performer-card.grid-card.card {
     height: 400px; 
 }
 
+div.item-list-container span.performer-name {
+	font-size: 14px;
+}
+
 
 /***********************************************************/

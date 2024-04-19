@@ -1,5 +1,17 @@
 /* Glassy - A Window To Your Collection - A Stash Theme By Serechops */
 
+/* Navbrand Custom Image */
+
+button.minimal.brand-link.d-none.d-md-inline-block.btn.btn-primary, 
+button.minimal.brand-link.d-inline-block.btn.btn-primary {
+	width: 95px;
+    height: 40px;  
+    display: inline-block;  /* Keeps the block-level width/height but allows inline placement */
+    background-image: url('https://imgur.com/Ukksbi7.png');  /* Path to your image */
+    background-size: cover;  /* Cover ensures the image covers the entire area */
+    text-indent: -9999px;  /* Moves the text off-screen */
+    overflow: hidden;  /* Prevents any part of the text from being visible */
+}
 /* Common Styles */
 * {
 	text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
@@ -51,8 +63,17 @@ li.row.mx-0.mt-2.search-result:not(.selected-result.active) {
 
 
 /* Popup Modal Styling - Settings Section - General "Dark Themed Glassy Look" */
-hover.fade.hover-popover-content.show.popver.bs-popover-top,
-div.tag-popover-card,
+
+.queue-scene-details,
+.queue-controls,
+.react-select__control.react-select__control--is-focused,
+.react-select__menu.css,
+.nav-link.active,
+a#performer-tabs-tab-scenes,
+a#performer-tabs-tab-galleries,
+a#performer-tabs-tab-images,
+a#performer-tabs-tab-movies,
+a#performer-tabs-tab-appearswith,
 div#queue-content,
 .PerformerTagger-performer,
 .StudioTagger-studio,
@@ -80,7 +101,6 @@ div.dropdown-menu.show,
 p.title,
 div.stats-element,
 .show.dropdown,
-.fade.hover-popover-content.show.popover.bs-popover-bottom,
 .ml-1.d-flex.align-items-center,
 div.queue-controls,
 div.queue-content,
@@ -114,6 +134,36 @@ div.modal-body,
 div.modal-content {
 	background: rgba(0, 0, 0, 0.3);
 	/* Darker background for dark mode, adjust opacity as needed */
+}
+
+.react-select__multi-value__label {
+	background: green !important;
+	color: white !important;
+}
+
+.react-select__multi-value__remove {
+	background: red !important; 
+}
+
+span.tag-item.badge.badge-secondary {
+    color: white;
+	background: none;
+}
+
+
+/* Popup Blurring */
+
+.fade.hover-popover-content.show.popover.bs-popover-bottom,
+hover.fade.hover-popover-content.show.popver.bs-popover-top,
+div.tag-popover-card,
+div#react-select-1-listbox,
+div#react-select-2-listbox,
+div#react-select-3-listbox,
+div#react-select-4-listbox,
+div#react-select-5-listbox,
+div#react-select-6-listbox {
+	background: rgba(0, 0, 0, 0.4);
+	backdrop-filter: blur(6px); /* Adjust the blur radius as needed */
 }
 
 /* Additional styling for text inside the containers - Helping Readability */
@@ -769,11 +819,6 @@ div.fade.hover-popover-content.show.popover.bs-popover-bottom {
 div.mt-2 span.tag-item.badge.badge-secondary {
     background-color: green;
     color: white;
-}
-
-span.tag-item.badge.badge-secondary {
-    color: white;
-	background-color: black;
 }
 
 
