@@ -142,12 +142,16 @@ div.modal-content {
 }
 
 .react-select__multi-value__remove {
-	background: red !important; 
+	background: black !important; 
 }
 
 span.tag-item.badge.badge-secondary {
     color: white;
 	background: none;
+}
+
+.react-select__multi-value__remove.css-1h0qd4 svg.css-8mmkcg {
+	fill: red;
 }
 
 
