@@ -1,0 +1,1140 @@
+/* Glassy - A Window To Your Collection - A Stash Theme By Serechops */
+
+/* Text Highlight Overhaul */
+
+.detail-item.synopsis,
+p {
+	font-weight: 500 !important;
+	text-shadow: -1px -1px 0 black,  
+               1px -1px 0 black,  
+               -1px 1px 0 black,  
+               0.25px 0.25px 0 black; /* Add a black stroke */
+}
+
+h3,
+h5 {
+	color: gold !important;
+}
+
+h6 { 
+	color: gold !important;
+}	
+
+div.TruncatedText {
+	font-weight: 600 !important;
+	text-shadow: -1px -1px 0 black,  
+               1px -1px 0 black,  
+               -1px 1px 0 black,  
+               0.25px 0.25px 0 black; /* Add a black stroke */
+}
+
+span.performer-name {
+	font-weight: 700 !important;
+}
+
+.movie-card.grid-card.card .TruncatedText {
+	color: white !important;
+	font-weight: 600 !important;
+}
+
+div.col-12 h6 {
+	border-bottom: 1px solid #ccc; /* Adds a light gray line below each section */
+}
+
+.recommendation-row-head h2 {
+	color: gold;
+}
+
+/* Navbrand Custom Image */
+
+button.minimal.brand-link.d-none.d-md-inline-block.btn.btn-primary, 
+button.minimal.brand-link.d-inline-block.btn.btn-primary {
+	width: 95px;
+    height: 40px;  
+    display: inline-block;  /* Keeps the block-level width/height but allows inline placement */
+    background-image: url('https://imgur.com/Ukksbi7.png');  /* Path to your image */
+    background-size: cover;  /* Cover ensures the image covers the entire area */
+    text-indent: -9999px;  /* Moves the text off-screen */
+    overflow: hidden;  /* Prevents any part of the text from being visible */
+}
+/* Common Styles */
+* {
+	text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+	color: white;
+}
+
+.justify-content-center .studio-card .studio-card-image {
+    width: 10vw; /*FF Fix for Studio Images*/
+}
+
+div#tasks-panel {
+    transform: translateY(10px);
+}
+
+/* Change cursor to pointer on hover for clickable elements */
+
+.movie-card-image cursor: pointer;
+
+/* Nav Button Effects */
+.nav-item:hover {
+	opacity: 0.8;
+}
+
+.saved-filter-list-menu.dropdown-menu.show,
+.bg-secondary, .clearable-text-field, .clearable-text-field:active{
+
+     background: rgba(0, 0, 0, 0.9) !important;
+
+}
+
+/*Better Separation of Scene Tagger Rows When A Partial Match is Made*/
+
+li.row.mx-0.mt-2.search-result:not(.selected-result.active) {
+    border: 1px solid orange;
+}
+
+/*Select Performer Placeholder Highlight*/
+.react-select__control.css-13cymwt-control:has(.react-select__placeholder.css-1jqq78o-placeholder) {
+    border: 3px solid red;
+}
+
+
+/*Correct Overflow on Longer Scene Titles in Tagger View*/
+
+.scene-link {
+    overflow: visible !important; /* Override any other rules */
+    word-break: break-all; /* Allow breaking of words */
+}
+
+
+/* Popup Modal Styling - Settings Section - General "Dark Themed Glassy Look" */
+.mr-auto.nav.nav-tabs a.nav-link,
+.fade.hover-popover-content,
+.queue-scene-details,
+.queue-controls,
+.react-select__control.react-select__control--is-focused,
+.react-select__menu.css,
+.nav-link.active,
+a#performer-tabs-tab-scenes,
+a#performer-tabs-tab-galleries,
+a#performer-tabs-tab-images,
+a#performer-tabs-tab-movies,
+a#performer-tabs-tab-appearswith,
+div#queue-content,
+.PerformerTagger-performer,
+.StudioTagger-studio,
+li.row.mx-0.mt-2.search-result.selected-result.active,
+div.mt-3.search-item,
+div.changelog-version.card,
+.tasks-panel,
+.setting-section,
+.flex-column.nav.nav-pills,
+.edit-buttons-container,
+li.my-2,
+a.dropdown-item,
+div.dropdown-menu.show,
+.react-select,
+.react-select.performer-select.form-control,
+.fade.tab-pane.active.show,
+.form-container,
+.detail-header.collapsed,
+.performer-head.col,
+.scene-card.zoom-1.grid-card.card,
+.performer-card.grid-card.card,
+.movie-card.grid-card.card,
+.studio-card.grid-card.card,
+.div.card,
+p.title,
+div.stats-element,
+.show.dropdown,
+.ml-1.d-flex.align-items-center,
+div.queue-controls,
+div.queue-content,
+select.input-control.form-control,
+.scene-edit-details,
+.sticky.detail-header,
+.react-select__input,
+.react-select__control.css-13cymwt-control,
+select.query-text-field-clear.d-none.btn.btn-secondary,
+div.input-group,
+.bg-secondary.text-white.dropdown-menu.show,
+.mb-2.mr-2.d-flex>*,
+.btn-secondary.form-control,
+.saved-filter-list-menu.dropdown-menu.show,
+.background-image-container,
+.detail-header.full-width,
+button.btn.btn-secondary,
+.job-table.card,
+div.tagger-container.mx-md-auto,
+button.btn.btn-primary,
+div.card,
+div.setting,
+div.collapsible-section.collapse.show,
+div.setting-group.collapsible,
+div.wall.w-100.row.justify-content-center,
+div.changelog-version-body.markdown.collapse.show,
+div.markdown,
+div.modal-header,
+div.modal-footer,
+div.modal-body,
+div.modal-content {
+	background: rgba(0, 0, 0, 0.3);
+	/* Darker background for dark mode, adjust opacity as needed */
+}
+
+.react-select__multi-value__label {
+	background: green !important;
+	color: white !important;
+}
+
+.react-select__multi-value__remove {
+	background: black !important; 
+}
+
+span.tag-item.badge.badge-secondary {
+    color: white;
+	background: none;
+}
+
+.react-select__multi-value__remove.css-1h0qd4 svg.css-8mmkcg {
+	fill: red;
+}
+
+
+/* Popup Blurring */
+
+.fade.hover-popover-content.show.popover.bs-popover-bottom,
+hover.fade.hover-popover-content.show.popver.bs-popover-top,
+div.tag-popover-card,
+div#react-select-1-listbox,
+div#react-select-2-listbox,
+div#react-select-3-listbox,
+div#react-select-4-listbox,
+div#react-select-5-listbox,
+div#react-select-6-listbox {
+	background: rgba(0, 0, 0, 0.4);
+	backdrop-filter: blur(6px); /* Adjust the blur radius as needed */
+}
+
+/* Additional styling for text inside the containers - Helping Readability */
+.tasks-panel-queue h2,
+.setting-section h2,
+.flex-column.nav.nav-pills h2,
+.div.card h2 {
+	color: #ffcc00;
+	/* Adjust the text color for headings in dark mode */
+}
+
+.tasks-panel-queue p,
+.setting-section p,
+.flex-column.nav.nav-pills p,
+.div.card p {
+	color: #ddd;
+	/* Adjust the text color for paragraphs in dark mode */
+}
+
+/* Scrollbar Modification */
+::-webkit-scrollbar {
+	width: 10px;
+}
+
+::-webkit-scrollbar-track {
+	background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+	background: #f0f0f0;
+	border: 2px solid #ddd;
+	border-radius: 6px;
+}
+
+/* Navigation Bar Styling */
+nav.bg-dark {
+    background: rgba(0, 0, 0, 0.5); /* Adjust the alpha value as needed */
+    backdrop-filter: blur(5px); /* Adjust the blur radius as needed */
+}
+
+a.minimal {
+    outline: 0.25px solid black;
+}
+
+
+.bg-dark {
+	background: none !important;
+	background-color: none !important;
+}
+
+.form-group .bg-dark {
+	background: rgba(10, 20, 25, 0.20) !important;
+}
+
+/* CSS for Highlighting Cards on Mouseover - Vertical Wipe Effect */
+.grid-card.card {
+	position: relative;
+	transition: border 0.5s ease, transform 0.5s ease, filter 0.5s ease;
+	border-radius: 10px;
+}
+
+.movie-card.grid-card.card {
+	position: relative;
+}
+
+.studio-card.grid-card.card::before,
+.movie-card.grid-card.card::before,
+.grid-card.card.zoom-1::before,
+.performer-card.grid-card.card::before {
+	content: '';
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	background: linear-gradient(to bottom, transparent 50%, rgba(0, 0, 0, 1) 150%);
+	background-size: 100% 200%;
+	transition: background-position 0.5s ease;
+	z-index: -1;
+	/* Set a lower z-index for the pseudo-element */
+}
+
+
+
+.grid-card.card.zoom-1:hover::before,
+.performer-card.grid-card.card:hover::before,
+.movie-card.grid-card.card:hover::before,
+.studio-card.grid-card.card:hover::before {
+	background-position: 0 -100%;
+}
+
+/*This generates the white border around the cards on hover and makes them "pop" with a subtle transform */
+
+.grid-card.card:hover {
+	border: 2.5px solid #fff;
+	transform: scale(1.01);
+	overflow: hidden;
+	filter: blur(0);
+}
+
+/* Background Studio Grey Banners -- Better Readability */
+.studio-logo,
+.studio-card-image {
+	border-radius: 10px;
+	/* Adjust the border-radius for rounded corners */
+	background-color: rgba(26, 26, 26, 0.6);
+}
+
+/* Centering in Movie, Tag, Studio, Gallery and Performer card-section */
+.tag-card.grid-card.card,
+.studio-card.grid-card.card,
+.gallery-card.grid-card.card,
+.performer-card.grid-card.card {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	text-align: center;
+}
+/* Global Changes */
+
+/*Hide Donate Button*/
+.btn-primary.btn.donate.minimal {
+	display: none;
+}
+
+
+/* Scenes Tab Styling */
+.scenes-tab {
+	padding: 0px !important;
+}
+
+/* Studios Tab Styling */
+.studios-tab {
+	width: 15%;
+}
+
+/* Add a background image to the existing background container */
+:root {
+  --background-image-url: url('https://rare-gallery.com/uploads/posts/919672-concrete-texture-dark-background-abstract.jpg');
+}
+
+body {
+  background-image: var(--background-image-url);
+  background-size: contain;
+  background-position: center;
+  background-attachment: fixed;
+}
+
+
+/* Create the parallax effect */
+body::before {
+	content: "";
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	z-index: -1;
+	background: inherit;
+	transform: translateZ(-1px) scale(1.5);
+}
+
+/* Styling for Glassy Translucent Effect */
+.performer-card-image,
+.video-section .thumbnail-section,
+.card-section .performer-card.grid-card,
+.card-section .studio-card-image,
+.card-section .movie-card-image {
+	border-radius: 15px;
+	overflow: hidden;
+}
+
+.studio-image {
+	width: 100%;
+	display: block;
+	text-align: center;
+}
+
+.wall-item {
+	border: 1px solid rgba(0, 0, 0, 0);
+	/* 1px solid black border with 50% transparency */
+}
+
+.btn.btn-primary {
+	border: 1px solid rgba(50, 50, 50, 0.5);
+	/* 1px solid dark grey border with 50% transparency */
+}
+
+
+/* [Gallery tab] Hides the lightbox header and footer to make the image area larger. Mouse reveals them as an overlay to the image*/
+
+.Lightbox-header,
+.Lightbox-footer {
+	z-index: 9999;
+	position: absolute;
+	width: 100%;
+	opacity: 0;
+	background-color: #0008;
+	transition: opacity 0.5s ease;
+}
+
+.Lightbox-footer {
+	bottom: 0;
+}
+
+.Lightbox-navbutton {
+	opacity: 0;
+	transition: opacity 0.5s ease;
+}
+
+
+.Lightbox-navbutton:hover,
+.Lightbox-header:hover,
+.Lightbox-footer:hover {
+	opacity: 1;
+}
+
+
+/* Resize preview button on Images and put them in top left */
+
+.preview-button .preview-button .btn.btn-primary {
+	position: absolute;
+	top: 0;
+	left: 0;
+	transform: scale(0.5);
+}
+
+
+/* Magnify Button Hover Effect - Shows a magnify button in the middle of the card on hover */
+.fa-icon {
+	background-color: transparent;
+	border: none;
+	outline: none;
+	transition: transform 0.2s ease-in-out;
+}
+
+.fa-icon:hover {
+	transform: scale(1.1);
+}
+
+/* Transparent Preview Placeholder in Magnifying Glass - Refactoring The Behaviour and Appearance of the Magnifying Glass */
+.preview-button .btn.btn-primary {
+	background-color: rgba(0, 0, 0, 0);
+	/* Full transparent background */
+	/* Add any other styling as needed */
+}
+
+/* [Images tab] Don't crop preview thumbnails */
+
+.flexbin>*>img {
+	object-fit: inherit;
+	max-width: none;
+	min-width: initial;
+}
+
+/* Main Page - Animate Headers - Vertical Fade-in effect */
+
+@keyframes textAnimation {
+	0% {
+		opacity: 0;
+		transform: translateY(-20px);
+	}
+
+	100% {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+.recommendation-row-head h2 {
+	margin: 0;
+	text-align: center;
+	animation: textAnimation 1s ease-in-out;
+	/* Adjust the animation duration and timing function as needed */
+}
+
+/*Disables Images from Being Input into Performer and Studio Banners*/
+.background-image-container>picture {
+	display: none;
+}
+
+/*Make the fill color of the search bars almost completely transparent*/
+
+.query-text-field.bg-secondary.text-white.border-secondary.form-control path {
+	fill: none;
+}
+
+/*Studios Back to Top Button Text Centered*/
+.sticky.detail-header {
+	text-align: center;
+}
+
+/*Change Country Flag Location on Performers*/
+.performer-card__country-flag {
+	position: absolute;
+	top: 0;
+	left: 0;
+	margin: 14px;
+	/* Adjust margin as needed */
+}
+
+
+/* [Performers tab] Show a larger image in performer's page for desktop */
+.performer-image-container {
+	flex: 0 0 2%;
+	max-width: 2%;
+}
+
+
+/* Parallax effect for desktop and mobile */
+body::before {
+	content: "";
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	z-index: -1;
+	background: inherit;
+	transform: translateZ(-1px) scale(1.5);
+}
+
+/* Make these have transparent backgrounds - Settings */
+.package-manager-toolbar,
+.collapsible-section.collapse.show,
+div.setting,
+div.setting-section {
+	background: rgba(0, 0, 0, 0);
+}
+
+/* Adjust Task Panel Transparency to be more visible */
+#tasks-panel .tasks-panel-queue {
+	background: rgba(0, 0, 0, 0.6);
+}
+
+/* Strip[ Padding and Margins from Checkboxes on Performers */
+.card-check {
+	padding: 0;
+	margin: 0;
+	/* Optional: Remove any margin if applied by default */
+}
+
+/*Ratings Banner Color Overhaul*/
+
+.rating-banner.rating-5:after {
+    color: white;
+    content: '5';
+    background-color: green;
+    display: inline-block;
+    visibility: visible;
+    font-size: 1rem;
+    font-weight: 700;
+    height: 27px;
+    letter-spacing: 1px;
+    line-height: 2rem;
+    padding: 5px;
+    position: relative;
+    text-align: center;
+    transform: rotate(0deg);
+    width: 60px;
+    text-shadow: 0 0 2px black;
+    transform: translateX(-12px);
+    transform: translateY(-5px);
+}
+.rating-banner.rating-5 {
+    font-size: 0;
+    left: -25px;
+    top: -6px;
+    padding: unset;
+    height: unset;
+    visibility: hidden !important;
+}
+
+.rating-banner.rating-4:after {
+    color: white;
+    content: '4';
+    background-color: limegreen;
+    display: inline-block;
+    visibility: visible;
+    font-size: 1rem;
+    font-weight: 700;
+    height: 27px;
+    letter-spacing: 1px;
+    line-height: 2rem;
+    padding: 5px;
+    position: relative;
+    text-align: center;
+    transform: rotate(0deg);
+    width: 60px;
+    text-shadow: 0 0 2px black;
+    transform: translateX(-12px);
+    transform: translateY(-5px);
+}
+.rating-banner.rating-4 {
+    font-size: 0;
+    left: -25px;
+    top: -6px;
+    padding: unset;
+    height: unset;
+    visibility: hidden !important;
+}
+
+.rating-banner.rating-3:after {
+    color: white;
+    content: '3';
+    background-color: #CCCC00;
+    display: inline-block;
+    visibility: visible;
+    font-size: 1rem;
+    font-weight: 700;
+    height: 27px;
+    letter-spacing: 1px;
+    line-height: 2rem;
+    padding: 5px;
+    position: relative;
+    text-align: center;
+    transform: rotate(0deg);
+    width: 60px;
+    text-shadow: 0 0 2px black;
+    transform: translateX(-12px);
+    transform: translateY(-5px);
+}
+.rating-banner.rating-3 {
+    font-size: 0;
+    left: -25px;
+    top: -6px;
+    padding: unset;
+    height: unset;
+    visibility: hidden !important;
+}
+
+.rating-banner.rating-2:after {
+    color: white;
+    content: '2';
+    background-color: orange;
+    display: inline-block;
+    visibility: visible;
+    font-size: 1rem;
+    font-weight: 700;
+    height: 27px;
+    letter-spacing: 1px;
+    line-height: 2rem;
+    padding: 5px;
+    position: relative;
+    text-align: center;
+    transform: rotate(0deg);
+    width: 60px;
+    text-shadow: 0 0 2px black;
+    transform: translateX(-12px);
+    transform: translateY(-5px);
+}
+.rating-banner.rating-2 {
+    font-size: 0;
+    left: -25px;
+    top: -6px;
+    padding: unset;
+    height: unset;
+    visibility: hidden !important;
+}
+
+.rating-banner.rating-1:after {
+    color: white;
+    content: '1';
+    background-color: red;
+    display: inline-block;
+    visibility: visible;
+    font-size: 1rem;
+    font-weight: 700;
+    height: 27px;
+    letter-spacing: 1px;
+    line-height: 2rem;
+    padding: 5px;
+    position: relative;
+    text-align: center;
+    transform: rotate(0deg);
+    width: 60px;
+    text-shadow: 0 0 2px black;
+    transform: translateX(-12px);
+    transform: translateY(-5px);
+}
+.rating-banner.rating-1 {
+    font-size: 0;
+    left: -25px;
+    top: -6px;
+    padding: unset;
+    height: unset;
+    visibility: hidden !important;
+}
+
+/* 0.85 Updates */
+
+button.minimal.mousetrap.favorite-button.not-favorite.btn.btn-primary,
+button.minimal.mousetrap.favorite-button.favorite.btn.btn-primary {
+    font-size: 10px; /* Hide any text content */
+    padding: 0; /* Remove padding */
+    width: auto; /* Allow the button to adjust its width based on the SVG */
+    height: auto; /* Allow the button to adjust its height based on the SVG */
+    background-color: transparent; /* Make the background transparent */
+    border: none; /* Optionally, remove the border */
+    outline: none; /* Optionally, remove the outline */
+    cursor: pointer; /* Set cursor to pointer */
+}
+
+
+button.minimal.mousetrap.favorite-button.not-favorite.btn.btn-primary svg.svg-inline--fa.fa-heart.fa-2x.fa-icon path {
+    background: transparent;
+    fill: gray; /* For SVG icons */
+} 
+
+button.minimal.mousetrap.favorite-button.favorite.btn.btn-primary svg.svg-inline--fa.fa-heart.fa-2x.fa-icon path {
+	background: transparent;
+    fill: red; /* For SVG icons */
+}
+
+.form-container {
+    background-color: transparent;
+}
+
+svg.svg-inline--fa.fa-venus.gender-icon path {
+    fill: pink;
+}
+
+.scene-card__details {
+    transform: translateY(-3px); /* Adjust the value as needed */
+    position: relative;
+}
+
+/* Left Alignment in .scene-card section */
+.gallery-card.zoom-0.grid-card.card .card-sction,
+.gallery-card.zoom-1.grid-card.card .card-section,
+.gallery-card.zoom-2.grid-card.card .card-section,
+.gallery-card.zoom-3.grid-card.card .card-section,
+.scene-card.zoom-0.grid-card.card .card-section,
+.scene-card.zoom-1.grid-card.card .card-section,
+.scene-card.zoom-2.grid-card.card .card-section,
+.scene-card.zoom-3.grid-card.card .card-section {
+	display: flex;
+	flex-direction: column;
+	align-items: left;
+	justify-content: left;
+	text-align: left;
+}
+
+.scene-card.zoom-1.grid-card.card,
+.movie-card.grid-card.card,
+.gallery-card.grid-card.card,
+.performer-card.grid-card.card,
+.studio-card.grid-card.card {
+    background: transparent;
+}
+
+
+/* 0.8.6 Changes */
+
+/* Organized Button Status Color */
+svg.svg-inline--fa.fa-rotate.fa-icon path,
+svg.svg-inline--fa.fa-circle-check.fa-icon.mr-2 path,
+svg.svg-inline--fa.fa-circle-check.fa-icon.SceneTaggerIcon path,
+svg.svg-inline--fa.fa-circle-check.fa-icon.SceneTaggerIcon.text-success path, 
+svg.svg-inline--fa.fa-check.fa-icon.fa-fw path,
+button.minimal.btn.btn-primary svg.svg-inline--fa.fa-box.fa-icon path,
+button.minimal.organized-button.organized.btn.btn-secondary svg.svg-inline--fa.fa-box.fa-icon path {
+
+  fill: green;
+
+}
+
+/* Scene Edit Bar Styling */
+.form-container.edit-buttons-container.px-3.pt-3.row,
+.scraper-group.btn-group,
+.edit-buttons.mb-3.pl-0 {
+
+  background-color: transparent !important;
+
+}
+
+
+.scene-card.zoom-1:hover .scene-card__details {
+  max-height: 100%; /* Expand the container to fill its parent */
+  -webkit-line-clamp: 5; /* Limit the number of lines to 5 */
+}
+
+.scene-card.zoom-1:hover .card-section-title.flex-aligned {
+  align-self: flex-start; /* Move the title to the top of its container */
+}
+
+
+/* 0.8.7 Changes */
+
+.fade.TruncatedText-tooltip.show.tooltip.bs-tooltip-bottom {
+  display: none;
+}
+
+/* Styles for card-section */
+.scene-card.zoom-0.grid-card.card .card-section,
+.scene-card.zoom-1.grid-card.card .card-section,
+.scene-card.zoom-2.grid-card.card .card-section,
+.scene-card.zoom-3.grid-card.card .card-section {
+  transition: transform 0.3s ease; /* Add a smooth transition effect */
+}
+
+
+
+svg.svg-inline--fa.fa-tag.fa-icon.nav-menu-icon.d-block.d-xl-inline.mb-2.mb-xl-0 path,
+svg.svg-inline--fa.fa-triangle-exclamation.fa-icon.SceneTaggerIcon.text-warn path,
+button.minimal.btn.btn-primary svg.svg-inline--fa.fa-tag.fa-icon path {
+		fill: yellow;
+}
+
+svg.svg-inline--fa.fa-user.fa-icon.nav-menu-icon.d-block.d-xl-inline.mb-2.mb-xl-0 path,
+button.minimal.btn.btn-primary svg.svg-inline--fa.fa-user.fa-icon path {
+		fill: magenta;
+}
+
+svg.svg-inline--fa.fa-location-dot.fa-icon.nav-menu-icon.d-block.d-xl-inline.mb-2.mb-xl-0 path,
+svg.svg-inline--fa.fa-xmark.fa-icon path, 
+svg.svg-inline--fa.fa-xmark.fa-icon.SceneTaggerIcon.text-danger path,
+button.minimal.btn.btn-primary svg.svg-inline--fa.fa-location-dot.fa-icon path {
+		fill: red;
+}
+
+
+
+svg.svg-inline--fa.fa-images.fa-icon.nav-menu-icon.d-block.d-xl-inline.mb-2.mb-xl-0 path,
+button.minimal.btn.btn-primary svg.svg-inline--fa.fa-image.fa-icon path,
+button.minimal.btn.btn-primary svg.svg-inline--fa.fa-images.fa-icon path {
+		fill: #FFE5B4;
+}	
+
+
+svg.svg-inline--fa.fa-circle-play.fa-icon.nav-menu-icon.d-block.d-xl-inline.mb-2.mb-xl-0 path,
+button.minimal.btn.btn-primary svg.svg-inline--fa.fa-circle-play.fa-icon path {
+    fill: cyan;   
+}
+
+
+div.fade.hover-popover-content.show.popover.bs-popover-bottom {
+  display: flex;
+  justify-content: flex-start; /* Align grid items to the left */
+  max-height: 200px; /* Set a fixed height for the container */
+  overflow-y: auto; /* Enable vertical scrolling */
+}
+
+.form-container.edit-buttons-container.px-3.pt-3.row {
+    position: static !important;
+}
+
+
+
+/* New Tags Shown as Green - Scene Tagger */
+
+div.mt-2 span.tag-item.badge.badge-secondary {
+    background-color: green;
+    color: white;
+}
+
+
+/* Tag '+' Background */
+
+button.minimal.ml-2.btn.btn-primary {
+    background-color: black;
+    color: white; /* Optionally, change text color to white for better contrast */
+	transform: translateX(-2px);
+}
+
+
+.navbar-buttons.flex-row.ml-auto.order-xl-2.navbar-nav div.mr-2 button.btn.btn-primary {
+    background-color: green;
+	color: white;
+}
+
+svg.svg-inline--fa.fa-chart-column.fa-icon path,
+svg.svg-inline--fa.fa-gear path,
+svg.svg-inline--fa.fa-circle-question.fa-icon path {
+		fill: orange;
+}
+
+svg.svg-inline--fa.fa-film.fa-icon.nav-menu-icon.d-block.d-xl-inline.mb-2.mb-xl-0 path {
+	fill: #5C4033;
+}
+
+svg.svg-inline--fa.fa-video.fa-icon.nav-menu-icon.d-block.d-xl-inline.mb-2.mb-xl-0 path {
+	fill: #8B9094;
+}
+
+/* Performer Detail Heart Color Change */
+ 
+span.name-icons button.minimal.not-favorite.btn.btn-primary svg.svg-inline--fa.fa-heart.fa-icon path {
+    fill: white; /* For SVG icons */
+} 
+
+span.name-icons button.minimal.favorite.btn.btn-primary svg.svg-inline--fa.fa-heart.fa-icon path {
+    fill: red; /* For SVG icons */
+}
+
+
+
+/*Mobile Overhaul*/
+
+/*Brings back the Studio Image Size in Mobile*/
+@media only screen and (max-width: 767px) {
+
+.justify-content-center .studio-card .studio-card-image {
+    width: 100%; 
+}
+}
+
+/*Adjusts text size of headers in mobile*/
+@media only screen and (max-width: 768px) {
+    h1, h2, h3, h4, h5, h6 {
+        font-size: 14px !important; /* Adjust the font size for mobile devices */
+    }
+}
+
+/* Media query for mobile devices */
+@media only screen and (max-width: 767px) {
+
+/* Setting A 2x2 Grid for the Mobile Pages */
+.row.justify-content-center {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr); /* 2 columns */
+    grid-gap: 10px; /* Adjust the gap between grid items */
+}
+
+@media only screen and (max-width: 767px) {
+.scene-card .progress-bar {
+    transform: translateY(217px);
+}
+}
+
+/* Responsive Adjustments */
+@media screen and (max-width: 767px) {
+	.container {
+		padding: 8px;
+	}
+
+	.logo {
+		font-size: 12px;
+	}
+
+	.card {
+		padding: 8px;
+	}
+
+	.card-title {
+		font-size: 14px;
+	}
+
+	.card-description {
+		font-size: 12px;
+	}
+
+	.btn {
+		padding: 6px 12px;
+		font-size: 12px;
+	}
+}
+
+/* Media query for mobile devices */
+@media only screen and (max-width: 767px) {
+
+	/* Disable animations and hover effects on mobile */
+	.movie-recommendations .slick-track,
+	.scene-recommendations .slick-track,
+	.performer-recommendations .slick-track,
+	.studio-recommendations .slick-track,
+	.movie-recommendations .slick-track:hover,
+	.scene-recommendations .slick-track:hover,
+	.performer-recommendations .slick-track:hover,
+	.studio-recommendations .slick-track:hover {
+		animation: none;
+		animation-play-state: running;
+		/* Ensure animations are not paused on hover on mobile */
+	}
+}
+
+/* Apply styles for mobile devices (adjust max-width as needed) */
+@media only screen and (max-width: 767px) {
+	.VideoPlayer {
+		position: fixed;
+		top: 0;
+		left: 0;
+		width: 100%;
+		height: 240px;
+		/* Adjust the height as needed */
+		z-index: 1000;
+		/* Adjust the z-index as needed */
+	}
+
+	.nav.nav-tabs {
+		margin-top: 240px;
+		/* Set margin-top equal to the height of VideoPlayer */
+		z-index: 1100;
+	}
+}
+
+/* Apply styles for mobile devices (adjust max-width as needed) */
+@media only screen and (max-width: 767px) {
+	.scene-header.d-xl-none width: 100%;
+	/* Ensure full width on mobile */
+}
+
+/* Apply styles for mobile devices (adjust max-width as needed) */
+@media only screen and (max-width: 767px) {
+	h1 {
+		font-size: 24px;
+		/* Adjust the font size for h1 on mobile */
+	}
+
+	h2 {
+		font-size: 22px;
+		/* Adjust the font size for h2 on mobile */
+	}
+
+	h3 {
+		font-size: 18px;
+		/* Adjust the font size for h3 on mobile */
+	}
+
+	h4 {
+		font-size: 18px;
+		/* Adjust the font size for h4 on mobile */
+	}
+
+	h5 {
+		font-size: 16px;
+		/* Adjust the font size for h5 on mobile */
+	}
+
+	h6 {
+		font-size: 14px;
+		/* Adjust the font size for h6 on mobile */
+	}
+}
+
+/* Media query for mobile devices */
+@media only screen and (max-width: 767px) {
+	.studio-logo {
+			{
+			background: rgba(0, 0, 0, 0.4);
+			/* Darker background for dark mode, adjust opacity as needed */
+			color: #fff;
+			/* Text color for dark mode */
+			border-radius: 10px;
+			/* Adjust the border-radius for rounded corners */
+			padding: 20px;
+			/* Adjust the padding as needed */
+			box-shadow: 0 4px 8px rgba(255, 255, 255, 0.1), 0 0 10px rgba(255, 255, 255, 0.1);
+			/* Raised embossed effect */
+		}
+	}
+
+	/* Apply styles for mobile devices (adjust max-width as needed) */
+	@media only screen and (max-width: 767px) {
+		#studio-page .detail-container {
+			margin-bottom: 0;
+			/* Adjust margin-bottom as needed to reduce the gap */
+		}
+
+		#studio-page .nav.nav-tabs {
+			margin-top: 0;
+			/* Adjust margin-top as needed to reduce the gap */
+		}
+	}
+
+	/* Apply styles for mobile devices (adjust max-width as needed) */
+	@media only screen and (max-width: 767px) {
+		#performer-page .detail-container {
+			margin-bottom: 0;
+			/* Adjust margin-bottom as needed to reduce the gap */
+		}
+
+		#performer-page .nav.nav-tabs {
+			margin-top: 0;
+			/* Adjust margin-top as needed to reduce the gap */
+		}
+	}
+
+
+.performer.performer-video.lazy-load {
+	background: rgba(0, 0, 0, 0.4);
+	/* Darker background for dark mode, adjust opacity as needed */
+	color: #fff;
+	/* Text color for dark mode */
+	border-radius: 10px;
+	/* Adjust the border-radius for rounded corners */
+	padding: 20px;
+	/* Adjust the padding as needed */
+	box-shadow: 0 4px 8px rgba(255, 255, 255, 0.1), 0 0 10px rgba(255, 255, 255, 0.1);
+	/* Raised embossed effect */
+}
+
+.performer-video.lazy-load {
+    opacity: 0;
+    transition: opacity 0.3s ease-in-out;
+}
+
+.performer-video.lazy-load:hover {
+    opacity: 1;
+}
+
+.tag-card-header video {
+    width: auto;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+}
+
+/* Nav Button Effects */
+.nav-item:hover {
+    opacity: 0.8;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #f0f0f0;
+    border: 2px solid #ddd;
+    border-radius: 6px;
+}
+

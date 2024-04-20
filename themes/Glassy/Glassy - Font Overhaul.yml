@@ -1,0 +1,6 @@
+name: Glassy - Font Overhaul
+description: A Stash Theme
+version: 0.1
+ui:
+  css:
+    - Glassy - Font Overhaul.css

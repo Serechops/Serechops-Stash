@@ -2,16 +2,16 @@
 
 .scene-player-container {
   position: absolute;
-  top: 1%;
-  left: 0%;
-  max-width: 50%;
+  top: 0%;
+  right: 0%;
+  max-width: 60%;
 }
 
 .scene-tabs {
   position: absolute;
-  top: 1%;
-  right: 1%;
-  max-width: 50%;
+  top: 0%;
+  left: 0%;
+  max-width: 40%;
 }
 
 .scene-divider.d-none.d-xl-block {
