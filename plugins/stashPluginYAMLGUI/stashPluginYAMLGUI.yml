@@ -1,0 +1,15 @@
+description: Build a YAML for your Stash plugin via GUI.
+errLog: none
+interface: raw
+name: stashPluginYAMLGUI
+settings: {}
+ui:
+  assets: {}
+  csp:
+    connect-src: []
+    script-src: []
+    style-src: []
+  css:
+  - ''
+url: https://github.com/Serechops/Serechops-Stash?tab=readme-ov-file
+version: '0.1'
