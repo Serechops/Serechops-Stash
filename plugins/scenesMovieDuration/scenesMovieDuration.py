@@ -48,7 +48,7 @@ def calculate_scene_duration(movie):
         for file in scene['files']:
             duration = file.get('duration', 0)  # Get duration if it exists, otherwise default to 0
             total_duration += duration
-    return total_duration
+    return round(total_duration)  # Round the total duration to the nearest whole number
 
 def format_duration(seconds):
     hours, remainder = divmod(seconds, 3600)
@@ -61,22 +61,26 @@ def main():
     # Execute the query to fetch all movies
     try:
         result = execute_query(graphql_url, query)
+        total_movies = len(result['data']['allMovies'])
     except Exception as e:
         log.error(f"Error executing GraphQL query: {e}")
         return
 
     # Process each movie
+    processed_movies = 0
     for movie in result['data']['allMovies']:
         movie_id = movie['id']
         movie_name = movie['name']
         movie_duration = movie['duration']
         
-        # Skip the movie if it already has a duration set
-        if movie_duration is not None:
-            log.info(f"Skipping movie {movie_name} (ID: {movie_id}) as it already has a duration set.")
-            continue
-        
+        # Calculate the total sum of scenes durations
         total_duration = calculate_scene_duration(movie)
+        
+        # Skip updating the movie if the total duration matches the sum of scenes durations
+        if movie_duration == total_duration:
+            log.info(f"Skipping movie {movie_name} (ID: {movie_id}) as its duration matches the sum of scenes durations.")
+            processed_movies += 1
+            continue
 
         # Update the movie's duration with the calculated sum
         try:
@@ -86,9 +90,9 @@ def main():
         except Exception as e:
             log.error(f"Error updating movie {movie_id}: {e}")
 
-if __name__ == "__main__":
-    main()
-
+        processed_movies += 1
+        progress = processed_movies / total_movies
+        log.progress(progress)
 
 if __name__ == "__main__":
     main()
