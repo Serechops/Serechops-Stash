@@ -10,10 +10,6 @@ The [Find Marker Tag Images](https://github.com/Serechops/Serechops-Stash/tree/m
 
 Explore [Glassy](https://github.com/Serechops/Serechops-Stash/tree/main/themes/Glassy#glassy---a-window-to-your-collection) and give your collection a fresh look!
 
-# Renamer
-
-The [Renamer](https://github.com/Serechops/Serechops-Stash/tree/main/plugins/Renamer#renamer) plugin is very similar to renameOnUpdate. It will automatically rename files based on user-defined settings whenever a scene is updated.
-
 # Movie-Fy
 
 The [Movie-Fy](https://github.com/Serechops/Serechops-Stash/tree/main/plugins/Movie-Fy#movie-fy) tool is designed to assist in managing and creating movies within Stash.
@@ -25,6 +21,10 @@ The [Movie Duration from Scenes](https://github.com/Serechops/Serechops-Stash/tr
 # Performer Gallery Scraper:
 
 The [Performer Gallery Scraper](https://github.com/Serechops/Serechops-Stash/tree/main/plugins/performerGallery) will scan your Stash for all of your performers and scrape solo galleries of them to help round out your Stash profile images and galleries of them.
+
+# Renamer
+
+The [Renamer](https://github.com/Serechops/Serechops-Stash/tree/main/plugins/Renamer#renamer) plugin is very similar to renameOnUpdate. It will automatically rename files based on user-defined settings whenever a scene is updated.
 
 
 
