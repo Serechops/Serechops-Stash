@@ -4,7 +4,7 @@ This script updates the duration of movies in your Stash by summing the duration
 
 ## Description
 
-When managing movies in your database, it's common for the duration of a movie to be the sum of the durations of its individual scenes. However, if scenes are added, removed, or edited, the movie duration may become outdated. This script solves that problem by recalculating the movie duration based on the durations of its scenes.
+When managing movies in your database scenes are added, removed, or edited, and the movie duration may become outdated. This script solves that problem by recalculating the movie duration based on the durations of its scenes.
 
 ## How to Use
 
