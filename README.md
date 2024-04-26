@@ -22,3 +22,6 @@ The [Find Marker Tag Images](https://github.com/Serechops/Serechops-Stash/tree/m
 
 The [Performer Gallery Scraper](https://github.com/Serechops/Serechops-Stash/tree/main/plugins/performerGallery) will scan your Stash for all of your performers and scrape solo galleries of them to help round out your Stash profile images and galleries of them.
 
+# Movie Duration from Scenes
+
+The [Movie Duration from Scenes](https://github.com/Serechops/Serechops-Stash/tree/main/plugins/scenesMovieDuration#movie-duration-from-scenes) plugin updates the duration of movies in your Stash by summing the durations of their scenes.
