@@ -1,0 +1,11 @@
+name: Movie Duration from Scenes
+description: More accurately reflect your movie's duration with the sum of durations of its scenes.
+version: 0.1
+url: https://github.com/Serechops/Serechops-Stash
+exec:
+  - python
+  - "{pluginDir}/scenesMovieDuration.py"
+interface: raw
+tasks:
+  - name: 'Update Movie Durations'
+    description: Update your movie durations from the sum of its scenes' durations.
