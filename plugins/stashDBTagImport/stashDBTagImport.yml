@@ -1,0 +1,11 @@
+name: StashDB Tag Import
+description: Import StashDB's list of Tags for your Stash.
+version: 0.1
+url: https://github.com/Serechops/Serechops-Stash
+exec:
+  - python
+  - "{pluginDir}/stashDBTagImport.py"
+interface: raw
+tasks:
+  - name: 'Import StashDB Tags'
+    description: Import StashDB tags complete with description to use in conjunction with your Stash.
