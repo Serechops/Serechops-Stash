@@ -1,0 +1,18 @@
+# stashDBTagImport
+
+Import over 2k curated Tags with Descriptions from StashDB into your Stash to have ready to use for your media.
+
+## Requirements
+
+- Python 3.x
+- `requests` library (`pip install requests`)
+- `stashapi` module (`pip install stashapp-tools`)
+
+## Usage
+
+Run the `Import StashDB Tags` plugin task to import over 2k curated Tags with descriptions from StashDB.
+
+## Configuration
+
+- `graphql_url`: URL of the GraphQL endpoint. Update this variable to match your endpoint. Default: `http://localhost:9999/graphql`
+
