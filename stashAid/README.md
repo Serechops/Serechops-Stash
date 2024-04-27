@@ -44,7 +44,8 @@ The main server for stashAid can be launched via terminal from the directory con
 
 From here, when you visit the server (server web address is in the terminal) you should be presented with a web page/admin panel with a few options:
 
-![Main Page](.github/images/stashAid.png)
+![Bulk File Renamer](.github/images/Stash-Aid-BulkFileRenamer.png)
+![Plugin Manager](.github/images/Stash-Aid-PluginManager.png)
 
 Please browse the different pages that are included! 
 
