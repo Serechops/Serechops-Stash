@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GraphQL Schema Explorer</title>
+    <!-- Include the GraphiQL CSS -->
+    <link href="https://unpkg.com/graphiql/graphiql.min.css" rel="stylesheet">
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        #graphiql {
+            height: 100vh;
+        }
+    </style>
+</head>
+<body>
+    <!-- Create a container for GraphiQL -->
+    <div id="graphiql">Loading...</div>
+
+    <!-- Include the GraphiQL JavaScript -->
+    <script src="https://unpkg.com/react/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/graphiql/graphiql.min.js"></script>
+
+    <script>
+        // Define a function to fetch GraphQL API
+        function fetchGraphQL(params) {
+            return fetch('http://localhost:9999/graphql', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(params),
+            }).then(response => response.json());
+        }
+
+        // Render GraphiQL with the provided fetch function
+        ReactDOM.render(
+            React.createElement(GraphiQL, { fetcher: fetchGraphQL }),
+            document.getElementById('graphiql'),
+        );
+    </script>
+</body>
+</html>

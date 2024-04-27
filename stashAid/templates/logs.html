@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Script Runner</title>
+    <style>
+        :root {
+            --background-color: #121212;
+            --text-color: #E0E0E0;
+            --accent-color: cyan;
+            --info-color: #29b6f6;
+            --warning-color: #ffa726;
+            --error-color: #ef5350;
+            --debug-color: #26a69a;
+            --critical-color: #ec407a;
+            --form-background-color: #333;
+            --log-background-color: #242424;
+            --border-radius: 8px;
+        }
+
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: 'Courier New', Courier, monospace;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            display: flex;
+            flex-direction: column;
+        }
+
+        h2 {
+            color: var(--accent-color);
+        }
+
+        form {
+            background-color: var(--form-background-color);
+            padding: 20px;
+            border-radius: var(--border-radius);
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            align-items: center;
+            color: var(--text-color);
+        }
+
+        form select, form input {
+            padding: 10px;
+            border-radius: var(--border-radius);
+            border: 1px solid var(--accent-color);
+            background-color: var(--background-color);
+            color: var(--text-color);
+        }
+
+        .log-viewer {
+            display: flex;
+        }
+
+        .line-numbers {
+            text-align: right;
+            padding: 20px 10px 20px 20px;
+            background-color: var(--log-background-color);
+            color: var(--accent-color);
+            user-select: none;
+        }
+
+        .log-content {
+            background-color: var(--log-background-color);
+            padding: 20px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+        }
+
+        .log-level {
+            font-weight: bold;
+        }
+
+        .DEBUG { color: var(--debug-color); }
+        .INFO { color: var(--info-color); }
+        .WARNING { color: var(--warning-color); }
+        .ERROR { color: var(--error-color); }
+        .CRITICAL { color: var(--critical-color); }
+
+        .highlight {
+            background-color: var(--accent-color);
+            color: var(--background-color);
+            padding: 0 4px;
+            border-radius: 4px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            background-color: var(--accent-color);
+            border: none;
+            border-radius: var(--border-radius);
+            color: var(--background-color);
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .btn:hover {
+            background-color: darken(var(--accent-color), 10%);
+        }
+    </style>
+</head>
+<body>
+    <h2>Script Runner</h2>
+    <form id="script-form">
+        <div>
+            <label for="scriptSelect">Select Script:</label>
+            <select id="scriptSelect">
+                <option value="gallery_scraper">Gallery Scraper</option>
+                <!-- Add more options as needed -->
+            </select>
+        </div>
+        <button type="button" class="btn" onclick="executeScript()">Execute Script</button>
+    </form>
+    
+    <h2>Log Viewer</h2>
+    <form>
+        <div>
+            <label for="query">Search:</label>
+            <input type="text" id="query">
+        </div>
+    </form>
+    
+    <div class="log-viewer">
+        <pre class="line-numbers" id="line-numbers"></pre>
+        <pre class="log-content" id="log-content"></pre>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const logs = {{ logs|tojson }};
+            const queryInput = document.getElementById('query');
+            const lineNumbers = document.getElementById('line-numbers');
+            const logContent = document.getElementById('log-content');
+
+            // Function to escape HTML characters
+            function escapeHtml(unsafe) {
+                return unsafe
+                    .replace(/&/g, "&amp;")
+                    .replace(/</g, "&lt;")
+                    .replace(/>/g, "&gt;")
+                    .replace(/"/g, "&quot;")
+                    .replace(/'/g, "&#039;");
+            }
+
+            // Function to highlight text based on query
+            function highlightText(text, query) {
+                if (!query) {
+                    return escapeHtml(text);
+                }
+                const escapedQuery = escapeHtml(query);
+                const regex = new RegExp('(' + escapedQuery + ')', 'gi');
+                return escapeHtml(text).replace(regex, '<span class="highlight">$1</span>');
+            }
+
+            // Function to process and display log lines
+            function processLogLine(log, query) {
+                const match = log.match(/(DEBUG|INFO|WARNING|ERROR|CRITICAL)/);
+                const logLevel = match ? match[0] : '';
+                const logText = log.substring(log.indexOf(" ") + 1);
+                const highlightedLogLevel = logLevel ? `<span class="log-level ${logLevel}">${logLevel}</span>` : '';
+                const highlightedLogText = highlightText(logText, query);
+
+                return `${highlightedLogLevel} ${highlightedLogText}`;
+            }
+
+            // Function to update logs based on query
+            function updateLogs(query) {
+                lineNumbers.innerHTML = '';
+                logContent.innerHTML = '';
+
+                logs.forEach((log, index) => {
+                    const lineNumber = document.createElement('div');
+                    lineNumber.textContent = index + 1;
+                    lineNumbers.appendChild(lineNumber);
+
+                    const logLine = document.createElement('div');
+                    logLine.innerHTML = processLogLine(log, query);
+                    logContent.appendChild(logLine);
+                });
+            }
+
+            // Initial log display without query
+            updateLogs('');
+
+            // Update logs display on query input
+            queryInput.addEventListener('input', function() {
+                updateLogs(this.value.trim());
+            });
+        });
+
+        // Function to execute selected script
+        function executeScript() {
+            const scriptId = document.getElementById("scriptSelect").value;
+            const xhr = new XMLHttpRequest();
+            xhr.open("GET", "/execute_script/" + scriptId, true);
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState === XMLHttpRequest.DONE) {
+                    const response = xhr.responseText;
+                    document.getElementById("log-content").innerHTML += response;
+                }
+            };
+            xhr.send();
+        }
+    </script>
+</body>
+</html>

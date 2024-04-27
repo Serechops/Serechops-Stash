@@ -1,0 +1,10 @@
+requests
+lxml
+thefuzz
+beautifulsoup4
+stashapp-tools
+flask
+flask-cors
+psutil
+logging
+apscheduler

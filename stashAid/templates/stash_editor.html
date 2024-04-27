@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stash CSS Editor</title>
+    <!-- Include Ace Editor library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.12/ace.js"></script>
+    <!-- Include Ace Editor theme -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.12/theme-monokai.js"></script>
+    <!-- Include Ace Editor mode for CSS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.12/mode-css.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            background-color: #333; /* Dark background color */
+            color: #eee; /* Light text color */
+            font-family: Arial, sans-serif;
+        }
+
+        h1 {
+            font-family: Monaco, monospace; /* Use Monaco font */
+            color: #fff; /* White heading color */
+            text-align: center;
+        }
+
+        #editor {
+            width: 100%;
+            height: 90vh; /* Set editor height */
+        }
+
+        .btn {
+            display: block;
+            margin: 10px auto;
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .btn:hover {
+            background-color: #0056b3;
+        }
+
+        .btn.saved {
+            background-color: #28a745;
+        }
+    </style>
+</head>
+<body>
+    <h1>Stash CSS Editor - Powered By Ace Editor</h1>
+    <!-- Container for Ace Editor -->
+    <div id="editor"></div>
+
+    <!-- Save Changes button -->
+    <button class="btn" onclick="saveChanges()">Save Changes</button>
+
+    <!-- Include script for initializing Ace Editor -->
+    <script>
+        // Initialize Ace Editor
+        var editor = ace.edit("editor");
+        editor.setTheme("ace/theme/monokai"); // Set theme to Monokai
+        editor.session.setMode("ace/mode/css"); // Set mode to CSS
+
+        // Load content of the CSS file into the editor
+        var filePath = "/custom.css"; // Path to the CSS file on the server
+        fetch(filePath)
+            .then(response => response.text())
+            .then(data => editor.setValue(data))
+            .catch(error => console.error("Error loading file:", error));
+
+        // Set editor options
+        editor.setOptions({
+            fontSize: "14px", // Set font size
+            fontFamily: "Consolas, 'Courier New', monospace", // Reset font family to default
+            wrap: true, // Enable line wrapping
+            showPrintMargin: false, // Hide print margin
+            highlightActiveLine: true, // Highlight the active line
+            highlightSelectedWord: true, // Highlight selected word
+            readOnly: false, // Allow editing
+            cursorStyle: "ace", // Adjust cursor style here
+            useSoftTabs: true, // Use soft tabs
+            tabSize: 4, // Set tab size
+            displayIndentGuides: true, // Show indent guides
+            navigateWithinSoftTabs: true // Navigate within soft tabs
+        });
+
+        // Function to save changes to the file
+        function saveChanges() {
+            var content = editor.getValue();
+            fetch('/save', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ content: content })
+            })
+            .then(response => {
+                if (response.ok) {
+                    console.log("Changes saved successfully.");
+                    // Change button color and text
+                    var button = document.querySelector('.btn');
+                    button.classList.add('saved');
+                    button.textContent = 'Changes Saved';
+                    // Reset button after 3 seconds
+                    setTimeout(() => {
+                        button.classList.remove('saved');
+                        button.textContent = 'Save Changes';
+                    }, 3000);
+                } else {
+                    console.error("Failed to save changes.");
+                }
+            })
+            .catch(error => console.error("Error saving changes:", error));
+        }
+    </script>
+</body>
+</html>

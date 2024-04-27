@@ -1,0 +1,23 @@
+name: Performer Gallery Scraper Plugin
+description: A plugin to scrape galleries from porngals4.com for specific performers and create zip archives.
+version: 0.1
+url: https://github.com/Serechoo/stash-userscripts
+exec:
+  - node
+  - "{pluginDir}/gallery_scraper.js"
+interface: raw
+settings:
+  maxPages:
+    displayName: Maximum Pages to Scrape
+    description: Maximum number of pages to scrape per performer
+    type: NUMBER
+  performerId:
+    displayName: Performer ID
+    description: Enter the ID of the performer whose galleries you want to scrape (leave empty to scrape all performers)
+    type: STRING
+tasks:
+  - name: 'Scrape Performers'
+    description: Scrape galleries for all performers or a specific performer
+    defaultArgs:
+      headless: true
+      maxPages: 2

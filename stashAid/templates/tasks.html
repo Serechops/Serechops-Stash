@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Task Scheduler</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Custom CSS -->
+    <style>
+        body {
+            background-color: #121212;
+            color: #fff;
+        }
+
+        .container {
+            margin-top: 50px;
+        }
+
+        .card {
+            background-color: #1E1E1E;
+            color: #fff;
+        }
+
+        .card-header {
+            background-color: #343A40;
+            border-bottom: none;
+        }
+
+        .card-body {
+            padding: 1.5rem;
+        }
+
+        .form-control {
+            background-color: #2C2C2C;
+            color: #fff;
+            border: 1px solid #6C757D;
+        }
+
+        .btn-primary {
+            background-color: #007BFF;
+            border-color: #007BFF;
+        }
+
+        .btn-primary:hover {
+            background-color: #0056b3;
+            border-color: #0056b3;
+        }
+
+        .btn-danger {
+            background-color: #DC3545;
+            border-color: #DC3545;
+        }
+
+        .btn-danger:hover {
+            background-color: #c82333;
+            border-color: #bd2130;
+        }
+
+        .table {
+            background-color: #2C2C2C;
+        }
+
+        .table th,
+        .table td {
+            border-color: #6C757D;
+        }
+
+        .table-dark th,
+        .table-dark td,
+        .table-dark thead th {
+            border-color: #343A40;
+        }
+
+        .modal-content {
+            background-color: #1E1E1E;
+            color: #fff;
+        }
+
+        .modal-header {
+            border-bottom: none;
+        }
+
+        .modal-footer {
+            border-top: none;
+        }
+
+        h2 {
+            font-family: Monaco, monospace;
+            color: #fff;
+            text-align: center;
+        }
+		.table-description {
+    word-wrap: break-word;
+    white-space: pre-line;
+}
+
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h2 class="text-center mb-4">Task Scheduler</h2>
+        <!-- Add Task Button -->
+        <button type="button" class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#addTaskModal">Add Task</button>
+
+        <!-- Task Table -->
+        <div class="table-responsive">
+            <table class="table table-dark table-striped">
+                <thead>
+                    <tr>
+                        <th scope="col">#</th>
+                        <th scope="col">Task Name</th>
+                        <th scope="col">Task Description</th>
+                        <th scope="col">Scheduled Time</th>
+                        <th scope="col">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for task in tasks %}
+                    <!-- Inside the <tbody> tag of the task table -->
+					<tr>
+						<th scope="row">{{ loop.index }}</th>
+						<td>{{ task.name }}</td>
+						<td>{{ task.description }}</td>
+						<td>{{ task.scheduled_time }}</td>
+						<td>
+							<button type="button" class="btn btn-danger" onclick="deleteTask('{{ task.id }}')">Delete</button>
+						</td>
+					</tr>
+
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Add Task Modal -->
+    <div class="modal fade" id="addTaskModal" tabindex="-1" aria-labelledby="addTaskModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addTaskModalLabel">Add Task</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form method="POST" action="/add_task">
+                        <div class="mb-3">
+                            <label for="taskName" class="form-label">Task Name</label>
+                            <input type="text" class="form-control" id="taskName" name="task_name" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="taskDescription" class="form-label">Task Description</label>
+                            <textarea class="form-control" id="taskDescription" name="task_description" rows="3"></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label for="scriptSelect" class="form-label">Select Script</label>
+                            <select class="form-select" id="scriptSelect" name="script_id" required>
+							<option value="" selected disabled>Select Script</option>
+							{% if script_paths %}
+								{% for script_id, script_info in script_paths.items() %}
+									<option value="{{ script_id }}">{{ script_id }}</option>
+								{% endfor %}
+							{% else %}
+								<option disabled>No scripts available</option>
+							{% endif %}
+						</select>
+                            <div id="scriptSelectFeedback" class="form-text"></div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="scheduledTime" class="form-label">Scheduled Time</label>
+                            <input type="datetime-local" class="form-control" id="scheduledTime" name="scheduled_time" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Save Task</button>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- JavaScript to set scriptSelectFeedback -->
+    <script>
+        function setScriptSelectFeedback() {
+            {% if script_paths %}
+                document.getElementById("scriptSelectFeedback").innerHTML = "Scripts populated successfully.";
+            {% else %}
+                document.getElementById("scriptSelectFeedback").innerHTML = "Error: Failed to populate scripts.";
+            {% endif %}
+        }
+
+        // Call the function after the page has finished loading
+        window.addEventListener('load', setScriptSelectFeedback);
+    </script>
+
+    <!-- JavaScript for deleting tasks -->
+    <script>
+        function deleteTask(taskId) {
+            if (confirm("Are you sure you want to delete this task?")) {
+                fetch(`/delete_task/${taskId}`, {
+                    method: 'DELETE'
+                })
+                .then(response => {
+                    if (response.ok) {
+                        location.reload(); // Reload the page upon successful deletion
+                    } else {
+                        alert('Failed to delete task');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('An error occurred while deleting the task');
+                });
+            }
+        }
+    </script>
+
+</body>
+
+</html>

@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stash Data</title>
+    <!-- Tabulator CSS -->
+    <link href="https://unpkg.com/tabulator-tables/dist/css/tabulator_midnight.min.css" rel="stylesheet">
+    <!-- Tabulator JS -->
+    <script type="text/javascript" src="https://unpkg.com/tabulator-tables/dist/js/tabulator.min.js"></script>
+    <style>
+        body {
+            background-color: #1e1e1e;
+            color: #fff;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        #tabulator-table {
+            width: 100%;
+            margin: 10px auto;
+        }
+
+        .tabulator-header {
+            background-color: #333;
+            color: #fff;
+        }
+
+        .tabulator-table {
+            border: none;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+            overflow: hidden;
+        }
+
+        .tabulator-row {
+            background-color: #444;
+        }
+
+        .tabulator-row.tabulator-selected {
+            background-color: #4CAF50 !important; /* Green background color for selected rows */
+        }
+
+        .tabulator-row:hover {
+            background-color: #555;
+        }
+
+        .tabulator-row:nth-child(even) {
+            background-color: #333;
+        }
+
+        #pagination-size-select {
+            background-color: #333;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            padding: 5px 10px;
+            font-size: 14px;
+            margin-bottom: 10px;
+            cursor: pointer;
+        }
+
+        #pagination-size-select option {
+            background-color: #333;
+            color: #fff;
+        }
+    </style>
+</head>
+<body>
+    <div id="tabulator-table"></div>
+
+    <div>
+        <select id="pagination-size-select">
+            <option value="25">Show 25</option>
+            <option value="50">Show 50</option>
+            <option value="100">Show 100</option>
+        </select>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+    var table = new Tabulator("#tabulator-table", {
+        layout: "fitData",
+		selectable: true,
+        pagination: "local",
+        paginationSize: 25, // Initial number of rows per page
+        columns: [
+            { title: "Scene ID", field: "id" },
+            { title: "Scene Title", field: "title" },
+            { title: "Performer Name", field: "performers", formatter: function(cell, formatterParams, onRendered) {
+                // Join performer names
+                return cell.getValue().map(performer => performer.name).join(", ");
+            }},
+            { title: "Performer ID", field: "performers", formatter: function(cell, formatterParams, onRendered) {
+                // Join performer IDs
+                return cell.getValue().map(performer => performer.id).join(", ");
+            }},
+            { title: "Tag Name", field: "tags", formatter: function(cell, formatterParams, onRendered) {
+                // Join tag names
+                return cell.getValue().map(tag => tag.name).join(", ");
+            }},
+            { 
+				title: "Tag ID", 
+				field: "tags", 
+				sorter: "number",
+				formatter: function(cell, formatterParams, onRendered) {
+					// Extract tag IDs
+					var tagIds = cell.getValue().map(tag => parseInt(tag.id));
+					// Sort the tag IDs numerically
+					tagIds.sort(function(a, b) {
+						return a - b;
+					});
+					// Join the sorted tag IDs, separating each by comma
+					return tagIds.join(", ");
+				} 
+			},
+            { title: "Studio Name", field: "studio.name" },
+            { title: "Studio ID", field: "studio.id" },
+            { title: "Path", field: "files.0.path" },
+            { title: "Date", field: "date" },
+        ],
+    });
+
+    // Change pagination size based on dropdown selection
+    document.getElementById('pagination-size-select').addEventListener('change', function () {
+        var newSize = parseInt(this.value);
+        table.setPageSize(newSize);
+    });
+
+				// Function to fetch data from GraphQL server
+				function fetchDataFromGraphQL() {
+					fetch('http://localhost:9999/graphql', {
+						method: 'POST',
+						headers: {
+							'Content-Type': 'application/json'
+						},
+						body: JSON.stringify({
+							query: `
+								query FindScenes {
+									findScenes(
+										scene_filter: { file_count: { value: 0, modifier: GREATER_THAN } }
+										filter: { per_page: -1 }
+									) {
+										filesize
+										scenes {
+											id
+											title
+										details
+										director
+										date
+										files {
+											path
+											basename
+										}
+										studio {
+											name
+											id
+										}
+										galleries {
+											title
+											id
+										}
+										scene_markers {
+											title
+											id
+										}
+										movies {
+											movie {
+												name
+												id
+											}
+										}
+										tags {
+											name
+											id
+										}
+										performers {
+											name
+											id
+										}
+									}
+									duration
+									count
+								}
+							}
+						`,
+					}),
+				})
+				.then(response => response.json())
+				.then(data => {
+					// Filter out scenes with only the ID field populated
+					var filteredScenes = data.data.findScenes.scenes.filter(scene => {
+						return Object.keys(scene).length > 1;
+					});
+					
+					// Modify data to include all associated tags and performers
+					filteredScenes.forEach(scene => {
+						scene.tags = scene.tags || [];
+						scene.performers = scene.performers || [];
+					});
+					
+					table.setData(filteredScenes);
+				})
+				.catch(error => {
+					console.error('Error fetching data:', error);
+				});
+			}
+			
+			// Fetch data from GraphQL server on page load
+			fetchDataFromGraphQL();
+			;
+	});	
+    </script>
+</body>
+</html>

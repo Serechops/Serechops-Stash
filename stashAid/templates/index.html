@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stash-Aid</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+	<style>
+        body {
+            background-color: #1e1e1e; /* Dark background */
+            color: white; /* Light text */
+            margin: 0; /* Remove default margin */
+            overflow: hidden; /* Hide overflow to prevent scrollbar */
+        }
+        .navbar-dark .navbar-nav {
+            color: #ddd; /* Light text for navbar links */
+            transition: color 0.3s; /* Smooth transition on color change */
+            display: flex; /* Use flexbox */
+            align-items: center; /* Center items vertically */
+            padding-top: 50px; /* Add space for the logo */
+        }
+        .navbar-dark .navbar-nav .nav-link:hover {
+            color: #fff; /* Change text color on hover */
+        }
+        .navbar {
+            border-right: 1px solid #444; /* Slight border to define navbar right */
+            flex-direction: column; /* Stack items vertically */
+            height: 100vh; /* Make navbar full height */
+            position: fixed; /* Fixed position to stay on the left side */
+            left: 0; /* Position from the left side */
+            top: 0; /* Position from the top */
+            display: flex; /* Use flexbox */
+            justify-content: center; /* Center items horizontally */
+            
+        }
+        .navbar-brand img {
+            width: 150px; /* Adjust image width */
+            margin-bottom: 1px; /* Add margin to separate from navbar items */
+			justify-content: center;
+        }
+        .navbar-nav {
+            width: 100%; /* Occupy full width */
+            margin-top: 1px; /* Add top margin to align with navbar-brand */
+        }
+        .container-main {
+            margin-left: 205px; /* Adjust margin to make space for the navbar */
+            padding: 0; /* Remove default padding */
+            height: 100vh; /* Make container full height */
+            overflow-y: auto; /* Add scrollbar if content exceeds container height */
+        }
+        iframe {
+			border: none; /* Remove border from iframe */
+			position: absolute; /* Position the iframe */
+			width: calc(100vw - 205px); /* Make iframe occupy remaining width */
+			height: 100%; /* Make iframe occupy full height */
+		}
+		h2 {
+            font-family: Monaco, monospace; /* Use Monaco font */
+            color: #fff; /* White heading color */
+            text-align: center;
+        }
+		.navbar-collapse {
+        position: static; /* No absolute positioning */
+        box-shadow: none; /* Remove shadow */
+        background-color: transparent; /* Clear background */
+		}
+		.navbar-nav .nav-item {
+			/* Apply a transformation to move each item up by 10px */
+			transform: translateY(-50px);
+			transition: transform 0.2s ease-in-out; /* Optional: Smooth transition for hover effects */
+		}
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <a class="navbar-brand" href="/">
+            <img src="https://cdn-icons-png.freepik.com/512/10061/10061838.png" alt="Stash-Aid Logo">
+		<h2>
+		Stash-Aid
+		</h2>
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav flex-column">
+                <li class="nav-item">
+                    <a class="nav-link" href="#" onclick="loadContent('/stash_data')">
+                        <i class="bi bi-clipboard2-data-fill"></i> <!-- Bootstrap icon -->
+                        Stash BIG DATA
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#" onclick="loadContent('/stash_scene_details')">
+                        <i class="bi bi-folder"></i> <!-- Bootstrap icon -->
+                        Stash Bulk File Renamer
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#" onclick="loadContent('/stash_editor')">
+                        <i class="bi bi-pencil"></i> <!-- Bootstrap icon -->
+                        Stash CSS Editor
+                    </a>
+                </li>
+				<li class="nav-item">
+                    <a class="nav-link" href="#" onclick="loadContent('/featured')">
+                        <i class="bi bi-database"></i> <!-- Bootstrap icon -->
+                        StashDB Recent Scenes
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#" onclick="loadContent('/graphql')">
+                        <i class="bi bi-graph-up"></i> <!-- Bootstrap icon -->
+                        Stash GraphQL Explorer
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#" onclick="loadContent('/logs')">
+                        <i class="bi bi-terminal"></i> <!-- Bootstrap icon -->
+                        Stash Scripts & Logs
+                    </a>
+                </li>
+				<li class="nav-item">
+                    <a class="nav-link" href="#" onclick="loadContent('/view_tasks')">
+                        <i class="bi bi-calendar"></i> <!-- Bootstrap icon -->
+                        Stash Task Scheduler
+                    </a>
+                </li>
+				<li class="nav-item">
+                    <a class="nav-link" href="#" onclick="loadContent('/plugins')">
+                        <i class="bi bi-gear-wide-connected"></i> <!-- Bootstrap icon -->
+                        Stash Plugin Manager
+                    </a>
+                </li>
+				<li class="nav-item">
+                    <a class="nav-link" href="#" onclick="loadContent('/wiki')">
+                        <i class="bi bi-journals"></i> <!-- Bootstrap icon -->
+                        Stash-Aid Wiki
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container-main">
+        <iframe id="contentFrame" src="http://localhost:9999" frameborder="0"></iframe> <!-- Initial iframe with default src -->
+    </div>
+
+    <!-- Bootstrap JS and Popper.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.slim.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.1/dist/umd/popper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.min.js"></script>
+    <script>
+        function loadContent(url) {
+            document.getElementById('contentFrame').src = url;
+        }
+    </script>
+</body>
+</html>

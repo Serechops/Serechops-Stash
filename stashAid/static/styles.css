@@ -1,0 +1,124 @@
+/* Dark mode styles */
+body {
+    font-family: Monaco, Consolas, 'Lucida Console', monospace;
+    background-color: #1e1e1e;
+    color: #ffffff;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+.container {
+    text-align: center;
+}
+
+h1 {
+    margin-bottom: 20px;
+    color: #eeeeee;
+}
+
+/* Log styles */
+.log-container {
+    border: 1px solid #444;
+    background-color: #2e2e2e;
+    color: #ffffff;
+    max-height: 70vh; /* Adjust as needed */
+    overflow-y: auto; /* Change to auto to show scrollbar only when needed */
+    margin-top: 20px;
+    padding: 10px;
+    border-radius: 5px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+}
+
+.log-container p {
+    margin: 5px 0;
+}
+
+.log-container .warning {
+    color: #f39c12;
+}
+
+.log-container .error {
+    color: #e74c3c;
+}
+
+/* Button styles */
+.btn {
+    background-color: #4CAF50;
+    border: none;
+    color: white;
+    padding: 2vh 4vw; /* Adjust padding using viewport units */
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 2vh; /* Adjust font size using viewport units */
+    margin: 2vh 1vw; /* Adjust margin using viewport units */
+    cursor: pointer;
+    border-radius: 4px;
+    transition: background-color 0.3s;
+}
+
+.btn:hover {
+    background-color: #45a049;
+}
+
+/* Dropdown styles */
+.dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+.dropdown-content {
+    display: none;
+    position: absolute;
+    background-color: #333;
+    min-width: 15vw; /* Adjust width using viewport units */
+    max-height: 50vh; /* Adjust height using viewport units */
+    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+    z-index: 1;
+    border-radius: 4px;
+    overflow: auto; /* Change to auto to show scrollbar only when needed */
+}
+
+.dropdown-content a {
+    color: white;
+    padding: 2vh 4vw; /* Adjust padding using viewport units */
+    text-decoration: none;
+    display: block;
+    transition: background-color 0.3s;
+}
+
+.dropdown-content a:hover {
+    background-color: #555;
+}
+
+.dropdown:hover .dropdown-content {
+    display: block;
+}
+
+.dropdown:hover .dropbtn {
+    background-color: #3e8e41;
+}
+
+/* Script header style */
+.script-header {
+    color: #dddddd;
+    margin-bottom: 2vh; /* Adjust margin using viewport units */
+}
+
+/* Media queries for responsiveness */
+@media screen and (max-width: 768px) {
+    /* Adjust styles for smaller screens */
+    .btn {
+        font-size: 3vh;
+        padding: 3vh 6vw;
+        margin: 3vh 2vw;
+    }
+
+    .dropdown-content {
+        min-width: 60vw;
+    }
+}

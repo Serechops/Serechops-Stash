@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scene List - Powered by StashDB</title>
+    <style>
+        /* Add CSS styles for the grid, text truncation, and image resizing here */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #333;
+            color: #fff;
+        }
+
+        header {
+            background-color: #222;
+            color: #fff;
+            text-align: center;
+            padding: 20px;
+            display: flex;
+            justify-content: center; /* Center horizontally */
+            align-items: center; /* Center vertically */
+        }
+
+        /* Style the select element */
+        #contentSelector {
+            padding: 10px;
+            background-color: #444;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-left: auto; /* Push the dropdown to the right */
+        }
+
+        /* Style the options within the select element */
+        #contentSelector option {
+            background-color: #444;
+            color: #fff;
+        }
+
+        .grid {
+            display: grid; /* Use CSS grid for three columns */
+            grid-template-columns: repeat(3, 1fr); /* Three equal columns */
+            gap: 20px;
+            padding: 20px;
+        }
+
+        .scene-card {
+            border: 1px solid #ccc;
+            padding: 20px;
+            background-color: #444;
+            box-sizing: border-box;
+            text-align: center; /* Center text horizontally */
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .scene-image {
+            max-width: 317px; /* Set the maximum width */
+            height: 150px; /* Set the desired height */
+            margin-bottom: 10px;
+        }
+
+        .scene-link {
+            text-decoration: none;
+            color: #007bff;
+        }
+
+        .truncate-text {
+            display: -webkit-box;
+            -webkit-line-clamp: 4; /* Limit to 4 lines of text */
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Scene List - Recent Releases and Your Favorites - Powered by StashDB</h1>
+        <select id="contentSelector">
+            <option value="recent">Recent Releases</option>
+            <option value="favorites">Favorites</option>
+        </select>
+    </header>
+    <div class="grid" id="sceneList">
+        <!-- Dynamic content will be added here -->
+    </div>
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>

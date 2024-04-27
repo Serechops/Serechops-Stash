@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stash-Aid Wiki</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #121212;
+            --text-color: #e0e0e0;
+            
+            --navbar-bg-color: #333333;
+            --card-bg-color: #242424;
+            --border-radius: 8px;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+        }
+
+        .navbar-dark .navbar-nav .nav-link {
+            color: var(--text-color);
+        }
+
+        .navbar-dark .navbar-brand, .navbar-dark .navbar-toggler {
+            color: var(--text-color);
+        }
+
+        .navbar, .card {
+            background-color: var(--navbar-bg-color);
+            border-radius: var(--border-radius);
+        }
+
+        .btn {
+            background-color: var(--accent-color);
+            border: none;
+            border-radius: var(--border-radius);
+            transition: transform 0.2s ease;
+        }
+
+        .btn:hover {
+            transform: scale(1.05);
+        }
+
+        section {
+            background-color: var(--card-bg-color);
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: var(--border-radius);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        h2 {
+            color: var(--accent-color);
+        }
+
+        a, a:hover {
+            text-decoration: none;
+            color: var(--accent-color);
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="#">Stash-Aid Wiki</a>
+        </div>
+    </nav>
+
+    <!-- Page Content -->
+			<div class="container mt-4">
+				<section class="mb-5">
+			<h2>Plugin Manager</h2>
+			<p><strong>Overview:</strong> The Plugin Manager is a centralized system for managing and updating plugins that extend the functionality and features of your platform. It simplifies the process of installing new plugins, updating existing ones, and managing the overall plugin ecosystem.</p>
+			<h3>How to Use</h3>
+			<ul>
+				<li><strong>Viewing Available Plugins:</strong> Users can view a list of available plugins, including their names, descriptions, versions, and release dates. This helps in deciding which plugins to install.</li>
+				<li><strong>Installing Plugins:</strong> To install a plugin, click the 'Install' button next to the plugin listing. The system will automatically handle the download and installation process.</li>
+				<li><strong>Updating Plugins:</strong> The 'Update All' button allows users to update all installed plugins to their latest versions with a single click, ensuring that all plugins are current with the latest features and security patches.</li>
+				<li><strong>Reloading Plugins:</strong> After installing or updating plugins, the 'Reload Plugins' button can be used to ensure they are properly integrated into the platform without requiring a complete system restart.</li>
+			</ul>
+		</section>
+
+        
+        <section class="mb-5">
+			<h2>Bulk File Renamer</h2>
+			<p><strong>Overview:</strong> The Bulk File Renamer tool automates the renaming of files in bulk, based on predefined patterns. It significantly improves file organization and accessibility.</p>
+			<h3>How to Use</h3>
+			<ul>
+				<li><strong>Selecting Files:</strong> Users can select multiple files for renaming based on specific criteria such as file type, date, or other attributes.</li>
+				<li><strong>Defining Rename Patterns:</strong> Users can define patterns for renaming files, which may include keywords, dates, or sequences. These patterns ensure consistent naming conventions.</li>
+				<li><strong>Previewing Changes:</strong> Before finalizing the rename operation, users can preview the new file names to ensure accuracy and prevent errors.</li>
+				<li><strong>Renaming Files:</strong> With satisfaction in the preview, users can proceed to rename the files. The system will apply the new names according to the defined pattern.</li>
+			</ul>
+		</section>
+
+
+        <section class="mb-5">
+			<h2>Task Scheduler</h2>
+			<p><strong>Overview:</strong> The Task Scheduler allows for the scheduling and management of automated tasks. Users can define task details, select scripts for execution, and set times for these tasks to run automatically.</p>
+			<h3>How to Use</h3>
+			<ul>
+				<li><strong>Defining Tasks:</strong> Users can create tasks by specifying a name, description, and the script to execute. This allows for easy identification and management of tasks.</li>
+				<li><strong>Scheduling Tasks:</strong> Each task can have a scheduled time for execution, supporting a variety of scheduling options like one-time, recurring, or event-triggered tasks.</li>
+				<li><strong>Managing Tasks:</strong> Users can view a list of their scheduled tasks, including details like status and next execution time. Tasks can be edited or deleted as needed.</li>
+			</ul>
+		</section>
+
+
+        <section class="mb-5">
+			<h2>Stash BIG Data</h2>
+			<p><strong>Overview:</strong> The BIG Data feature offers advanced capabilities for viewing and managing large datasets, including filtering, sorting, and pagination.</p>
+			<h3>How to Use</h3>
+			<ul>
+				<li><strong>Viewing Data:</strong> Users can view datasets in tabulated forms, with options for sorting and filtering based on various criteria to quickly find needed information.</li>
+				<li><strong>Filtering and Sorting:</strong> Comprehensive filters and sorting options allow users to narrow down datasets and organize the displayed information according to specific needs.</li>
+				<li><strong>Pagination:</strong> For large datasets, pagination helps in navigating through data in manageable chunks, enhancing the user experience by preventing overload.</li>
+			</ul>
+		</section>
+
+
+        <section>
+			<h2>Stash CSS Editor</h2>
+			<p><strong>Overview:</strong> The Stash CSS Editor is an integrated tool for editing and customizing the platform's CSS in real-time, featuring syntax highlighting and immediate preview changes.</p>
+			<h3>How to Use</h3>
+			<ul>
+				<li><strong>Editing CSS:</strong> Users can write or modify CSS code within the editor. Syntax highlighting aids in identifying code elements easily.</li>
+				<li><strong>Previewing Changes:</strong> Changes made in the CSS editor are immediately reflected on the platform, allowing for rapid customization and iteration.</li>
+				<li><strong>Saving Changes:</strong> Once satisfied with the modifications, users can save their changes. The platform will automatically apply the new styles.</li>
+			</ul>
+		</section>
+
+    </div>
+
+    <!-- Bootstrap JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.min.js"></script>
+</body>
+</html>

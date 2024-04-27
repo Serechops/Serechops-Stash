@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plugin Manager</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #121212;
+            color: #fff;
+        }
+        .table-dark th, .table-dark td, .table-dark thead th {
+            background-color: #343a40;
+            border-color: #454d55;
+        }
+        .form-control {
+            background-color: #343a40;
+            color: #fff;
+            border-color: #454d55;
+        }
+        .form-control::placeholder {
+            color: #ced4da; /* Placeholder color */
+        }
+        .form-control:focus {
+            background-color: #fff; /* Background color on focus */
+            color: #212529; /* Text color on focus */
+        }
+        .btn-primary {
+            background-color: #007bff;
+            border-color: #007bff;
+        }
+        .btn-primary:hover {
+            background-color: #0056b3;
+            border-color: #0056b3;
+        }
+        .btn-danger {
+            background-color: #dc3545;
+            border-color: #dc3545;
+        }
+        .btn-danger:hover {
+            background-color: #c82333;
+            border-color: #bd2130;
+        }
+		h1 {
+            font-family: Monaco, monospace;
+            color: #fff;
+            text-align: center;
+        }
+		h2 {
+            font-family: Monaco, monospace;
+            color: #fff;
+        }
+		.scrollable-table {
+            max-height: 500px; /* Adjust the height as needed */
+            overflow-y: auto;
+        }
+		/* CSS for the search input */
+		.search-input {
+			margin-bottom: 1rem;
+			transition: background-color 0.3s; /* Add transition for smooth color change */
+		}
+		
+		/* CSS to style the search input text */
+		.search-input:focus {
+			outline: none; /* Remove the default focus outline */
+			border-color: cyan; /* Set the border color to cyan when focused */
+			background-color: rgba(0, 255, 255, 0.1); /* Darker shade of cyan when focused */
+			box-shadow: 0 0 0 0.25rem rgba(0, 255, 255, 0.25); /* Add a cyan box shadow when focused */
+		}
+    </style>
+</head>
+<body>
+
+<div class="container mt-5">
+    <h1 class="mb-4">Plugin Manager</h1>
+	<!-- Search Bar -->
+    <div class="mb-3">
+        <input type="text" class="form-control" id="searchInput" placeholder="Search plugins...">
+    </div>
+    
+    <!-- Available Plugins Section -->
+    <div class="mb-5">
+	<div class="mb-5 scrollable-table">
+        <h2>Available Plugins</h2>
+        <table class="table table-dark">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Description</th>
+                    <th>Version</th>
+                    <th>Date</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="available-plugins">
+                <!-- This will be populated dynamically with GraphQL data -->
+            </tbody>
+        </table>
+    </div>
+	<div class="text-center">
+        <button class="btn btn-primary me-2" onclick="updateAllPackages()">Update All</button>
+        <button class="btn btn-secondary" onclick="reloadPlugins()">Reload Plugins</button>
+    </div>
+</div>
+
+<!-- Toast Notifications -->
+<div class="position-fixed bottom-0 end-0 p-3" style="z-index: 11">
+    <div id="toast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="toast-header">
+            <strong class="me-auto">Notification</strong>
+            <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+        <div class="toast-body"></div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+<script>
+    // GraphQL server URL
+    const graphqlServerURL = 'http://localhost:9999/graphql';
+
+    // Source indices
+    const sourceIndices = [
+        'https://tetrax-10.github.io/stash-stuffs/index.yml',
+        'https://stashapp.github.io/CommunityScripts/stable/index.yml',
+        'https://7djx1qp.github.io/stash-plugins/main/index.yml',
+        'https://stg-annon.github.io/StashScripts/stable/index.yml',
+        'https://feederbox826.github.io/plugins/main/index.yml',
+        'https://scruffynerf.github.io/CommunityScripts/develop/index.yml',
+        'https://serechoo.github.io/Glassy-Theme/index.yml'
+    ];
+
+    // GraphQL queries
+    const queryAvailablePackages = `
+        query AvailablePackages {
+            availablePackages(
+                type: Plugin
+                source: "$sourceIndex"
+            ) {
+                package_id
+                name
+                version
+                date
+                sourceURL
+                metadata
+                source_package {
+                    package_id
+                    name
+                    version
+                    date
+                    sourceURL
+                    metadata
+                }
+                requires {
+                    package_id
+                    name
+                    version
+                    date
+                    sourceURL
+                    metadata
+                }
+            }
+        }
+    `;
+    
+    const queryInstalledPackages = `
+        query InstalledPackages {
+            installedPackages(type: Plugin) {
+                package_id
+                name
+                version
+                date
+                sourceURL
+                metadata
+            }
+        }
+    `;
+    
+    const mutationUninstallPackage = `
+        mutation UninstallPackage($packageID: String!, $sourceURL: String!) {
+            uninstallPackages(type: Plugin, packages: { id: $packageID, sourceURL: $sourceURL })
+        }
+    `;
+
+    const mutationUpdatePackages = `
+        mutation UpdatePackages {
+            updatePackages(type: Plugin, packages: [])
+        }
+    `;
+
+    const mutationReloadPlugins = `
+        mutation ReloadPlugins {
+            reloadPlugins
+        }
+    `;
+
+    // Function to fetch available plugins for each source index
+    async function fetchAvailablePlugins() {
+        const availablePlugins = [];
+        for (const sourceIndex of sourceIndices) {
+            try {
+                const response = await axios.post(graphqlServerURL, {
+                    query: queryAvailablePackages.replace('$sourceIndex', sourceIndex)
+                });
+                availablePlugins.push(...response.data.data.availablePackages);
+            } catch (error) {
+                console.error('Error fetching available plugins:', error);
+            }
+        }
+        return availablePlugins;
+    }
+    
+    // Function to check if a plugin is installed
+    async function isPluginInstalled(packageID) {
+        try {
+            const response = await axios.post(graphqlServerURL, {
+                query: queryInstalledPackages
+            });
+            const installedPlugins = response.data.data.installedPackages;
+            return installedPlugins.some(plugin => plugin.package_id === packageID);
+        } catch (error) {
+            console.error('Error checking if plugin is installed:', error);
+            return false;
+        }
+    }
+
+	// Function to handle plugin installation
+	async function installPlugin(sourceURL, packageID) {
+		try {
+			const response = await axios.post(graphqlServerURL, {
+				query: `
+					mutation InstallPlugin {
+						installPackages(
+							type: Plugin
+							packages: {
+								sourceURL: "${sourceURL}"
+								id: "${packageID}"
+							}
+						)
+					}
+				`
+			});
+            // Check if installation was successful
+            if (response.data.data.installPackages) {
+                console.log('Plugin installed successfully:', packageID);
+                // Reload the plugins to update the UI
+                renderAvailablePlugins();
+            } else {
+                console.error('Error installing plugin:', packageID);
+            }
+		} catch (error) {
+			console.error('Error installing plugin:', error);
+		}
+	}
+
+    // Function to handle plugin uninstallation
+    async function uninstallPlugin(sourceURL, packageID) {
+        try {
+            const response = await axios.post(graphqlServerURL, {
+                query: mutationUninstallPackage,
+                variables: {
+                    packageID: packageID,
+                    sourceURL: sourceURL
+                }
+            });
+            // Check if uninstallation was successful
+            if (response.data.data.uninstallPackages) {
+                console.log('Plugin uninstalled successfully:', packageID);
+                // Reload the plugins to update the UI
+                renderAvailablePlugins();
+            } else {
+                console.error('Error uninstalling plugin:', packageID);
+            }
+        } catch (error) {
+            console.error('Error uninstalling plugin:', error);
+        }
+    }
+
+    // Function to update all installed packages
+    async function updateAllPackages() {
+        try {
+            const response = await axios.post(graphqlServerURL, {
+                query: mutationUpdatePackages
+            });
+            if (response.data.data.updatePackages) {
+                console.log('All packages updated successfully');
+                showToast('All packages updated successfully', 'success');
+            } else {
+                console.error('Error updating packages');
+                showToast('Error updating packages', 'error');
+            }
+        } catch (error) {
+            console.error('Error updating packages:', error);
+            showToast('Error updating packages', 'error');
+        }
+    }
+
+    // Function to reload all plugins
+    async function reloadPlugins() {
+        try {
+            const response = await axios.post(graphqlServerURL, {
+                query: mutationReloadPlugins
+            });
+            if (response.data.data.reloadPlugins) {
+                console.log('Plugins reloaded successfully');
+                showToast('Plugins reloaded successfully', 'success');
+                // Reload the plugins to update the UI
+                renderAvailablePlugins();
+            } else {
+                console.error('Error reloading plugins');
+                showToast('Error reloading plugins', 'error');
+            }
+        } catch (error) {
+            console.error('Error reloading plugins:', error);
+            showToast('Error reloading plugins', 'error');
+        }
+    }
+
+    // Function to render available plugins in the table
+    async function renderAvailablePlugins() {
+        const availablePlugins = await fetchAvailablePlugins();
+        const tableBody = document.getElementById('available-plugins');
+        tableBody.innerHTML = ''; // Clear existing rows
+		// Sort the plugins alphabetically by name
+        availablePlugins.sort((a, b) => a.name.localeCompare(b.name));
+        for (const plugin of availablePlugins) {
+            const row = document.createElement('tr');
+            const isInstalled = await isPluginInstalled(plugin.package_id);
+            row.innerHTML = `
+                <td>${plugin.name}</td>
+				<td>${plugin.metadata.description}</td>
+                <td>${plugin.version}</td>
+                <td>${plugin.date}</td>
+                <td>
+                    <button class="btn btn-${isInstalled ? 'danger' : 'primary'}" onclick="${isInstalled ? `uninstallPlugin('${plugin.sourceURL}', '${plugin.package_id}')` : `installPlugin('${plugin.sourceURL}', '${plugin.package_id}')`}">${isInstalled ? 'Uninstall' : 'Install'}</button>
+                </td>
+            `;
+            tableBody.appendChild(row);
+        }
+    }
+
+    // Function to show toast notifications
+    function showToast(message, type) {
+        const toast = document.getElementById('toast');
+        const toastBody = toast.querySelector('.toast-body');
+        toastBody.textContent = message;
+        toast.classList.remove('bg-success', 'bg-danger');
+        toast.classList.add(type === 'success' ? 'bg-success' : 'bg-danger');
+        const bsToast = new bootstrap.Toast(toast);
+        bsToast.show();
+    }
+
+    // Call the function to render available plugins
+    renderAvailablePlugins();
+</script>
+<script>
+    // Function to filter plugins based on search query
+    function filterPlugins(searchQuery) {
+        const rows = document.querySelectorAll('#available-plugins tr');
+        rows.forEach(row => {
+            const nameColumn = row.querySelector('td:first-child');
+            if (nameColumn) {
+                const name = nameColumn.textContent.toLowerCase();
+                if (name.includes(searchQuery.toLowerCase())) {
+                    row.style.display = '';
+                    highlightMatch(nameColumn, searchQuery);
+                } else {
+                    row.style.display = 'none';
+                }
+            }
+        });
+    }
+
+    // Function to highlight matching words in a column
+    function highlightMatch(element, searchQuery) {
+        const text = element.textContent;
+        const regex = new RegExp(`(${searchQuery})`, 'gi');
+        const highlightedText = text.replace(regex, '<span style="color: cyan;">$1</span>');
+        element.innerHTML = highlightedText;
+    }
+
+    // Add event listener to search input
+    const searchInput = document.getElementById('searchInput');
+    searchInput.addEventListener('input', function() {
+        const searchQuery = this.value.trim();
+        filterPlugins(searchQuery);
+    });
+</script>
+</body>
+</html>
