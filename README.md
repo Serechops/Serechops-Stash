@@ -26,7 +26,9 @@ The [Performer Gallery Scraper](https://github.com/Serechops/Serechops-Stash/tre
 
 The [Renamer](https://github.com/Serechops/Serechops-Stash/tree/main/plugins/Renamer#renamer) plugin is very similar to renameOnUpdate. It will automatically rename files based on user-defined settings whenever a scene is updated.
 
+# StashDB Mass Tag Import
 
+With [stashDBTagImport](https://github.com/Serechops/Serechops-Stash/tree/main/plugins/stashDBTagImport#stashdbtagimport) you can easily mass import over 2,000 tags with associated descriptions into your Stash that have been curated directly from StashDB.
 
 
 
