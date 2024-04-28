@@ -7,10 +7,6 @@ div.item-list-container .performer-card-image {
     display: grid;
 }
 
-div.item-list-container .rating-banner {
-	display: none !important;
-}
-
 div.item-list-container .performer-card.grid-card.card {
     width: 150px !important; /* Adjust the width as needed */
     height: 400px; 

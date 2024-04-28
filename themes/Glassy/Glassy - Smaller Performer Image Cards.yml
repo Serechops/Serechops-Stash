@@ -1,6 +1,6 @@
 name: Glassy - Smaller Performer Image Cards
 description: A Glassy Add-On Module.
-version: 0.1
+version: 0.2
 ui:
   css:
     - Glassy - Smaller Performer Image Cards.css
