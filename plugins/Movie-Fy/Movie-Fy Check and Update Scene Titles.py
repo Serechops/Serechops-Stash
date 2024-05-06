@@ -1,32 +1,32 @@
 import re
 import requests
+import stashapi.log as log
 
-def find_studio_id(studio_name):
+# Function to find studio ID, specifically looking for the studio named "Movie"
+def find_studio_id():
     find_studios_url = "http://localhost:9999/graphql"
     find_studios_payload = {
-        "query": f"""
-            query FindStudios {{
-                findStudios(filter: {{ q: "{studio_name}" }}) {{
-                    studios {{
+        "query": """
+            query FindStudios {
+                findStudios(studio_filter: { name: { value: "Movie", modifier: EQUALS } }) {
+                    studios {
                         id
-                    }}
-                }}
-            }}
+                    }
+                }
+            }
         """
     }
-
-    response = requests.post(find_studios_url, json=find_studios_payload)
-    result = response.json()
-
-    if "data" in result and "findStudios" in result["data"]:
-        studios = result["data"]["findStudios"]["studios"]
-        if studios:
-            return studios[0]["id"]
+    try:
+        response = requests.post(find_studios_url, json=find_studios_payload)
+        result = response.json()
+        if "data" in result and "findStudios" in result["data"] and result["data"]["findStudios"]["studios"]:
+            log.info("Studio ID found successfully.")
+            return result["data"]["findStudios"]["studios"][0]["id"]
         else:
-            print(f"Studio with name '{studio_name}' not found.")
+            log.error(f"Error finding studios: {result.get('errors', 'Unknown Error')}")
             return None
-    else:
-        print("Error finding studios:", result.get("errors"))
+    except Exception as e:
+        log.error(f"Exception in finding studio ID: {str(e)}")
         return None
 
 def find_scenes(studio_id):
@@ -46,14 +46,17 @@ def find_scenes(studio_id):
             }}
         """
     }
-
-    response = requests.post(find_scenes_url, json=find_scenes_payload)
-    result = response.json()
-
-    if "data" in result and "findScenes" in result["data"]:
-        return result["data"]["findScenes"]["scenes"]
-    else:
-        print("Error finding scenes:", result.get("errors"))
+    try:
+        response = requests.post(find_scenes_url, json=find_scenes_payload)
+        result = response.json()
+        if "data" in result and "findScenes" in result["data"]:
+            log.info("Scenes found successfully.")
+            return result["data"]["findScenes"]["scenes"]
+        else:
+            log.error(f"Error finding scenes: {result.get('errors')}")
+            return None
+    except Exception as e:
+        log.error(f"Exception in finding scenes: {str(e)}")
         return None
 
 def find_scene_details(scene_id):
@@ -67,21 +70,21 @@ def find_scene_details(scene_id):
             }}
         }}
     """
-
-    response = requests.post("http://localhost:9999/graphql", json={"query": find_scene_query})
-    result = response.json()
-
-    if "data" in result and "findScene" in result["data"]:
-        return result["data"]["findScene"]
-    else:
-        print("Error finding scene details:", result.get("errors"))
+    try:
+        response = requests.post("http://localhost:9999/graphql", json={"query": find_scene_query})
+        result = response.json()
+        if "data" in result and "findScene" in result["data"]:
+            log.info("Scene details retrieved successfully.")
+            return result["data"]["findScene"]
+        else:
+            log.error(f"Error finding scene details: {result.get('errors')}")
+            return None
+    except Exception as e:
+        log.error(f"Exception in finding scene details: {str(e)}")
         return None
 
 def update_title_with_basename(scene_id, file_basename):
-    # Use regex to remove file extension
     title = re.sub(r'\.[^.]*$', '', file_basename)
-
-    # GraphQL mutation to update scene title
     update_scene_mutation = f"""
         mutation SceneUpdate {{
             sceneUpdate(input: {{ id: {scene_id}, title: "{title}" }}) {{
@@ -89,52 +92,39 @@ def update_title_with_basename(scene_id, file_basename):
             }}
         }}
     """
-
-    print("\nGraphQL Mutation to Update Scene Title:")
-    print(update_scene_mutation)
-
-    # Uncomment the following lines to execute the mutation
-    response = requests.post("http://localhost:9999/graphql", json={"query": update_scene_mutation})
-    result = response.json()
-    print("Mutation Result:", result)
+    try:
+        log.debug(f"GraphQL Mutation to Update Scene Title: {update_scene_mutation}")
+        response = requests.post("http://localhost:9999/graphql", json={"query": update_scene_mutation})
+        result = response.json()
+        if result.get("data"):
+            log.info(f"Updated Scene ID: {scene_id} with new title: {title}")
+        else:
+            log.error(f"Failed to update title for Scene ID: {scene_id}")
+    except Exception as e:
+        log.error(f"Exception during mutation for Scene ID: {scene_id}: {str(e)}")
 
 if __name__ == "__main__":
-    studio_name = "Movie"
-
-    print(f"Finding scenes for Studio: {studio_name}")
-
-    studio_id = find_studio_id(studio_name)
+    log.info("Starting process to find scenes for Studio: Movie")
+    studio_id = find_studio_id()
 
     if studio_id:
-        print(f"Found Studio ID for '{studio_name}': {studio_id}")
-
         scenes = find_scenes(studio_id)
 
         if scenes:
-            print(f"\nScenes for Studio '{studio_name}':")
-            for scene in scenes:
-                print(f"Scene ID: {scene['id']}, Title: {scene['title']}")
-
-            print("\nChecking and updating titles:")
+            log.info("Processing scenes for updates.")
             for scene in scenes:
                 scene_details = find_scene_details(scene['id'])
 
                 if scene_details:
                     title = scene_details["title"]
                     file_basename = scene_details["files"][0]["basename"] if scene_details["files"] else None
-
-                    print("\nScene Details:")
-                    print(f"Scene ID: {scene['id']}")
-                    print(f"Title: {title}")
-                    print(f"File Basename: {file_basename}")
-
                     if not title and file_basename:
                         update_title_with_basename(scene['id'], file_basename)
                     else:
-                        print("No action needed. Scene already has a title or is missing a file basename.")
+                        log.info(f"No update needed for Scene ID: {scene['id']}.")
                 else:
-                    print(f"Could not retrieve scene details for Scene ID: {scene['id']}")
+                    log.error("Failed to retrieve details for scene.")
         else:
-            print(f"No scenes found for Studio '{studio_name}'.")
+            log.error("No scenes found for studio.")
     else:
-        print(f"Could not proceed without Studio ID for '{studio_name}'.")
+        log.error("Failed to retrieve studio ID for 'Movie'.")
