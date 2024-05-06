@@ -1,6 +1,6 @@
 name: Movie-Fy Check and Update Scene Titles
 description: Check and update titles for scenes in the Movie studio
-version: 0.1
+version: 0.2
 url: https://github.com/Serechops/Serechops-Stash
 exec:
   - python
