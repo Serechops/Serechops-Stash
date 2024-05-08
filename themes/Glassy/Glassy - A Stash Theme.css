@@ -141,6 +141,7 @@ div.modal-content {
 	color: white !important;
 }
 
+div.react-select__control .react-select__multi-value,
 .react-select__multi-value__remove {
 	background: black !important; 
 }
@@ -865,6 +866,13 @@ span.name-icons button.minimal.favorite.btn.btn-primary svg.svg-inline--fa.fa-he
 }
 
 
+/****** Search Box No Shasdow Tweak ******/
+input.query-text-field.bg-secondary.text-white.border-secondary.form-control {
+	box-shadow: none !important;
+}
+
+
+/****************************************/
 
 /*Mobile Overhaul*/
 
