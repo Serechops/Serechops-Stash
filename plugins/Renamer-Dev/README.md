@@ -100,37 +100,8 @@ Modify the boolean values of `move_files`, `rename_files`, and `dry_run` to cont
 
 Specify custom paths that you would like untouched by Renamer. 
 
-## Example Configuration
+# Rollback.py
 
-```python
-config = {
-    "wrapper_styles": {
-        "studio": '[]',
-        "title": '[]',
-        "performers": '[]',
-        "date": '[]',
-        "height": '[]',
-        "video_codec": '[]',
-        "frame_rate": '[]',
-        "tag": '[]'
-    },
-    "separator": '-',
-    "key_order": [
-        "studio",
-        "title",
-        "performers",
-        "date",
-        "height",
-        "video_codec",
-        "frame_rate",
-        "tags"
-    ],
-    "exclude_keys": [],
-    "move_files": False,
-    "rename_files": True,
-    "dry_run": True,
-    "max_tag_keys": 10,
-    "tag_whitelist": ["Boots"],
-    "exclude_paths": [r"/path/to/exclude1"]
-}
-```
+This is an experimental script whereby it will target your `Renamer.json` external log. 
+
+Run this script using `python Rollback.py` then supply it a scene ID that you would like to revert to its original location(s). When a scene ID is given, if it exists in the external `Renamer.json` log, it will indicate timestamps and original directories for that scene. Simply select an item `1. 2. 3. ...etc.` and the file will be renamed and moved back to its original directory. Think of this as a "snapshot" if there was ever a time you wanted to go back and change where a file should be moved or how it should be named.
