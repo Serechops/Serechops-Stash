@@ -6,6 +6,7 @@ from renamer_settings import config
 import logging
 import json
 from pythonjsonlogger import jsonlogger
+import re
 
 class CustomJsonFormatter(jsonlogger.JsonFormatter):
     def format(self, record):
@@ -72,41 +73,118 @@ def replace_illegal_characters(filename):
     transtable = str.maketrans(illegal_chars, safe_chars)
     return filename.translate(transtable)
 
+def apply_regex_transformations(value, key):
+    """ Apply regex transformations based on settings. """
+    transformations = config.get('regex_transformations', {})
+    for transformation_name, transformation_details in transformations.items():
+        if key in transformation_details['fields']:
+            pattern = re.compile(transformation_details['pattern'])
+            # Corrected to pass the match object to the lambda function
+            replacement_function = lambda match: transformation_details['replacement'](match)
+            value = re.sub(pattern, replacement_function, value)
+    return value
+
+def sort_performers(performers):
+    """Sort and limit the number of performers based on configuration."""
+    sorted_performers = sorted(performers, key=lambda x: x['name'])  # Sort by name
+    if config['performer_limit'] is not None and len(sorted_performers) > config['performer_limit']:
+        sorted_performers = sorted_performers[:config['performer_limit']]
+    return sorted_performers
+
+def rename_associated_files(directory, filename_base, new_filename_base, dry_run):
+    """Rename associated files in the same directory based on new base name."""
+    for item in directory.iterdir():
+        if item.suffix[1:] in config['associated_files'] and item.stem == filename_base:
+            new_associated_file = directory / f"{new_filename_base}{item.suffix}"
+            if dry_run:
+                logger.info(f"Dry run: Would rename '{item}' to '{new_associated_file}'")
+            else:
+                item.rename(new_associated_file)
+                logger.info(f"Renamed associated file '{item}' to '{new_associated_file}'")
+
+
+def move_associated_files(directory, new_directory, dry_run):
+    """Move associated files to a new directory specified by new_directory."""
+    for item in directory.iterdir():
+        if item.suffix[1:] in config['associated_files']:
+            new_associated_file = new_directory / item.name
+            if dry_run:
+                logger.info(f"Dry run: Would move '{item}' to '{new_associated_file}'")
+            else:
+                shutil.move(str(item), str(new_associated_file))
+                logger.info(f"Moved associated file '{item}' to '{new_associated_file}'")
+
+
+def process_files(scene, new_filename, move, rename, dry_run):
+    original_path = Path(scene['file_path'])
+    new_path = calculate_new_path(original_path, new_filename)  # Calculates new path based on rules/logic
+    directory = original_path.parent
+    filename_base = original_path.stem
+    new_filename_base = new_path.stem
+    new_directory = new_path.parent
+
+    if rename:
+        rename_associated_files(directory, filename_base, new_filename_base, dry_run)
+
+    # Handle main file operation
+    if dry_run:
+        logger.info(f"Dry run: Would {'move' if move else 'rename'} main file to '{new_path}'")
+    else:
+        if move:
+            shutil.move(str(original_path), str(new_path))
+            logger.info(f"Moved main file to '{new_path}'")
+            # Move associated files after the main file has been moved
+            move_associated_files(directory, new_directory, dry_run)
+        elif rename:
+            original_path.rename(new_path)
+            logger.info(f"Renamed main file to '{new_path}'")
+
+    if not move:
+        # Move associated files separately if main file is not moved
+        move_associated_files(directory, new_directory, dry_run)
+
+import datetime
+
+def apply_date_format(value):
+    """Converts date strings from one format to another specified in the config."""
+    try:
+        # Convert from "%Y-%m-%d" to the specified format in config['date_format']
+        formatted_date = datetime.datetime.strptime(value, "%Y-%m-%d").strftime(config['date_format'])
+        return formatted_date
+    except ValueError as e:
+        ext_log.error(f"Date formatting error: {str(e)}")
+        return value  # Return original value if there's a formatting error
+
+
+
 def form_new_filename(scene):
-    """Generate a new filename based on the scene attributes and settings, ensuring correct data extraction and formatting."""
+    """Generate a new filename based on the scene attributes and settings."""
     parts = []
     for key in config['key_order']:
         if key in config['exclude_keys']:
             continue
-        
+
         value = scene.get(key)
         if key == 'tags':
-            # Process tags with whitelist filtering
             filtered_tags = [tag['name'] for tag in value if tag['name'] in config['tag_whitelist']]
-            if not filtered_tags:
-                continue
-            value = config['separator'].join(filtered_tags)
+            value = config['separator'].join(filtered_tags) if filtered_tags else ''
         elif key == 'performers':
-            # Extract names from performer dictionaries
-            value = config['separator'].join(performer['name'] for performer in value if 'name' in performer)
-        elif key in ['studio', 'title', 'date']:
-            # Direct extraction for single-level dictionary keys or plain keys
-            if isinstance(value, dict):
-                value = value.get('name')
+            performers = sort_performers(value)
+            value = config['separator'].join(performer['name'] for performer in performers)
+        elif key == 'date' and value:
+            value = apply_date_format(value)
+        elif key in ['studio', 'title']:
+            value = value.get('name', '') if isinstance(value, dict) else value
         elif key in ['height', 'video_codec', 'frame_rate']:
-            # Special formatting rules
-            value = next((file_info.get(key) for file_info in scene.get('files', [])), '')
-            if key == 'height':
-                value = f"{value}p"
-            elif key == 'video_codec':
-                value = value.upper()
-            elif key == 'frame_rate':
-                value = f"{value} FPS"
-        
-        if not value:
-            continue  # Skip empty values
+            file_info_value = next((file_info.get(key) for file_info in scene.get('files', [])), '')
+            if key == 'height' and file_info_value:
+                value = str(file_info_value) + 'p'
+            elif key == 'video_codec' and file_info_value:
+                value = file_info_value.upper()
+            elif key == 'frame_rate' and file_info_value:
+                value = str(file_info_value) + ' FPS'
 
-        # Apply wrapper styles and replace illegal characters
+        value = apply_regex_transformations(value, key) if value else value
         part = f"{config['wrapper_styles'].get(key, ('', ''))[0]}{value}{config['wrapper_styles'].get(key, ('', ''))[1]}"
         part = replace_illegal_characters(part)
         parts.append(part)
@@ -130,14 +208,7 @@ def move_or_rename_files(scene, new_filename, move, rename, dry_run):
     studio = scene.get('studio', {})
     studio_name = studio.get('name')
     tags = {tag['name'] for tag in scene.get('tags', [])}
-
-    # Determine specific paths based on tags
-    tag_path = None
-    for tag in tags:
-        if tag in config['tag_specific_paths']:
-            tag_path = Path(config['tag_specific_paths'][tag])
-            logger.info(f"Detected tag directory for scene {scene_id}: Tag '{tag}' maps to directory '{tag_path}'")
-            break
+    tag_path = next((Path(config['tag_specific_paths'][tag]) for tag in tags if tag in config['tag_specific_paths']), None)
 
     for file_info in scene.get('files', []):
         original_path = Path(file_info['path'])
@@ -148,16 +219,12 @@ def move_or_rename_files(scene, new_filename, move, rename, dry_run):
                 ext_log.error("File is not in any known stash path", extra={"file_path": str(original_path), "scene_id": scene_id})
             continue
 
-        if move and (studio_name or tag_path):
-            # Ensure directory creation is correctly handled within tag-specific paths
-            target_directory = tag_path / (studio_name if studio_name else 'Default') if tag_path else current_stash / (studio_name if studio_name else 'Default')
-        else:
-            target_directory = original_path.parent
-
+        target_directory = tag_path / (studio_name if studio_name else 'Default') if tag_path else current_stash / (studio_name if studio_name else 'Default')
         new_path = target_directory / (new_filename + original_path.suffix)
 
         if dry_run:
-            logger.info(f"Dry run: Would {'move' if move and studio_name else 'rename'} file: {original_path} -> {new_path}")
+            logger.info(f"Dry run: Would {'move' if move else 'rename'} file: {original_path} -> {new_path}")
+            move_associated_files(original_path.parent, target_directory, dry_run)
             continue
 
         if not original_path.exists():
@@ -165,31 +232,44 @@ def move_or_rename_files(scene, new_filename, move, rename, dry_run):
             continue
 
         target_directory.mkdir(parents=True, exist_ok=True)
-        if move and (studio_name or tag_path):
+
+        if move:
             shutil.move(str(original_path), str(new_path))
             action = "Moved"
+            move_associated_files(original_path.parent, target_directory, dry_run)
         elif rename:
             original_path.rename(new_path)
             action = "Renamed"
-        else:
-            continue
 
-        ext_log.info(f"{action} file", extra={
-            "original_path": str(original_path),
-            "new_path": str(new_path),
-            "action_performed": action,
-            "scene_id": scene_id
-        })
-
+        ext_log.info(f"{action} file", extra={"original_path": str(original_path), "new_path": str(new_path), "action_performed": action, "scene_id": scene_id})
         logger.info(f"{action} file from '{original_path}' to '{new_path}'.")
-        results.append({
-            "action": action,
-            "original_path": str(original_path),
-            "new_path": str(new_path),
-            "scene_id": scene_id
-        })
+        results.append({"action": action, "original_path": str(original_path), "new_path": str(new_path), "scene_id": scene_id})
 
     return results
+
+
+def rename_associated_files(original_path, new_path, dry_run=False):
+    directory = original_path.parent
+    base_name = original_path.stem
+    new_base_name = new_path.stem
+
+    for ext in config['associated_files']:
+        associated_files = list(directory.glob(f"*.{ext}"))
+        if len(associated_files) == 1 or any(file.stem == base_name for file in associated_files):
+            for associated_file in associated_files:
+                if associated_file.stem == base_name or len(associated_files) == 1:
+                    new_associated_file = directory / f"{new_base_name}{associated_file.suffix}"
+                    if dry_run:
+                        logger.info(f"Dry run: Detected and would move/rename '{associated_file}' to '{new_associated_file}'")
+                    else:
+                        shutil.move(str(associated_file), str(new_associated_file))
+                        logger.info(f"Moved and renamed associated file '{associated_file}' to '{new_associated_file}'")
+                else:
+                    logger.info(f"Associated file '{associated_file}' does not match base name '{base_name}' and will not be renamed.")
+        else:
+            logger.info(f"No unique or matching associated files found for extension '.{ext}' in directory '{directory}'")
+
+
 
 def find_scene_by_id(scene_id):
     """Fetch detailed data for a specific scene by its ID."""
