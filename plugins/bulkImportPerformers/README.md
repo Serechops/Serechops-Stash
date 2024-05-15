@@ -2,7 +2,7 @@
 
 ## Description
 
-This script bulk imports performers into your system using a list of performer names from a text file. It leverages GraphQL to interact with the backend, checking for existing performers before attempting to create new ones.
+This script bulk imports performers into your system using a list of performer names from a text file.
 
 ## Features
 
