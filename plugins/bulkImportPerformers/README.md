@@ -25,8 +25,11 @@ This script bulk imports performers into your system using a list of performer n
 Here is an example of what the `performers.txt` file should look like:
 
 Vida Guerra
+
 Kate Upton
+
 Katy Perry
+
 Jessica Alba
 
 ## Logging
