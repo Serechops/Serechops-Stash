@@ -2,6 +2,10 @@
 
 Please add this index as a new source in your Stash > Settings > Plugins: https://serechops.github.io/Serechops-Stash/index.yml
 
+# Bulk Import Performers
+
+The [Bulk Import Performers](https://github.com/Serechops/Serechops-Stash/tree/main/plugins/bulkImportPerformers#bulk-import-performers) plugin mass creates performers in your Stash using a list of performer names from a text file.
+
 # Find Marker Tag Images: 
 
 The [Find Marker Tag Images](https://github.com/Serechops/Serechops-Stash/tree/main/plugins/findMarkerTagImages#find-marker-tag-images) plugin will compare the names of your tag images and scene markers and update the animated previews of any matched scene markers to be your tag images. 
