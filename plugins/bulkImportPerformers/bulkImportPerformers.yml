@@ -1,0 +1,11 @@
+name: Bulk Import Performers
+description: Bulk Import Performers based on names from a text file.
+version: 0.1
+url: https://github.com/Serechops/Serechops-Stash
+exec:
+  - python
+  - "{pluginDir}/bulkImportPerformers.py"
+interface: raw
+tasks:
+  - name: Bulk Import Performers
+    description: Imports performers from a list of names in a text file.
