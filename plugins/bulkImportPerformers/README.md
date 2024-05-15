@@ -18,6 +18,8 @@ This script bulk imports performers into your system using a list of performer n
 
 1. Run the Task `Bulk Import Performers` after adding their names to the `performers.txt`
 
+`Note:` for any new additions to the list, you will have to `Reload Plugins` for the script to see the updated list.
+
 ## Example
 
 Here is an example of what the `performers.txt` file should look like:
