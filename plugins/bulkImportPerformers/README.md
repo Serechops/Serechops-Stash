@@ -42,6 +42,3 @@ If you encounter any issues:
 - Ensure your `config.py` file has the correct API key and endpoint.
 - Ensure your `performers.txt` file is correctly formatted and located in the same directory as the script.
 
-## License
-
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
