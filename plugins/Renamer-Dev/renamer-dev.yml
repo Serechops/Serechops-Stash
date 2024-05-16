@@ -1,6 +1,6 @@
 name: Renamer-Dev
 description: Renames scene files based on scene details and updates associated scenes with a "Renamed" tag.
-version: 0.12b-dev
+version: 0.13-dev
 url: https://github.com/Serechops/Serechops-Stash
 exec:
   - python
