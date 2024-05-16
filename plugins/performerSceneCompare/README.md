@@ -8,7 +8,6 @@ This script is designed to compare local performer scenes with those available o
 - Automatically create missing scenes locally.
 - Create a new studio named after the performer for missing scenes.
 - Associate newly created scenes with the new studio.
-- Progress tracking for the entire script execution.
 
 ## Requirements
 
