@@ -1,4 +1,4 @@
-name: Performer Compare
+name: Performer Scene Compare
 description: Compares local performer scenes with StashDB and updates the local database.
 version: 0.1
 url: https://github.com/Serechops/Serechops-Stash
