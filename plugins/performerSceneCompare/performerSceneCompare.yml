@@ -1,0 +1,14 @@
+name: Performer Compare
+description: Compares local performer scenes with StashDB and updates the local database.
+version: 0.1
+url: https://github.com/Serechops/Serechops-Stash
+exec:
+  - python
+  - "{pluginDir}/performerSceneCompare.py"  # Adjust to your script's name and location
+interface: raw
+hooks:
+  - name: PerformerCompare
+    description: Compares local performer scenes with StashDB on demand.
+    triggeredBy:
+      - Performer.Update.Post
+
