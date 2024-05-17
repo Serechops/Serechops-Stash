@@ -1,5 +1,12 @@
 /* Glassy - A Window To Your Collection - A Stash Theme By Serechops */
 
+
+/******** Theme Switch Colorize ********/
+
+button#themeSwitchPlugin.dropdown-toggle.minimal.d-flex.align-items-center.h-100.btn.btn-primary {
+	background: black;
+}
+
 /* Navbrand Custom Image */
 
 button.minimal.brand-link.d-none.d-md-inline-block.btn.btn-primary, 
@@ -68,7 +75,6 @@ li.row.mx-0.mt-2.search-result:not(.selected-result.active) {
 .queue-controls,
 .react-select__control.react-select__control--is-focused,
 .react-select__menu.css,
-.nav-link.active,
 a#performer-tabs-tab-scenes,
 a#performer-tabs-tab-galleries,
 a#performer-tabs-tab-images,
@@ -308,7 +314,7 @@ a.minimal {
 
 /* Add a background image to the existing background container */
 :root {
-  --background-image-url: url('https://rare-gallery.com/uploads/posts/919672-concrete-texture-dark-background-abstract.jpg');
+  --background-image-url: url('https://images.unsplash.com/photo-1493243350443-9e3048ce7288?q=80&w=2552&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D');
 }
 
 body {
@@ -872,7 +878,14 @@ input.query-text-field.bg-secondary.text-white.border-secondary.form-control {
 }
 
 
-/****************************************/
+/**** Performer Stars Color Gold *****/
+
+div.filled-star svg.svg-inline--fa.fa-star.fa-icon.set path {
+	fill: gold;
+}
+
+
+/*******************************************************************************************************************************/
 
 /*Mobile Overhaul*/
 
