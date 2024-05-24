@@ -1,0 +1,6 @@
+name: Glassy Images
+description: Images for A Stash Theme
+version: 0.1.0
+ui:
+  assets:
+    /: .
