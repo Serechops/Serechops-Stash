@@ -1,6 +1,6 @@
 # Stash Tag Performer Image
 
-This script updates an image in Stash by associating it with a performer based on the parent directory name of the image file. The script is designed to be triggered by an `Image.Update.Post` hook in Stash.
+This script updates an image in Stash by associating it with a performer based on the parent directory name of the image file. The script is designed to be triggered by an `Image.Create.Post` hook in Stash.
 
 ## Configuration
 
