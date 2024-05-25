@@ -1,3 +1,5 @@
 renamer.log
 node_modules/
 _site/
+stashaid/app.log
+__pycache__/

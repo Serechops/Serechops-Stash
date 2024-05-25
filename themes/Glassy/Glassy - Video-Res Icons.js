@@ -41,7 +41,7 @@ function setupElementObserver() {
 setupElementObserver();
 
 // Set up a listener for any stash page change
-stash.addEventListener('stash:page:any', () => {
+PluginApi.Event.addEventListener("stash:location", () => {
     console.log('Page changed, re-checking for elements...');
     setupElementObserver();
 });

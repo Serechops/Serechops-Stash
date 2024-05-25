@@ -4,3 +4,5 @@ version: 0.9.6a
 ui:
   css:
     - Glassy - A Stash Theme.css
+  requires:
+    - Glassy_Images
