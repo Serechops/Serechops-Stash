@@ -5,4 +5,4 @@ ui:
   css:
     - Glassy - A Stash Theme.css
   requires:
-    - Glassy-Images
+    - GlassyImages
