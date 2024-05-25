@@ -36,6 +36,6 @@ With [stashDBTagImport](https://github.com/Serechops/Serechops-Stash/tree/main/p
 
 # Stash Disable All
 
-With [stashDisableAll](https://github.com/Serechops/Serechops-Stash/blob/main/plugins/stashDisableAll/README.md#stash-disable-all-plugin) you can easily toggle the UI states back to an all disabled, "Default" state for troubleshooting, and then revert back to your original configuration.
+With [stashDisableAll](https://github.com/Serechops/Serechops-Stash/tree/main/plugins/stashDisableAll#stash-disable-all-plugin) you can easily toggle the UI states back to an all disabled, "Default" state for troubleshooting, and then revert back to your original configuration.
 
 
