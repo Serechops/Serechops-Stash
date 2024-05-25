@@ -34,6 +34,8 @@ The [Renamer](https://github.com/Serechops/Serechops-Stash/tree/main/plugins/Ren
 
 With [stashDBTagImport](https://github.com/Serechops/Serechops-Stash/tree/main/plugins/stashDBTagImport#stashdbtagimport) you can easily mass import over 2,000 tags with associated descriptions into your Stash that have been curated directly from StashDB.
 
+# Stash Disable All
 
+With [stashDisableAll](https://github.com/Serechops/Serechops-Stash/blob/main/plugins/stashDisableAll/README.md#stash-disable-all-plugin) you can easily toggle the UI states back to an all disabled, "Default" state for troubleshooting, and then revert back to your original configuration.
 
 
