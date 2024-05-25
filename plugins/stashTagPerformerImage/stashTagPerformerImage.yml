@@ -1,0 +1,13 @@
+name: stashTagPerformerImage
+description: Checks parent directory of image on Image.Update.Post and compares to any existing performers in the db. Updates that image with the related performer.
+version: 0.1
+url: https://github.com/Serechops/Serechops-Stash
+exec:
+  - python
+  - "{pluginDir}/stashTagPerformerImage.py"
+interface: raw
+hooks:
+  - name: UpdateImage
+    description: Updates an image with a relevant performer from a parent directory name check.
+    triggeredBy:
+      - Image.Create.Post
