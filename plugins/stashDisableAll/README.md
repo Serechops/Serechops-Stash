@@ -1,6 +1,6 @@
 # Stash Disable All Plugin
 
-This repository contains two Python scripts to manage the state of plugins and interface configuration options in a system using GraphQL. The primary script disables all enabled plugins (except the `stashEnableAll` plugin) and interface options, saving their states to a JSON file. The secondary script re-enables them based on the saved state.
+This plugin contains two Python scripts to manage the state of plugins and interface configuration options in a system using GraphQL. The primary script disables all enabled plugins (except the `stashEnableAll` plugin) and interface options, saving their states to a JSON file. The secondary script re-enables them based on the saved state.
 
 ## Scripts
 
