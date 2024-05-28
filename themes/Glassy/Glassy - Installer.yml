@@ -1,5 +1,6 @@
-name: Glassy
-description: Glassy meta-package
+name: Glassy Installer
+description: Glassy meta-package for requirements.
+# requires: Glassy - A Window to Your Collection
 # requires: Glassy - Font Overhaul
 # requires: Glassy - Front Page Animations and Blur
 # requires: Glassy - Images
