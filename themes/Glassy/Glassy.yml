@@ -1,0 +1,16 @@
+name: Glassy
+description: Glassy meta-package
+# requires: Glassy - Font Overhaul
+# requires: Glassy - Front Page Animations and Blur
+# requires: Glassy - Images
+# requires: Glassy - Marker Wall Redesign
+# requires: Glassy - Performer Scene Card Details Redesign
+# requires: Glassy - Scene and Movie Card Redesign
+# requires: Glassy - Scene and Movie Card Redesign - No Animated Titles
+# requires: Glassy - Scene Player-Details 60-40
+# requires: Glassy - Scene Player-Details Reversed 60-40
+# requires: Glassy - Smaller Performer Cards on Main Page
+# requires: Glassy - Smaller Performer Image Cards
+# requires: Glassy - Video-Res Icons
+version: 0
+url: https://github.com/Serechops/Serechops-Stash
