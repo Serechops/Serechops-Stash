@@ -14,7 +14,7 @@ button.minimal.brand-link.d-inline-block.btn.btn-primary {
 	width: 95px;
     height: 40px;  
     display: inline-block;  /* Keeps the block-level width/height but allows inline placement */
-    background-image: url('../Glassy-Images/assets/img/navbrand.png');  /* Path to your image */
+    background-image: url('../Glassy - Images/assets/img/navbrand.png');  /* Path to your image */
     background-size: cover;  /* Cover ensures the image covers the entire area */
     text-indent: -9999px;  /* Moves the text off-screen */
     overflow: hidden;  /* Prevents any part of the text from being visible */
@@ -314,7 +314,7 @@ a.minimal {
 
 /* Add a background image to the existing background container */
 :root {
-  --background-image-url: url('../Glassy-Images/assets/img/background.jpg');
+  --background-image-url: url('../Glassy - Images/assets/img/background.jpg');
 }
 
 body {
