@@ -3,6 +3,6 @@ description: A Stash Theme
 version: 0.9.6c
 ui:
   css:
-    - Glassy - A Stash Theme.css
+    - Glassy - A Window to Your Collection.css
   requires:
-    - GlassyImages
+    - Glassy - Images
