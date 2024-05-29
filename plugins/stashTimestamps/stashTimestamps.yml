@@ -11,3 +11,7 @@ tasks:
     description: Goes through all scenes with markers and creates timestamps within the details.
     defaultArgs:
       mode: main
+  - name: Remove TimeStamps
+    description: Remove all timestamps from details.
+    defaultArgs:
+      mode: remove_timestamps_section
