@@ -1,0 +1,6 @@
+name: image2Scene
+description: Add a mechanism to link images to scenes in the Image Edit Panel.
+version: 0.1
+ui:
+  javascript:
+    - image2Scene.js
