@@ -42,4 +42,8 @@ With [stashDBTagImport](https://github.com/Serechops/Serechops-Stash/tree/main/p
 
 With [stashDisableAll](https://github.com/Serechops/Serechops-Stash/tree/main/plugins/stashDisableAll#stash-disable-all-plugin) you can easily toggle the UI states back to an all disabled, "Default" state for troubleshooting, and then revert back to your original configuration.
 
+# Stash Timestamps
+
+Add [Stash Timestamps](https://github.com/Serechops/Serechops-Stash/tree/main/plugins/stashTimestamps#stash-timestamps) to the details of each scene that contains markers in your Stash.
+
 
