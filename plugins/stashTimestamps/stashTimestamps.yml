@@ -1,0 +1,13 @@
+name: Stash TimeStamps
+description: Create timestamps from pre-existing markers within the scene's details.
+version: 0.1
+url: https://github.com/Serechops/Serechops-Stash
+exec:
+  - python
+  - "{pluginDir}/stashTimestamps.py"
+interface: raw
+tasks:
+  - name: Create TimeStamps
+    description: Goes through all scenes with markers and creates timestamps within the details.
+    defaultArgs:
+      mode: main
