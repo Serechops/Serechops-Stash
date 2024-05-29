@@ -14,6 +14,10 @@ The [Find Marker Tag Images](https://github.com/Serechops/Serechops-Stash/tree/m
 
 Explore [Glassy](https://github.com/Serechops/Serechops-Stash/tree/main/themes/Glassy#glassy---a-window-to-your-collection) and give your collection a fresh look!
 
+# image2Scene
+
+Enjoy [image2Scene](https://github.com/Serechops/Serechops-Stash/tree/main/plugins/image2Scene#image2scene) and easily link your image collection to any scene within your Stash via the `Image Edit Panel`.
+
 # Movie-Fy
 
 The [Movie-Fy](https://github.com/Serechops/Serechops-Stash/tree/main/plugins/Movie-Fy#movie-fy) tool is designed to assist in managing and creating movies within Stash.
