@@ -6,8 +6,9 @@ exec:
   - python
   - "{pluginDir}/enableFromSave.py"
 interface: raw
-requires:
-  - stashDisableAll
+ui:
+  requires:
+    - stashDisableAll
 tasks:
   - name: Enable Plugins and UI configs.
     description: Enable Plugins and UI configs from saved JSON config file.

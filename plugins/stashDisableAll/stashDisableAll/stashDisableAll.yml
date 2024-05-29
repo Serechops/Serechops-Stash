@@ -6,8 +6,9 @@ exec:
   - python
   - "{pluginDir}/disableSave.py"
 interface: raw
-requires:
-  - enableFromSave
+ui:
+  requires:
+    - enableFromSave
 tasks:
   - name: Disable All UI Configs and plugins.
     description: Disables all UI configs and plugins.
