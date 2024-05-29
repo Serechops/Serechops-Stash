@@ -4,11 +4,8 @@ version: 0.1
 url: https://github.com/Serechops/Serechops-Stash
 exec:
   - python
-  - "{pluginDir}/enableFromSave.py"
+  - "{pluginDir}/stashEnableFromSave.py"
 interface: raw
-ui:
-  requires:
-    - stashDisableAll
 tasks:
   - name: Enable Plugins and UI configs.
     description: Enable Plugins and UI configs from saved JSON config file.

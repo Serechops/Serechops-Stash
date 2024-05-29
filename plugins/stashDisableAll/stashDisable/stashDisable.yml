@@ -1,0 +1,6 @@
+name: stashDisable
+description: stashDisable meta-package
+# requires: stashDisableAll
+# requires: stashEnableFromSave
+version: 0
+url: https://github.com/Serechops/Serechops-Stash
