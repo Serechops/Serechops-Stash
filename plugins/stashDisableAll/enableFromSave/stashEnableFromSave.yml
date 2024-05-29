@@ -1,11 +1,13 @@
 name: Stash Enable All
-description: Disables all UI configs and plugins. Saves the current config to a JSON file so that it can be restored to original state.
+description: Restores the UI to its original state via a saved JSON config.
 version: 0.1
 url: https://github.com/Serechops/Serechops-Stash
 exec:
   - python
   - "{pluginDir}/enableFromSave.py"
 interface: raw
+requires:
+  - stashDisableAll
 tasks:
   - name: Enable Plugins and UI configs.
     description: Enable Plugins and UI configs from saved JSON config file.
