@@ -1,12 +1,5 @@
 /* Glassy - A Window To Your Collection - A Stash Theme By Serechops */
 
-
-/******** Theme Switch Colorize ********/
-
-button#themeSwitchPlugin.dropdown-toggle.minimal.d-flex.align-items-center.h-100.btn.btn-primary {
-	background: black;
-}
-
 /* Navbrand Custom Image */
 
 button.minimal.brand-link.d-none.d-md-inline-block.btn.btn-primary, 
@@ -14,7 +7,7 @@ button.minimal.brand-link.d-inline-block.btn.btn-primary {
 	width: 95px;
     height: 40px;  
     display: inline-block;  /* Keeps the block-level width/height but allows inline placement */
-    background-image: url('../Glassy - Images/assets/img/navbrand.png');  /* Path to your image */
+    background-image: url('../Glassy - Images/assets/img/navbrand.png') !important;  /* Path to your image */
     background-size: cover;  /* Cover ensures the image covers the entire area */
     text-indent: -9999px;  /* Moves the text off-screen */
     overflow: hidden;  /* Prevents any part of the text from being visible */
@@ -71,6 +64,9 @@ li.row.mx-0.mt-2.search-result:not(.selected-result.active) {
 
 /* Popup Modal Styling - Settings Section - General "Dark Themed Glassy Look" */
 
+.autocomplete-container,
+input#scene-autocomplete.form-control.awesomplete,
+ul#awesomplete_list_1,
 .queue-scene-details,
 .queue-controls,
 .react-select__control.react-select__control--is-focused,
@@ -142,6 +138,7 @@ div.modal-content {
 	/* Darker background for dark mode, adjust opacity as needed */
 }
 
+
 .react-select__multi-value__label {
 	background: green !important;
 	color: white !important;
@@ -164,6 +161,7 @@ span.tag-item.badge.badge-secondary {
 
 /* Popup Blurring */
 
+ul#awesomplete_list_1,
 .fade.hover-popover-content.show.popover.bs-popover-bottom,
 hover.fade.hover-popover-content.show.popver.bs-popover-top,
 div.tag-popover-card,
@@ -256,8 +254,6 @@ a.minimal {
 	z-index: -1;
 	/* Set a lower z-index for the pseudo-element */
 }
-
-
 
 .grid-card.card.zoom-1:hover::before,
 .performer-card.grid-card.card:hover::before,
