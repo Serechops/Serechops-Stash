@@ -1,0 +1,13 @@
+name: Stash Jellyfin Exporter
+description: Restructures your Stash library to be Jellyfin compliant to better serve and populate metadata within your Jellyfin server.
+version: 0.1
+url: https://github.com/Serechops/Serechops-Stash
+exec:
+  - python
+  - "{pluginDir}/stashJellyfinExporter.py"
+interface: raw
+tasks:
+  - name: Restructure Library
+    description: Restructure library and produces all relevant NFOs and images for Jellyfin.
+    defaultArgs:
+      mode: main
