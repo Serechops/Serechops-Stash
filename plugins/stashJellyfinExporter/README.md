@@ -9,7 +9,7 @@ This script interfaces with Stash and its GraphQL API to export scene metadata f
 
 ## Configuration
 
-Update the `CONFIG` dictionary in the script with the following values:
+Update the `CONFIG` dictionary in the `stashJellyfinExporter.py` script with the following values:
 - `PEOPLE_DIR`: The directory path where performer images are stored.
 - `EXCLUDED_PATHS`: A list of paths to exclude from processing.
 - `DRY_RUN`: Set to `True` for a dry run (no changes will be made), or `False` to execute the changes.
