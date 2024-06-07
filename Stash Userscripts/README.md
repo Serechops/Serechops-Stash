@@ -38,6 +38,8 @@ These user scripts add custom right-click menus to `.scene-card`, `.gallery-card
 
 ## Configuration
 
+Set your server and API key in each of the provided scripts within the following block:
+
 ```
 // Server and API key configuration
     const config = {
@@ -45,6 +47,13 @@ These user scripts add custom right-click menus to `.scene-card`, `.gallery-card
         apiKey: '' // Add your API key here
     };
 ```
+
+As well, if your server differs from `localhost` please change the following line in the header portion of each script:
+
+`// @match        http://localhost:9999/*`
+
+This should be everything needed to have your up and running with `stashRightClick`.
+
 ## Usage
 
 1. Navigate to your localhost Stash instance.
