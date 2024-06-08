@@ -1,13 +1,15 @@
 // ==UserScript==
-// @name         stashRightClick for Galleries
-// @namespace    http://localhost:9999/
-// @version      1.1
-// @description  Adds a custom right-click menu to .gallery-card elements on localhost:9999 with options to add tags, performers, or scenes using GraphQL mutations.
-// @author       Your Name
+// @name         stashRightClick for Images
+// @namespace    https://github.com/Serechops/Serechops-Stash
+// @version      1.0
+// @description  Adds a custom right-click menu to .image-card elements on localhost:9999 with options to add tags, performers, or galleries using GraphQL mutations.
+// @author       Serechops
 // @match        http://localhost:9999/*
 // @grant        none
 // @require      https://cdn.jsdelivr.net/npm/toastify-js@1.12.0/src/toastify.min.js
 // @require      https://unpkg.com/tabulator-tables@5.0.8/dist/js/tabulator.min.js
+// @downloadURL  https://github.com/Serechops/Serechops-Stash/raw/main/Stash%20Userscripts/stashRightClick%20for%20Images.user.js
+// @updateURL    https://github.com/Serechops/Serechops-Stash/raw/main/Stash%20Userscripts/stashRightClick%20for%20Images.user.js
 // ==/UserScript==
 
 (async function() {
@@ -54,7 +56,7 @@
     // Custom CSS for the popup
     const customCSS = `
         #popup {
-            position: absolute;
+            position: fixed;
             background: rgba(0, 0, 0, 0.5);
             backdrop-filter: blur(10px);
             border: 1px solid #ccc;
@@ -67,7 +69,6 @@
         }
         #popup h2 {
             margin-top: 0;
-            cursor: move; /* Make the header cursor indicate that it's draggable */
         }
         #popup form label {
             display: block;
@@ -112,7 +113,7 @@
     let currentPopup = null;
 
     // Function to create the custom menu
-    function createCustomMenu(galleryId) {
+    function createCustomMenu(imageId) {
         const menu = document.createElement('div');
         menu.id = 'custom-menu';
         menu.style.position = 'absolute';
@@ -123,8 +124,8 @@
         menu.style.boxShadow = '0 0 10px rgba(0, 0, 0, 0.5)';
 
         const viewLink = document.createElement('a');
-        viewLink.href = `http://localhost:9999/galleries/${galleryId}`;
-        viewLink.textContent = 'View Gallery';
+        viewLink.href = `http://localhost:9999/images/${imageId}`;
+        viewLink.textContent = 'View Image';
         viewLink.style.display = 'block';
         viewLink.style.marginBottom = '5px';
         menu.appendChild(viewLink);
@@ -136,7 +137,7 @@
         addTagsLink.style.marginBottom = '5px';
         addTagsLink.addEventListener('click', function(e) {
             e.preventDefault();
-            createTabulatorPopup('Tags', galleryId, fetchTags, event);
+            createTabulatorPopup('Tags', imageId, fetchTags, event);
         });
         menu.appendChild(addTagsLink);
 
@@ -147,20 +148,20 @@
         addPerformersLink.style.marginBottom = '5px';
         addPerformersLink.addEventListener('click', function(e) {
             e.preventDefault();
-            createTabulatorPopup('Performers', galleryId, fetchPerformers, event);
+            createTabulatorPopup('Performers', imageId, fetchPerformers, event);
         });
         menu.appendChild(addPerformersLink);
 
-        const addScenesLink = document.createElement('a');
-        addScenesLink.href = '#';
-        addScenesLink.textContent = 'Add Scenes...';
-        addScenesLink.style.display = 'block';
-        addScenesLink.style.marginBottom = '5px';
-        addScenesLink.addEventListener('click', function(e) {
+        const linkSceneLink = document.createElement('a');
+        linkSceneLink.href = '#';
+        linkSceneLink.textContent = 'Link Scene...';
+        linkSceneLink.style.display = 'block';
+        linkSceneLink.style.marginBottom = '5px';
+        linkSceneLink.addEventListener('click', function(e) {
             e.preventDefault();
-            createTabulatorPopup('Scenes', galleryId, fetchScenes, event);
+            createTabulatorPopup('Scenes', imageId, fetchScenes, event);
         });
-        menu.appendChild(addScenesLink);
+        menu.appendChild(linkSceneLink);
 
         document.body.appendChild(menu);
         currentMenu = menu;
@@ -168,14 +169,14 @@
     }
 
     // Function to show the custom menu
-    function showCustomMenu(event, galleryId) {
+    function showCustomMenu(event, imageId) {
         if (currentMenu) {
             currentMenu.remove();
         }
         if (currentPopup) {
             currentPopup.remove();
         }
-        const menu = createCustomMenu(galleryId);
+        const menu = createCustomMenu(imageId);
         menu.style.top = `${event.pageY}px`;
         menu.style.left = `${event.pageX}px`;
         event.preventDefault();
@@ -190,14 +191,23 @@
         document.addEventListener('click', handleClickOutside);
     }
 
-    // Function to extract gallery ID from URL
-    function getGalleryIdFromUrl(url) {
-        const match = url.match(/galleries\/(\d+)/);
+    // Function to extract image ID from URL
+    function getImageIdFromUrl(url) {
+        const match = url.match(/images\/(\d+)/);
         return match ? match[1] : null;
     }
 
+    // Debounce function to limit the rate at which a function can fire
+    function debounce(func, wait) {
+        let timeout;
+        return function(...args) {
+            clearTimeout(timeout);
+            timeout = setTimeout(() => func.apply(this, args), wait);
+        };
+    }
+
     // Function to create the Tabulator table in a popup
-    function createTabulatorPopup(type, galleryId, fetchFunction, event) {
+    function createTabulatorPopup(type, imageId, fetchFunction, event) {
         console.log(`Creating Tabulator popup for ${type}`);
         const popup = document.createElement('div');
         popup.id = 'popup';
@@ -205,7 +215,7 @@
 
         const form = document.createElement('form');
         form.innerHTML = `
-            <h2>Add ${type} to Gallery</h2>
+            <h2>Add ${type} to Image</h2>
             <input type="text" id="${type.toLowerCase()}-search" placeholder="Search ${type}">
             <div id="${type.toLowerCase()}-table"></div>
             <button type="button" id="add-${type.toLowerCase()}">Add ${type}</button>
@@ -242,22 +252,13 @@
             placeholder: "No Data Available",
             selectable: true,
             columns: [
-                { title: "Name", field: type === 'Scenes' ? 'title' : 'name' },
+                { title: type === 'Scenes' ? 'Title' : 'Name', field: type === 'Scenes' ? 'title' : 'name' },
             ],
         });
 
         async function fetchData(query) {
             const data = await fetchFunction(query);
             table.setData(data);
-        }
-
-        // Debounce function to limit the rate at which a function can fire
-        function debounce(func, wait) {
-            let timeout;
-            return function(...args) {
-                clearTimeout(timeout);
-                timeout = setTimeout(() => func.apply(this, args), wait);
-            };
         }
 
         // Add input field for filtering
@@ -271,11 +272,11 @@
             const selectedRows = table.getSelectedData();
             const selectedIds = selectedRows.map(row => row.id);
             if (type === 'Tags') {
-                await updateGalleryWithTags(galleryId, selectedIds);
+                await updateImageWithTags(imageId, selectedIds);
             } else if (type === 'Performers') {
-                await updateGalleryWithPerformers(galleryId, selectedIds);
+                await updateImageWithPerformers(imageId, selectedIds);
             } else if (type === 'Scenes') {
-                await updateGalleryWithScenes(galleryId, selectedIds);
+                await linkSceneToImage(imageId, selectedIds);
             }
             popup.remove();
         });
@@ -355,7 +356,7 @@
     async function fetchScenes(query) {
         const queryText = `
             query FindScenes($filter: String!) {
-                findScenes(scene_filter: { title: { value: $filter, modifier: INCLUDES } }, filter: { per_page: -1 }) {
+                findScenes(scene_filter: { title: { value: $filter, modifier: INCLUDES } }, filter: { per_page: -1, direction: ASC }) {
                     scenes {
                         id
                         title
@@ -375,114 +376,12 @@
         return result.data.findScenes.scenes;
     }
 
-    // Function to fetch all tags and show the form
-    function fetchAllTags(galleryId, menu) {
-        const query = `
-            query AllTags {
-                allTags {
-                    id
-                    name
-                }
-            }
-        `;
-        fetch(config.serverUrl, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `ApiKey ${config.apiKey}`
-            },
-            body: JSON.stringify({ query })
-        })
-        .then(response => response.json())
-        .then(result => {
-            if (result.errors) {
-                console.error(result.errors);
-                showToast('Failed to fetch tags', 'error');
-            } else {
-                const tags = result.data.allTags.filter(tag => tag.name).sort((a, b) => a.name.localeCompare(b.name));
-                createPopupFormForTags(galleryId, tags, menu);
-            }
-        })
-        .catch(error => {
-            console.error(error);
-            showToast('Failed to fetch tags', 'error');
-        });
-    }
-
-    // Function to fetch all performers and show the form
-    function fetchAllPerformers(galleryId, menu) {
-        const query = `
-            query AllPerformers {
-                allPerformers {
-                    id
-                    name
-                }
-            }
-        `;
-        fetch(config.serverUrl, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `ApiKey ${config.apiKey}`
-            },
-            body: JSON.stringify({ query })
-        })
-        .then(response => response.json())
-        .then(result => {
-            if (result.errors) {
-                console.error(result.errors);
-                showToast('Failed to fetch performers', 'error');
-            } else {
-                const performers = result.data.allPerformers.filter(performer => performer.name).sort((a, b) => a.name.localeCompare(b.name));
-                createPopupFormForPerformers(galleryId, performers, menu);
-            }
-        })
-        .catch(error => {
-            console.error(error);
-            showToast('Failed to fetch performers', 'error');
-        });
-    }
-
-    // Function to fetch all scenes and show the form
-    function fetchAllScenes(galleryId, menu) {
-        const query = `
-            query AllScenes {
-                allScenes {
-                    id
-                    title
-                }
-            }
-        `;
-        fetch(config.serverUrl, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `ApiKey ${config.apiKey}`
-            },
-            body: JSON.stringify({ query })
-        })
-        .then(response => response.json())
-        .then(result => {
-            if (result.errors) {
-                console.error(result.errors);
-                showToast('Failed to fetch scenes', 'error');
-            } else {
-                const scenes = result.data.allScenes.filter(scene => scene.title).sort((a, b) => a.title.localeCompare(b.title));
-                createPopupFormForScenes(galleryId, scenes, menu);
-            }
-        })
-        .catch(error => {
-            console.error(error);
-            showToast('Failed to fetch scenes', 'error');
-        });
-    }
-
-    // Function to update the gallery with selected tags using GraphQL
-    async function updateGalleryWithTags(galleryId, newTagIds) {
+    // Function to update the image with selected tags using GraphQL
+    async function updateImageWithTags(imageId, newTagIds) {
         // First fetch existing tags
         const existingTagsQuery = `
-            query FindGallery {
-                findGallery(id: ${galleryId}) {
+            query FindImage {
+                findImage(id: ${imageId}) {
                     tags {
                         id
                     }
@@ -499,13 +398,13 @@
             body: JSON.stringify({ query: existingTagsQuery })
         });
         const existingTagsResult = await existingTagsResponse.json();
-        const existingTagIds = existingTagsResult.data.findGallery.tags.map(tag => tag.id);
+        const existingTagIds = existingTagsResult.data.findImage.tags.map(tag => tag.id);
 
         const combinedTagIds = Array.from(new Set([...existingTagIds, ...newTagIds]));
 
         const mutationQuery = `
-            mutation GalleryUpdate {
-                galleryUpdate(input: { id: "${galleryId}", tag_ids: ${JSON.stringify(combinedTagIds)} }) {
+            mutation ImageUpdate {
+                imageUpdate(input: { id: "${imageId}", tag_ids: ${JSON.stringify(combinedTagIds)} }) {
                     id
                 }
             }
@@ -524,23 +423,23 @@
             const result = await response.json();
             if (result.errors) {
                 console.error(result.errors);
-                showToast('Failed to update the gallery with tags', 'error');
+                showToast('Failed to update the image with tags', 'error');
             } else {
-                showToast('Gallery updated with tags successfully', 'success');
-                console.log(result.data.galleryUpdate);
+                showToast('Image updated with tags successfully', 'success');
+                console.log(result.data.imageUpdate);
             }
         } catch (error) {
             console.error(error);
-            showToast('Failed to update the gallery with tags', 'error');
+            showToast('Failed to update the image with tags', 'error');
         }
     }
 
-    // Function to update the gallery with selected performers using GraphQL
-    async function updateGalleryWithPerformers(galleryId, newPerformerIds) {
+    // Function to update the image with selected performers using GraphQL
+    async function updateImageWithPerformers(imageId, newPerformerIds) {
         // First fetch existing performers
         const existingPerformersQuery = `
-            query FindGallery {
-                findGallery(id: ${galleryId}) {
+            query FindImage {
+                findImage(id: ${imageId}) {
                     performers {
                         id
                     }
@@ -557,13 +456,13 @@
             body: JSON.stringify({ query: existingPerformersQuery })
         });
         const existingPerformersResult = await existingPerformersResponse.json();
-        const existingPerformerIds = existingPerformersResult.data.findGallery.performers.map(performer => performer.id);
+        const existingPerformerIds = existingPerformersResult.data.findImage.performers.map(performer => performer.id);
 
         const combinedPerformerIds = Array.from(new Set([...existingPerformerIds, ...newPerformerIds]));
 
         const mutationQuery = `
-            mutation GalleryUpdate {
-                galleryUpdate(input: { id: "${galleryId}", performer_ids: ${JSON.stringify(combinedPerformerIds)} }) {
+            mutation ImageUpdate {
+                imageUpdate(input: { id: "${imageId}", performer_ids: ${JSON.stringify(combinedPerformerIds)} }) {
                     id
                 }
             }
@@ -582,46 +481,64 @@
             const result = await response.json();
             if (result.errors) {
                 console.error(result.errors);
-                showToast('Failed to update the gallery with performers', 'error');
+                showToast('Failed to update the image with performers', 'error');
             } else {
-                showToast('Gallery updated with performers successfully', 'success');
-                console.log(result.data.galleryUpdate);
+                showToast('Image updated with performers successfully', 'success');
+                console.log(result.data.imageUpdate);
             }
         } catch (error) {
             console.error(error);
-            showToast('Failed to update the gallery with performers', 'error');
+            showToast('Failed to update the image with performers', 'error');
         }
     }
 
-    // Function to update the gallery with selected scenes using GraphQL
-    async function updateGalleryWithScenes(galleryId, newSceneIds) {
-        // First fetch existing scenes
-        const existingScenesQuery = `
-            query FindGallery {
-                findGallery(id: ${galleryId}) {
-                    scenes {
-                        id
+    // Function to link a scene to the image and create a gallery using GraphQL
+    async function linkSceneToImage(imageId, selectedSceneIds) {
+        for (let sceneId of selectedSceneIds) {
+            try {
+                // Fetch scene title
+                const sceneQuery = `
+                    query FindScene {
+                        findScene(id: "${sceneId}") {
+                            title
+                        }
                     }
-                }
+                `;
+
+                const sceneResponse = await fetch(config.serverUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `ApiKey ${config.apiKey}`
+                    },
+                    body: JSON.stringify({ query: sceneQuery }),
+                });
+
+                const sceneResult = await sceneResponse.json();
+                const sceneTitle = sceneResult.data.findScene.title;
+
+                // Create gallery named after the scene title
+                const galleryId = await createGallery(sceneTitle);
+
+                // Update image to associate with the gallery
+                await updateImage(imageId, galleryId);
+
+                // Update scene to associate with the gallery
+                await updateScene(sceneId, galleryId);
+
+                showToast(`Image gallery created for scene ${sceneTitle} successfully`, 'success');
+            } catch (error) {
+                console.error('Error linking scene to image:', error);
+                showToast('Failed to link scene to image', 'error');
             }
-        `;
+        }
+    }
 
-        const existingScenesResponse = await fetch(config.serverUrl, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `ApiKey ${config.apiKey}`
-            },
-            body: JSON.stringify({ query: existingScenesQuery })
-        });
-        const existingScenesResult = await existingScenesResponse.json();
-        const existingSceneIds = existingScenesResult.data.findGallery.scenes.map(scene => scene.id);
-
-        const combinedSceneIds = Array.from(new Set([...existingSceneIds, ...newSceneIds]));
-
-        const mutationQuery = `
-            mutation GalleryUpdate {
-                galleryUpdate(input: { id: "${galleryId}", scene_ids: ${JSON.stringify(combinedSceneIds)} }) {
+    // Function to create a gallery
+    async function createGallery(galleryTitle) {
+        const mutation = `
+            mutation GalleryCreate {
+                galleryCreate(input: { title: "${galleryTitle}" }) {
                     id
                 }
             }
@@ -634,32 +551,79 @@
                     'Content-Type': 'application/json',
                     'Authorization': `ApiKey ${config.apiKey}`
                 },
-                body: JSON.stringify({ query: mutationQuery })
+                body: JSON.stringify({ query: mutation }),
             });
-
-            const result = await response.json();
-            if (result.errors) {
-                console.error(result.errors);
-                showToast('Failed to update the gallery with scenes', 'error');
-            } else {
-                showToast('Gallery updated with scenes successfully', 'success');
-                console.log(result.data.galleryUpdate);
-            }
+            const data = await response.json();
+            return data.data.galleryCreate.id;
         } catch (error) {
-            console.error(error);
-            showToast('Failed to update the gallery with scenes', 'error');
+            console.error('Error creating gallery:', error);
+            throw new Error('Error creating gallery');
         }
     }
 
-    // Add event listener to .gallery-card elements
+    // Function to update an image with a gallery ID
+    async function updateImage(imageId, galleryId) {
+        const mutation = `
+            mutation ImageUpdate {
+                imageUpdate(input: { id: "${imageId}", gallery_ids: ["${galleryId}"] }) {
+                    id
+                }
+            }
+        `;
+
+        try {
+            const response = await fetch(config.serverUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `ApiKey ${config.apiKey}`
+                },
+                body: JSON.stringify({ query: mutation }),
+            });
+            const data = await response.json();
+            return data.data.imageUpdate.id;
+        } catch (error) {
+            console.error('Error updating image:', error);
+            throw new Error('Error updating image');
+        }
+    }
+
+    // Function to update a scene with a gallery ID
+    async function updateScene(sceneId, galleryId) {
+        const mutation = `
+            mutation SceneUpdate {
+                sceneUpdate(input: { id: "${sceneId}", gallery_ids: ["${galleryId}"] }) {
+                    id
+                }
+            }
+        `;
+
+        try {
+            const response = await fetch(config.serverUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `ApiKey ${config.apiKey}`
+                },
+                body: JSON.stringify({ query: mutation }),
+            });
+            const data = await response.json();
+            return data.data.sceneUpdate.id;
+        } catch (error) {
+            console.error('Error updating scene:', error);
+            throw new Error('Error updating scene');
+        }
+    }
+
+    // Add event listener to .image-card elements
     document.addEventListener('contextmenu', function(event) {
-        const galleryCard = event.target.closest('.gallery-card');
-        if (galleryCard) {
-            const linkElement = galleryCard.querySelector('.gallery-card-header');
+        const imageCard = event.target.closest('.image-card');
+        if (imageCard) {
+            const linkElement = imageCard.querySelector('.image-card-link');
             if (linkElement) {
-                const galleryId = getGalleryIdFromUrl(linkElement.href);
-                if (galleryId) {
-                    showCustomMenu(event, galleryId);
+                const imageId = getImageIdFromUrl(linkElement.href);
+                if (imageId) {
+                    showCustomMenu(event, imageId);
                 }
             }
         }
