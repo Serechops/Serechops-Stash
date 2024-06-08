@@ -39,10 +39,14 @@ These user scripts add custom right-click menus to `.scene-card`, `.gallery-card
 ## Configuration
 
 ```
-// Server and API key configuration
-    const config = {
-        serverUrl: 'http://localhost:9999/graphql',
-        apiKey: '' // Add your API key here
+/******************************************
+     * USER CONFIGURATION
+     ******************************************/
+    const userConfig = {
+        scheme: 'http', // or 'https'
+        host: 'localhost', // your server IP or hostname
+        port: 9999, // your server port
+        apiKey: '' // your API key
     };
 ```
 ## Usage
