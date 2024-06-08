@@ -2,7 +2,7 @@
 // @name         stashRightClick for Images
 // @namespace    https://github.com/Serechops/Serechops-Stash
 // @version      1.1
-// @description  Adds a custom right-click menu to .image-card elements on localhost:9999 with options to add tags, performers, or galleries using GraphQL mutations.
+// @description  Adds a custom right-click menu to .image-card elements with options to add tags, performers, or galleries using GraphQL mutations.
 // @author       Serechops
 // @match        http://localhost:9999/*
 // @grant        none
