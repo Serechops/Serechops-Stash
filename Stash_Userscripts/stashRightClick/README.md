@@ -38,6 +38,10 @@ These user scripts add custom right-click menus to `.scene-card`, `.gallery-card
 
 ## Configuration
 
+Change the `// @match        http://localhost:9999/*` in the script header to match your server address and port.
+
+Find this configuration at the top of each `stashRightClick` userscript and adjust it accordingly.
+
 ```
 /******************************************
      * USER CONFIGURATION
