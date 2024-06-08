@@ -1,13 +1,15 @@
 // ==UserScript==
-// @name         stashRightClick for Scenes
-// @namespace    http://localhost:9999/
-// @version      2.11
-// @description  Adds a custom right-click menu to .scene-card elements on localhost:9999 with options to add tags, performers, or galleries using GraphQL mutations. Updated with debounced searchable dropdowns and improved popup positioning, and appending tags/performers/galleries instead of replacing them.
-// @author       https://github.com/Serechops/Serechops-Stash
+// @name         stashRightClick for Galleries
+// @namespace    https://github.com/Serechops/Serechops-Stash
+// @version      1.1
+// @description  Adds a custom right-click menu to .gallery-card elements on localhost:9999 with options to add tags, performers, or scenes using GraphQL mutations.
+// @author       Serechops
 // @match        http://localhost:9999/*
 // @grant        none
 // @require      https://cdn.jsdelivr.net/npm/toastify-js@1.12.0/src/toastify.min.js
 // @require      https://unpkg.com/tabulator-tables@5.0.8/dist/js/tabulator.min.js
+// @downloadURL  https://github.com/Serechops/Serechops-Stash/raw/main/Stash%20Userscripts/stashRightClick%20for%20Galleries.user.js
+// @updateURL    https://github.com/Serechops/Serechops-Stash/raw/main/Stash%20Userscripts/stashRightClick%20for%20Galleries.user.js
 // ==/UserScript==
 
 (async function() {
@@ -61,7 +63,7 @@
             z-index: 10001;
             padding: 20px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
-            width: 500px;
+            width: 400px;
             max-height: 80%;
             overflow-y: auto;
         }
@@ -112,7 +114,7 @@
     let currentPopup = null;
 
     // Function to create the custom menu
-    function createCustomMenu(sceneId) {
+    function createCustomMenu(galleryId) {
         const menu = document.createElement('div');
         menu.id = 'custom-menu';
         menu.style.position = 'absolute';
@@ -123,14 +125,10 @@
         menu.style.boxShadow = '0 0 10px rgba(0, 0, 0, 0.5)';
 
         const viewLink = document.createElement('a');
-        viewLink.href = '#';
-        viewLink.textContent = 'View Scene';
+        viewLink.href = `http://localhost:9999/galleries/${galleryId}`;
+        viewLink.textContent = 'View Gallery';
         viewLink.style.display = 'block';
         viewLink.style.marginBottom = '5px';
-        viewLink.addEventListener('click', function(e) {
-            e.preventDefault();
-            fetchSceneStreams(sceneId);
-        });
         menu.appendChild(viewLink);
 
         const addTagsLink = document.createElement('a');
@@ -140,7 +138,7 @@
         addTagsLink.style.marginBottom = '5px';
         addTagsLink.addEventListener('click', function(e) {
             e.preventDefault();
-            createTabulatorPopup('Tags', sceneId, fetchTags, event);
+            createTabulatorPopup('Tags', galleryId, fetchTags, event);
         });
         menu.appendChild(addTagsLink);
 
@@ -151,31 +149,20 @@
         addPerformersLink.style.marginBottom = '5px';
         addPerformersLink.addEventListener('click', function(e) {
             e.preventDefault();
-            createTabulatorPopup('Performers', sceneId, fetchPerformers, event);
+            createTabulatorPopup('Performers', galleryId, fetchPerformers, event);
         });
         menu.appendChild(addPerformersLink);
 
-        const addGalleriesLink = document.createElement('a');
-        addGalleriesLink.href = '#';
-        addGalleriesLink.textContent = 'Add Galleries...';
-        addGalleriesLink.style.display = 'block';
-        addGalleriesLink.style.marginBottom = '5px';
-        addGalleriesLink.addEventListener('click', function(e) {
+        const addScenesLink = document.createElement('a');
+        addScenesLink.href = '#';
+        addScenesLink.textContent = 'Add Scenes...';
+        addScenesLink.style.display = 'block';
+        addScenesLink.style.marginBottom = '5px';
+        addScenesLink.addEventListener('click', function(e) {
             e.preventDefault();
-            createTabulatorPopup('Galleries', sceneId, fetchGalleries, event);
+            createTabulatorPopup('Scenes', galleryId, fetchScenes, event);
         });
-        menu.appendChild(addGalleriesLink);
-
-        const editSceneLink = document.createElement('a');
-        editSceneLink.href = '#';
-        editSceneLink.textContent = 'Edit Scene';
-        editSceneLink.style.display = 'block';
-        editSceneLink.style.marginBottom = '5px';
-        editSceneLink.addEventListener('click', function(e) {
-            e.preventDefault();
-            openEditScenePage(sceneId);
-        });
-        menu.appendChild(editSceneLink);
+        menu.appendChild(addScenesLink);
 
         document.body.appendChild(menu);
         currentMenu = menu;
@@ -183,14 +170,14 @@
     }
 
     // Function to show the custom menu
-    function showCustomMenu(event, sceneId) {
+    function showCustomMenu(event, galleryId) {
         if (currentMenu) {
             currentMenu.remove();
         }
         if (currentPopup) {
             currentPopup.remove();
         }
-        const menu = createCustomMenu(sceneId);
+        const menu = createCustomMenu(galleryId);
         menu.style.top = `${event.pageY}px`;
         menu.style.left = `${event.pageX}px`;
         event.preventDefault();
@@ -205,14 +192,14 @@
         document.addEventListener('click', handleClickOutside);
     }
 
-    // Function to extract scene ID from URL
-    function getSceneIdFromUrl(url) {
-        const match = url.match(/scenes\/(\d+)/);
+    // Function to extract gallery ID from URL
+    function getGalleryIdFromUrl(url) {
+        const match = url.match(/galleries\/(\d+)/);
         return match ? match[1] : null;
     }
 
     // Function to create the Tabulator table in a popup
-    function createTabulatorPopup(type, sceneId, fetchFunction, event) {
+    function createTabulatorPopup(type, galleryId, fetchFunction, event) {
         console.log(`Creating Tabulator popup for ${type}`);
         const popup = document.createElement('div');
         popup.id = 'popup';
@@ -220,7 +207,7 @@
 
         const form = document.createElement('form');
         form.innerHTML = `
-            <h2>Add ${type} to Scene</h2>
+            <h2>Add ${type} to Gallery</h2>
             <input type="text" id="${type.toLowerCase()}-search" placeholder="Search ${type}">
             <div id="${type.toLowerCase()}-table"></div>
             <button type="button" id="add-${type.toLowerCase()}">Add ${type}</button>
@@ -257,7 +244,7 @@
             placeholder: "No Data Available",
             selectable: true,
             columns: [
-                { title: "Name", field: type === 'Galleries' ? 'title' : 'name' },
+                { title: "Name", field: type === 'Scenes' ? 'title' : 'name' },
             ],
         });
 
@@ -286,11 +273,11 @@
             const selectedRows = table.getSelectedData();
             const selectedIds = selectedRows.map(row => row.id);
             if (type === 'Tags') {
-                await updateSceneWithTags(sceneId, selectedIds);
+                await updateGalleryWithTags(galleryId, selectedIds);
             } else if (type === 'Performers') {
-                await updateSceneWithPerformers(sceneId, selectedIds);
-            } else if (type === 'Galleries') {
-                await updateSceneWithGalleries(sceneId, selectedIds);
+                await updateGalleryWithPerformers(galleryId, selectedIds);
+            } else if (type === 'Scenes') {
+                await updateGalleryWithScenes(galleryId, selectedIds);
             }
             popup.remove();
         });
@@ -320,7 +307,6 @@
 
     // Function to fetch tags matching a query
     async function fetchTags(query) {
-        console.log('Fetching tags for query:', query);
         const queryText = `
             query FindTags($filter: String!) {
                 findTags(tag_filter: { name: { value: $filter, modifier: INCLUDES } }, filter: { per_page: -1 }) {
@@ -345,7 +331,6 @@
 
     // Function to fetch performers matching a query
     async function fetchPerformers(query) {
-        console.log('Fetching performers for query:', query);
         const queryText = `
             query FindPerformers($filter: String!) {
                 findPerformers(performer_filter: { name: { value: $filter, modifier: INCLUDES } }, filter: { per_page: -1 }) {
@@ -368,13 +353,12 @@
         return result.data.findPerformers.performers;
     }
 
-    // Function to fetch galleries matching a query
-    async function fetchGalleries(query) {
-        console.log('Fetching galleries for query:', query);
+    // Function to fetch scenes matching a query
+    async function fetchScenes(query) {
         const queryText = `
-            query FindGalleries($filter: String!) {
-                findGalleries(gallery_filter: { title: { value: $filter, modifier: INCLUDES } }, filter: { per_page: -1 }) {
-                    galleries {
+            query FindScenes($filter: String!) {
+                findScenes(scene_filter: { title: { value: $filter, modifier: INCLUDES } }, filter: { per_page: -1 }) {
+                    scenes {
                         id
                         title
                     }
@@ -390,214 +374,145 @@
             body: JSON.stringify({ query: queryText, variables: { filter: query } })
         });
         const result = await response.json();
-        return result.data.findGalleries.galleries;
+        return result.data.findScenes.scenes;
     }
 
-    // Function to update the scene with selected tags using GraphQL
-    async function updateSceneWithTags(sceneId, newTagIds) {
-        console.log(`Updating scene ${sceneId} with tags:`, newTagIds);
-        const existingTagIds = await fetchExistingTagIds(sceneId);
-        const allTagIds = Array.from(new Set([...existingTagIds, ...newTagIds]));
-
-        const mutationQuery = `
-            mutation SceneUpdate {
-                sceneUpdate(input: { id: "${sceneId}", tag_ids: ${JSON.stringify(allTagIds)} }) {
-                    id
-                }
-            }
-        `;
-
-        try {
-            const response = await fetch(config.serverUrl, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `ApiKey ${config.apiKey}`
-                },
-                body: JSON.stringify({ query: mutationQuery })
-            });
-
-            const result = await response.json();
-            if (result.errors) {
-                console.error(result.errors);
-                showToast('Failed to update the scene with tags', 'error');
-            } else {
-                showToast('Scene updated with tags successfully', 'success');
-                console.log(result.data.sceneUpdate);
-            }
-        } catch (error) {
-            console.error(error);
-            showToast('Failed to update the scene with tags', 'error');
-        }
-    }
-
-    // Function to update the scene with selected performers using GraphQL
-    async function updateSceneWithPerformers(sceneId, newPerformerIds) {
-        console.log(`Updating scene ${sceneId} with performers:`, newPerformerIds);
-        const existingPerformerIds = await fetchExistingPerformerIds(sceneId);
-        const allPerformerIds = Array.from(new Set([...existingPerformerIds, ...newPerformerIds]));
-
-        const mutationQuery = `
-            mutation SceneUpdate {
-                sceneUpdate(input: { id: "${sceneId}", performer_ids: ${JSON.stringify(allPerformerIds)} }) {
-                    id
-                }
-            }
-        `;
-
-        try {
-            const response = await fetch(config.serverUrl, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `ApiKey ${config.apiKey}`
-                },
-                body: JSON.stringify({ query: mutationQuery })
-            });
-
-            const result = await response.json();
-            if (result.errors) {
-                console.error(result.errors);
-                showToast('Failed to update the scene with performers', 'error');
-            } else {
-                showToast('Scene updated with performers successfully', 'success');
-                console.log(result.data.sceneUpdate);
-            }
-        } catch (error) {
-            console.error(error);
-            showToast('Failed to update the scene with performers', 'error');
-        }
-    }
-
-    // Function to update the scene with selected galleries using GraphQL
-    async function updateSceneWithGalleries(sceneId, newGalleryIds) {
-        console.log(`Updating scene ${sceneId} with galleries:`, newGalleryIds);
-        const existingGalleryIds = await fetchExistingGalleryIds(sceneId);
-        const allGalleryIds = Array.from(new Set([...existingGalleryIds, ...newGalleryIds]));
-
-        const mutationQuery = `
-            mutation SceneUpdate {
-                sceneUpdate(input: { id: "${sceneId}", gallery_ids: ${JSON.stringify(allGalleryIds)} }) {
-                    id
-                }
-            }
-        `;
-
-        try {
-            const response = await fetch(config.serverUrl, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `ApiKey ${config.apiKey}`
-                },
-                body: JSON.stringify({ query: mutationQuery })
-            });
-
-            const result = await response.json();
-            if (result.errors) {
-                console.error(result.errors);
-                showToast('Failed to update the scene with galleries', 'error');
-            } else {
-                showToast('Scene updated with galleries successfully', 'success');
-                console.log(result.data.sceneUpdate);
-            }
-        } catch (error) {
-            console.error(error);
-            showToast('Failed to update the scene with galleries', 'error');
-        }
-    }
-
-    // Function to fetch existing tag IDs for a scene
-    async function fetchExistingTagIds(sceneId) {
+    // Function to fetch all tags and show the form
+    function fetchAllTags(galleryId, menu) {
         const query = `
-            query {
-                findScene(id: "${sceneId}") {
+            query AllTags {
+                allTags {
+                    id
+                    name
+                }
+            }
+        `;
+        fetch(config.serverUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `ApiKey ${config.apiKey}`
+            },
+            body: JSON.stringify({ query })
+        })
+        .then(response => response.json())
+        .then(result => {
+            if (result.errors) {
+                console.error(result.errors);
+                showToast('Failed to fetch tags', 'error');
+            } else {
+                const tags = result.data.allTags.filter(tag => tag.name).sort((a, b) => a.name.localeCompare(b.name));
+                createPopupFormForTags(galleryId, tags, menu);
+            }
+        })
+        .catch(error => {
+            console.error(error);
+            showToast('Failed to fetch tags', 'error');
+        });
+    }
+
+    // Function to fetch all performers and show the form
+    function fetchAllPerformers(galleryId, menu) {
+        const query = `
+            query AllPerformers {
+                allPerformers {
+                    id
+                    name
+                }
+            }
+        `;
+        fetch(config.serverUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `ApiKey ${config.apiKey}`
+            },
+            body: JSON.stringify({ query })
+        })
+        .then(response => response.json())
+        .then(result => {
+            if (result.errors) {
+                console.error(result.errors);
+                showToast('Failed to fetch performers', 'error');
+            } else {
+                const performers = result.data.allPerformers.filter(performer => performer.name).sort((a, b) => a.name.localeCompare(b.name));
+                createPopupFormForPerformers(galleryId, performers, menu);
+            }
+        })
+        .catch(error => {
+            console.error(error);
+            showToast('Failed to fetch performers', 'error');
+        });
+    }
+
+    // Function to fetch all scenes and show the form
+    function fetchAllScenes(galleryId, menu) {
+        const query = `
+            query AllScenes {
+                allScenes {
+                    id
+                    title
+                }
+            }
+        `;
+        fetch(config.serverUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `ApiKey ${config.apiKey}`
+            },
+            body: JSON.stringify({ query })
+        })
+        .then(response => response.json())
+        .then(result => {
+            if (result.errors) {
+                console.error(result.errors);
+                showToast('Failed to fetch scenes', 'error');
+            } else {
+                const scenes = result.data.allScenes.filter(scene => scene.title).sort((a, b) => a.title.localeCompare(b.title));
+                createPopupFormForScenes(galleryId, scenes, menu);
+            }
+        })
+        .catch(error => {
+            console.error(error);
+            showToast('Failed to fetch scenes', 'error');
+        });
+    }
+
+    // Function to update the gallery with selected tags using GraphQL
+    async function updateGalleryWithTags(galleryId, newTagIds) {
+        // First fetch existing tags
+        const existingTagsQuery = `
+            query FindGallery {
+                findGallery(id: ${galleryId}) {
                     tags {
                         id
                     }
                 }
             }
         `;
-        const response = await fetch(config.serverUrl, {
+
+        const existingTagsResponse = await fetch(config.serverUrl, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `ApiKey ${config.apiKey}`
             },
-            body: JSON.stringify({ query })
+            body: JSON.stringify({ query: existingTagsQuery })
         });
-        const result = await response.json();
-        return result.data.findScene.tags.map(tag => tag.id);
-    }
+        const existingTagsResult = await existingTagsResponse.json();
+        const existingTagIds = existingTagsResult.data.findGallery.tags.map(tag => tag.id);
 
-    // Function to fetch existing performer IDs for a scene
-    async function fetchExistingPerformerIds(sceneId) {
-        const query = `
-            query {
-                findScene(id: "${sceneId}") {
-                    performers {
-                        id
-                    }
+        const combinedTagIds = Array.from(new Set([...existingTagIds, ...newTagIds]));
+
+        const mutationQuery = `
+            mutation GalleryUpdate {
+                galleryUpdate(input: { id: "${galleryId}", tag_ids: ${JSON.stringify(combinedTagIds)} }) {
+                    id
                 }
             }
         `;
-        const response = await fetch(config.serverUrl, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `ApiKey ${config.apiKey}`
-            },
-            body: JSON.stringify({ query })
-        });
-        const result = await response.json();
-        return result.data.findScene.performers.map(performer => performer.id);
-    }
 
-    // Function to fetch existing gallery IDs for a scene
-    async function fetchExistingGalleryIds(sceneId) {
-        const query = `
-            query {
-                findScene(id: "${sceneId}") {
-                    galleries {
-                        id
-                    }
-                }
-            }
-        `;
-        const response = await fetch(config.serverUrl, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `ApiKey ${config.apiKey}`
-            },
-            body: JSON.stringify({ query })
-        });
-        const result = await response.json();
-        return result.data.findScene.galleries.map(gallery => gallery.id);
-    }
-
-    // Function to show Toast notifications
-    function showToast(message, type = "success") {
-        Toastify({
-            text: message,
-            duration: 3000,
-            gravity: "top", // `top` or `bottom`
-            position: "center", // `left`, `center` or `right`
-            backgroundColor: type === "success" ? "green" : "red",
-        }).showToast();
-    }
-
-    // Function to fetch scene streams and navigate to the direct stream
-    async function fetchSceneStreams(sceneId) {
-        const query = `
-            query SceneStreams {
-                sceneStreams(id: "${sceneId}") {
-                    url
-                    mime_type
-                    label
-                }
-            }
-        `;
         try {
             const response = await fetch(config.serverUrl, {
                 method: 'POST',
@@ -605,52 +520,148 @@
                     'Content-Type': 'application/json',
                     'Authorization': `ApiKey ${config.apiKey}`
                 },
-                body: JSON.stringify({ query })
+                body: JSON.stringify({ query: mutationQuery })
             });
+
             const result = await response.json();
             if (result.errors) {
                 console.error(result.errors);
-                showToast('Failed to fetch scene streams', 'error');
+                showToast('Failed to update the gallery with tags', 'error');
             } else {
-                const streams = result.data.sceneStreams;
-                const directStream = streams.find(stream => stream.label === 'Direct stream');
-                if (directStream) {
-                    window.location.href = directStream.url;
-                } else {
-                    showToast('Direct stream not found', 'error');
-                }
+                showToast('Gallery updated with tags successfully', 'success');
+                console.log(result.data.galleryUpdate);
             }
         } catch (error) {
             console.error(error);
-            showToast('Failed to fetch scene streams', 'error');
+            showToast('Failed to update the gallery with tags', 'error');
         }
     }
 
-    // Function to open the edit scene page and select the 'Edit' tab
-    function openEditScenePage(sceneId) {
-        const editPageUrl = `http://localhost:9999/scenes/${sceneId}/edit`;
-        const newWindow = window.open(editPageUrl, '_blank');
-        if (newWindow) {
-            newWindow.onload = () => {
-                setTimeout(() => {
-                    const editTab = newWindow.document.querySelector('[data-rb-event-key="scene-edit-panel"]');
-                    if (editTab) {
-                        editTab.click();
+    // Function to update the gallery with selected performers using GraphQL
+    async function updateGalleryWithPerformers(galleryId, newPerformerIds) {
+        // First fetch existing performers
+        const existingPerformersQuery = `
+            query FindGallery {
+                findGallery(id: ${galleryId}) {
+                    performers {
+                        id
                     }
-                }, 1000); // Wait for the page to load and elements to render
-            };
+                }
+            }
+        `;
+
+        const existingPerformersResponse = await fetch(config.serverUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `ApiKey ${config.apiKey}`
+            },
+            body: JSON.stringify({ query: existingPerformersQuery })
+        });
+        const existingPerformersResult = await existingPerformersResponse.json();
+        const existingPerformerIds = existingPerformersResult.data.findGallery.performers.map(performer => performer.id);
+
+        const combinedPerformerIds = Array.from(new Set([...existingPerformerIds, ...newPerformerIds]));
+
+        const mutationQuery = `
+            mutation GalleryUpdate {
+                galleryUpdate(input: { id: "${galleryId}", performer_ids: ${JSON.stringify(combinedPerformerIds)} }) {
+                    id
+                }
+            }
+        `;
+
+        try {
+            const response = await fetch(config.serverUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `ApiKey ${config.apiKey}`
+                },
+                body: JSON.stringify({ query: mutationQuery })
+            });
+
+            const result = await response.json();
+            if (result.errors) {
+                console.error(result.errors);
+                showToast('Failed to update the gallery with performers', 'error');
+            } else {
+                showToast('Gallery updated with performers successfully', 'success');
+                console.log(result.data.galleryUpdate);
+            }
+        } catch (error) {
+            console.error(error);
+            showToast('Failed to update the gallery with performers', 'error');
         }
     }
 
-    // Add event listener to .scene-card elements
+    // Function to update the gallery with selected scenes using GraphQL
+    async function updateGalleryWithScenes(galleryId, newSceneIds) {
+        // First fetch existing scenes
+        const existingScenesQuery = `
+            query FindGallery {
+                findGallery(id: ${galleryId}) {
+                    scenes {
+                        id
+                    }
+                }
+            }
+        `;
+
+        const existingScenesResponse = await fetch(config.serverUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `ApiKey ${config.apiKey}`
+            },
+            body: JSON.stringify({ query: existingScenesQuery })
+        });
+        const existingScenesResult = await existingScenesResponse.json();
+        const existingSceneIds = existingScenesResult.data.findGallery.scenes.map(scene => scene.id);
+
+        const combinedSceneIds = Array.from(new Set([...existingSceneIds, ...newSceneIds]));
+
+        const mutationQuery = `
+            mutation GalleryUpdate {
+                galleryUpdate(input: { id: "${galleryId}", scene_ids: ${JSON.stringify(combinedSceneIds)} }) {
+                    id
+                }
+            }
+        `;
+
+        try {
+            const response = await fetch(config.serverUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `ApiKey ${config.apiKey}`
+                },
+                body: JSON.stringify({ query: mutationQuery })
+            });
+
+            const result = await response.json();
+            if (result.errors) {
+                console.error(result.errors);
+                showToast('Failed to update the gallery with scenes', 'error');
+            } else {
+                showToast('Gallery updated with scenes successfully', 'success');
+                console.log(result.data.galleryUpdate);
+            }
+        } catch (error) {
+            console.error(error);
+            showToast('Failed to update the gallery with scenes', 'error');
+        }
+    }
+
+    // Add event listener to .gallery-card elements
     document.addEventListener('contextmenu', function(event) {
-        const sceneCard = event.target.closest('.scene-card');
-        if (sceneCard) {
-            const linkElement = sceneCard.querySelector('.scene-card-link');
+        const galleryCard = event.target.closest('.gallery-card');
+        if (galleryCard) {
+            const linkElement = galleryCard.querySelector('.gallery-card-header');
             if (linkElement) {
-                const sceneId = getSceneIdFromUrl(linkElement.href);
-                if (sceneId) {
-                    showCustomMenu(event, sceneId);
+                const galleryId = getGalleryIdFromUrl(linkElement.href);
+                if (galleryId) {
+                    showCustomMenu(event, galleryId);
                 }
             }
         }
