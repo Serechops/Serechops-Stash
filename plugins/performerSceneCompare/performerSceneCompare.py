@@ -142,7 +142,6 @@ def query_stashdb_scenes(performer_stash_ids):
 
 def compare_scenes(local_scenes, stashdb_scenes):
     local_scene_ids = {scene['stash_ids'][0]['stash_id'] for scene in local_scenes if scene['stash_ids']}
-    stashdb_scene_ids = {scene['id'] for scene in stashdb_scenes}
 
     missing_scenes = [scene for scene in stashdb_scenes if scene['id'] not in local_scene_ids]
     logger.info(f"Found {len(missing_scenes)} missing scenes.")
