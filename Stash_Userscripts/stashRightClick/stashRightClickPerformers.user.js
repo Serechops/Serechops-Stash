@@ -1,10 +1,12 @@
 // ==UserScript==
 // @name         stashRightClick for Performers
 // @namespace    https://github.com/Serechops/Serechops-Stash
-// @version      1.4
+// @version      1.5
 // @description  Adds a custom right-click menu to .performer-card elements with options like "Missing Scenes" and "Change Image" using GraphQL queries.
 // @match        http://localhost:9999/*
 // @grant        GM_addStyle
+// @grant        GM.xmlHttpRequest
+// @connect      https://stashdb.org
 // @require      https://cdn.jsdelivr.net/npm/toastify-js@1.12.0/src/toastify.min.js
 // @require      https://cdn.jsdelivr.net/npm/chart.js
 // @downloadURL  https://github.com/Serechops/Serechops-Stash/raw/main/Stash_Userscripts/stashRightClick/stashRightClickPerformers.user.js
@@ -618,15 +620,23 @@
     }
 
     async function gqlQuery(endpoint, query, variables = {}, apiKey = '') {
-        const response = await fetch(endpoint, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Apikey': apiKey
-            },
-            body: JSON.stringify({ query, variables })
+        return new Promise((resolve, reject) => {
+            GM.xmlHttpRequest({
+                method: 'POST',
+                url: endpoint,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Apikey': apiKey
+                },
+                data: JSON.stringify({ query, variables }),
+                onload: function(response) {
+                    resolve(JSON.parse(response.responseText));
+                },
+                onerror: function(error) {
+                    reject(error);
+                }
+            });
         });
-        return response.json();
     }
 
     // Store the currently opened right-click menu to close it if another right-click occurs
