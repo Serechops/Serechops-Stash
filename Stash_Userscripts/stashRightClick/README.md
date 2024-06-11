@@ -48,9 +48,10 @@ Find this configuration at the top of each `stashRightClick` userscript and adju
      ******************************************/
     const userConfig = {
         scheme: 'http', // or 'https'
-        host: 'localhost', // your server IP or hostname
-        port: 9999, // your server port
-        apiKey: '' // your API key
+        host: 'localhost', // Your server IP or hostname
+        port: 9999, // Your server port
+        apiKey: '' // Your API key
+        stashDBApiKey: '' // Your StashDB API Key (only applicable to stashRightClickPerformers currently)
     };
 ```
 ## Usage
