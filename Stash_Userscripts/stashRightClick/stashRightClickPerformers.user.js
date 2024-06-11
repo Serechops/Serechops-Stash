@@ -1,12 +1,12 @@
 // ==UserScript==
 // @name         stashRightClick for Performers
 // @namespace    https://github.com/Serechops/Serechops-Stash
-// @version      1.5
+// @version      1.6
 // @description  Adds a custom right-click menu to .performer-card elements with options like "Missing Scenes" and "Change Image" using GraphQL queries.
 // @match        http://localhost:9999/*
 // @grant        GM_addStyle
 // @grant        GM.xmlHttpRequest
-// @connect      https://stashdb.org
+// @connect      stashdb.org
 // @require      https://cdn.jsdelivr.net/npm/toastify-js@1.12.0/src/toastify.min.js
 // @require      https://cdn.jsdelivr.net/npm/chart.js
 // @downloadURL  https://github.com/Serechops/Serechops-Stash/raw/main/Stash_Userscripts/stashRightClick/stashRightClickPerformers.user.js
@@ -38,7 +38,7 @@
         stashDBApiKey: userConfig.stashDBApiKey
     };
 
-    // Inject CSS for the custom menu and modals
+    // Inject CSS for the custom menu, modals, and loading spinner
     GM_addStyle(`
         @import url('https://cdn.jsdelivr.net/npm/toastify-js@1.12.0/src/toastify.min.css');
         @import url('https://unpkg.com/tabulator-tables@5.0.8/dist/css/tabulator_midnight.min.css');
@@ -205,7 +205,121 @@
             grid-template-columns: repeat(5, 1fr);
             gap: 10px;
         }
+
+        /* Loading spinner styles */
+        #loading-spinner {
+            display: none;
+            position: fixed;
+            z-index: 10002;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            width: 200px;
+            height: 300px;
+            background-color: rgba(0, 0, 0, 0.8);
+            border-radius: 25%;
+            overflow: hidden;
+        }
+
+        #loading-spinner img {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        opacity: 0;
+        animation: fadeIn 1s forwards;
+         }
+
+       @keyframes fadeIn {
+       0% { opacity: 0; }
+       100% { opacity: 1; }
+         }
+
+
+        #loading-spinner .loading-header {
+        position: absolute;
+        bottom: 10px;
+        width: 100%;
+        text-align: center;
+        color: white;
+        font-size: 18px;
+        font-weight: bold;
+        }
+
+
+        @keyframes bookSlide {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-100%); }
+        }
+
+        #dim-overlay {
+            display: none;
+            position: fixed;
+            z-index: 10001;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+
+        .loading-header {
+        outline: 1px solid black;
+        background: rgba(0, 0, 0, 0.5);
+       }
     `);
+
+    const spinnerHTML = `<div id="loading-spinner"><img src=""></div>`;
+    const dimOverlayHTML = `<div id="dim-overlay"></div>`;
+    document.body.insertAdjacentHTML('beforeend', spinnerHTML);
+    document.body.insertAdjacentHTML('beforeend', dimOverlayHTML);
+
+    let slideshowInterval;
+    function startSlideshow(images) {
+        const spinner = document.getElementById('loading-spinner');
+        let currentIndex = 0;
+
+        function showNextImage() {
+            if (currentIndex >= images.length) {
+                currentIndex = 0;
+            }
+            const imgHTML = `<img src="${images[currentIndex].url}" alt="Image">`;
+            spinner.insertAdjacentHTML('afterbegin', imgHTML);
+            const imgElement = spinner.querySelector('img');
+            imgElement.addEventListener('animationend', () => {
+                const allImages = spinner.querySelectorAll('img');
+                if (allImages.length > 1) {
+                    allImages[1].remove(); // Remove the previous image
+                }
+            });
+            currentIndex++;
+        }
+
+        showNextImage();
+        setInterval(showNextImage, 2000); // Change image every 3 seconds
+    }
+
+    function showLoadingSpinner(images) {
+        const spinner = document.getElementById('loading-spinner');
+        const dimOverlay = document.getElementById('dim-overlay');
+        if (spinner) {
+            spinner.innerHTML = '<div class="loading-header">Fetching Scenes...</div>';
+            startSlideshow(images);
+            spinner.style.display = 'block';
+            dimOverlay.style.display = 'block';
+        }
+    }
+
+
+    function hideLoadingSpinner() {
+        const spinner = document.getElementById('loading-spinner');
+        const dimOverlay = document.getElementById('dim-overlay');
+        if (spinner) {
+            clearInterval(slideshowInterval);
+            spinner.style.display = 'none';
+            dimOverlay.style.display = 'none';
+        }
+    }
 
     // Function to extract performer ID from the URL
     function getPerformerID(url) {
@@ -235,6 +349,31 @@
         } catch (error) {
             console.error('Error fetching performer StashDB ID:', error);
             return null;
+        }
+    }
+
+    // Function to fetch performer images
+    async function fetchPerformerImages(performerStashID) {
+        const query = `
+            query FindPerformer($id: ID!) {
+                findPerformer(id: $id) {
+                    images {
+                        url
+                    }
+                }
+            }
+        `;
+        try {
+            const response = await gqlQuery('https://stashdb.org/graphql', query, { id: performerStashID }, config.stashDBApiKey);
+            if (response && response.data && response.data.findPerformer) {
+                return response.data.findPerformer.images;
+            } else {
+                console.error('No images found for performer:', performerStashID);
+                return [];
+            }
+        } catch (error) {
+            console.error('Error fetching performer images:', error);
+            return [];
         }
     }
 
@@ -292,6 +431,12 @@
                         images {
                             url
                         }
+                        studio {
+                            name
+                            urls {
+                                url
+                            }
+                        }
                     }
                     count
                 }
@@ -334,6 +479,8 @@
                     <h3>${scene.title}</h3>
                     <img src="${scene.images[0]?.url || ''}" alt="${scene.title}">
                     <p>Release Date: ${scene.release_date}</p>
+                    <p>Studio: ${scene.studio?.name || 'N/A'}</p>
+                    ${scene.studio?.urls?.[0]?.url ? `<a href="${scene.studio.urls[0].url}" target="_blank">Visit the Studio</a>` : ''}
                     <a href="https://stashdb.org/scenes/${scene.id}" target="_blank">Find on StashDB</a>
                 </div>
             `).join('');
@@ -376,31 +523,6 @@
                 modal.remove();
             }
         };
-    }
-
-    // Function to fetch performer images
-    async function fetchPerformerImages(performerStashID) {
-        const query = `
-            query FindPerformer($id: ID!) {
-                findPerformer(id: $id) {
-                    images {
-                        url
-                    }
-                }
-            }
-        `;
-        try {
-            const response = await gqlQuery('https://stashdb.org/graphql', query, { id: performerStashID }, config.stashDBApiKey);
-            if (response && response.data && response.data.findPerformer) {
-                return response.data.findPerformer.images;
-            } else {
-                console.error('No images found for performer:', performerStashID);
-                return null;
-            }
-        } catch (error) {
-            console.error('Error fetching performer images:', error);
-            return null;
-        }
     }
 
     // Function to create the image selection modal
@@ -488,8 +610,8 @@
                 Toastify({
                     text: 'Please select an image',
                     backgroundColor: 'orange',
-                    position: "center",
-                    duration: 3000
+                        position: "center",
+                        duration: 3000
                 }).showToast();
             }
         };
@@ -530,6 +652,8 @@
             e.preventDefault();
             const stashIDs = await fetchPerformerStashDBID(performerID);
             if (stashIDs) {
+                const images = await fetchPerformerImages(stashIDs[0]);
+                showLoadingSpinner(images);
                 const localDetails = await fetchPerformerDetails(performerID);
                 const stashDBScenes = [];
                 let page = 1;
@@ -546,6 +670,7 @@
                 } else {
                     console.error('Failed to fetch performer details or StashDB scenes');
                 }
+                hideLoadingSpinner();
             } else {
                 console.error('Failed to fetch performer StashDB ID');
             }
