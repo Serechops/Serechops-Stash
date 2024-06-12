@@ -304,36 +304,35 @@ def compare_performer_scenes():
                 f"Studio created: {performer_details['name']} - Missing Scenes with ID: {studio_id}"
             )
 
-            # local_scenes = performer_details["scenes"]
-            # stash_ids = [sid["stash_id"] for sid in performer_details["stash_ids"]]
-            # stashdb_scenes = query_stashdb_scenes(stash_ids)
-            # missing_scenes = compare_scenes(local_scenes, stashdb_scenes)
-        #
-        # if missing_scenes:
-        #     total_scenes = len(missing_scenes)
-        #     processed_scenes = 0
-        #
-        #     for scene in missing_scenes:
-        #         # Create scene and link it to the new studio
-        #         created_scene_id = create_scene(scene)
-        #         if created_scene_id:
-        #             update_scene_with_studio(created_scene_id, studio_id)
-        #             logger.info(
-        #                 f"Scene {created_scene_id} created and associated with studio {studio_id}"
-        #             )
-        #
-        #         # Update progress
-        #         processed_scenes += 1
-        #         progress = processed_scenes / total_scenes
-        #         logger.progress(progress)
-        #
-        #     logger.info(
-        #         f"{total_scenes} missing scenes processed and associated with studio for performer {performer_details['name']}."
-        #     )
-        # else:
-        #     logger.info(
-        #         f"All scenes for performer {performer_details['name']} are up-to-date with StashDB."
-        #     )
+            local_scenes = performer_details["scenes"]
+            stash_ids = [sid["stash_id"] for sid in performer_details["stash_ids"]]
+            stashdb_scenes = query_stashdb_scenes(stash_ids)
+            missing_scenes = compare_scenes(local_scenes, stashdb_scenes)
+
+            if missing_scenes:
+                total_scenes = len(missing_scenes)
+                processed_scenes = 0
+                for scene in missing_scenes:
+                    # Create scene and link it to the new studio
+                    created_scene_id = create_scene(scene)
+                    if created_scene_id:
+                        update_scene_with_studio(created_scene_id, studio_id)
+                        logger.info(
+                            f"Scene {created_scene_id} created and associated with studio {studio_id}"
+                        )
+
+                        # Update progress
+                        processed_scenes += 1
+                        progress = processed_scenes / total_scenes
+                        logger.progress(progress)
+
+                logger.info(
+                    f"{total_scenes} missing scenes processed and associated with studio for performer {performer_details['name']}."
+                )
+            else:
+                logger.info(
+                    f"All scenes for performer {performer_details['name']} are up-to-date with StashDB."
+                )
         else:
             logger.error("Failed to retrieve details for performer.")
     else:
