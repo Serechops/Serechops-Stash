@@ -208,7 +208,7 @@ def create_scene(scene):
     studio_url = scene["urls"][0]["url"] if scene["urls"] else None
     date = scene["release_date"]
     cover_image = scene["images"][0]["url"] if scene["images"] else None
-    # stash_id=scene['id']
+    stash_id = scene["id"]
 
     try:
         # Ensure the date is in the correct format
@@ -234,12 +234,9 @@ def create_scene(scene):
             "url": studio_url,
             "date": formatted_date,
             "cover_image": cover_image,
-            # "stash_ids": [
-            #     {
-            #         "endpoint": "https://stashdb.org/graphql",
-            #         "stash_id": stash_id
-            #     }
-            # ]
+            "stash_ids": [
+                {"endpoint": "https://stashdb.org/graphql", "stash_id": stash_id}
+            ],
         }
     }
     result = missing_graphql_request(mutation, variables)
