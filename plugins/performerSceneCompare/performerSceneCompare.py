@@ -29,43 +29,50 @@ def gql_query(endpoint, query, variables=None, api_key=None):
 
 
 def local_graphql_request(query, variables=None):
-    headers = {
-        "Accept-Encoding": "gzip, deflate, br",
-        "Content-Type": "application/json",
-        "Accept": "application/json",
-        "ApiKey": config.LOCAL_API_KEY,  # Use the local API key if available
-    }
-    response = requests.post(
-        config.LOCAL_GQL_ENDPOINT,
-        json={"query": query, "variables": variables},
-        headers=headers,
+    return graphql_request(
+        query, config.LOCAL_GQL_ENDPOINT, config.LOCAL_API_KEY, variables
     )
-    try:
-        data = response.json()
-        return data.get("data")
-    except json.JSONDecodeError:
-        logger.error(f"Failed to decode JSON from response: {response.text}")
-        return None
 
 
 def missing_graphql_request(query, variables=None):
+    return graphql_request(
+        query, config.MISSING_GQL_ENDPOINT, config.MISSING_API_KEY, variables
+    )
+
+
+def graphql_request(query, endpoint, api_key, variables=None):
     headers = {
         "Accept-Encoding": "gzip, deflate, br",
         "Content-Type": "application/json",
         "Accept": "application/json",
-        "ApiKey": config.MISSING_API_KEY,  # Use the local API key if available
+        "ApiKey": api_key,  # Use the local API key if available
     }
-    response = requests.post(
-        config.LOCAL_GQL_ENDPOINT,
-        json={"query": query, "variables": variables},
-        headers=headers,
-    )
     try:
-        data = response.json()
-        return data.get("data")
-    except json.JSONDecodeError:
-        logger.error(f"Failed to decode JSON from response: {response.text}")
-        return None
+        response = requests.post(
+            endpoint,
+            json={"query": query, "variables": variables},
+            headers=headers,
+            timeout=120,  # Set a timeout for the request
+        )
+        logger.info(
+            f"Request to {endpoint} returned status code {response.status_code}"
+        )
+        response.raise_for_status()  # Raises HTTPError for bad responses (4XX, 5XX)
+        try:
+            data = response.json()
+            return data.get("data")
+        except json.JSONDecodeError:
+            logger.error(f"Failed to decode JSON from response: {response.text}")
+            return None
+    except requests.HTTPError as http_err:
+        logger.error(f"HTTP error occurred: {http_err} - Response: {response.text}")
+    except requests.Timeout:
+        logger.error("The request timed out")
+    except requests.RequestException as err:
+        logger.error(f"Error during requests to {endpoint}: {err}")
+    except Exception as e:
+        logger.error(f"An unexpected error occurred: {e}")
+    return None
 
 
 def get_most_recently_updated_performer():
@@ -195,7 +202,14 @@ def compare_scenes(local_scenes, stashdb_scenes):
     return missing_scenes
 
 
-def create_scene(code, title, studio_url, date, cover_image):
+def create_scene(scene):
+    code = scene["code"]
+    title = scene["title"]
+    studio_url = scene["urls"][0]["url"] if scene["urls"] else None
+    date = scene["release_date"]
+    cover_image = scene["images"][0]["url"] if scene["images"] else None
+    # stash_id=scene['id']
+
     try:
         # Ensure the date is in the correct format
         formatted_date = (
@@ -220,9 +234,16 @@ def create_scene(code, title, studio_url, date, cover_image):
             "url": studio_url,
             "date": formatted_date,
             "cover_image": cover_image,
+            # "stash_ids": [
+            #     {
+            #         "endpoint": "https://stashdb.org/graphql",
+            #         "stash_id": stash_id
+            #     }
+            # ]
         }
     }
     result = missing_graphql_request(mutation, variables)
+    logger.debug(f"GraphQL request result: {result}")
     if result and "sceneCreate" in result:
         scene_id = result["sceneCreate"]["id"]
         logger.info(f"Scene created with ID: {scene_id}")
@@ -242,6 +263,7 @@ def create_studio(performer_name):
     """
     variables = {"input": {"name": f"{performer_name} - Missing Scenes"}}
     result = missing_graphql_request(mutation, variables)
+
     if result and "studioCreate" in result:
         studio_id = result["studioCreate"]["id"]
         logger.info(
@@ -282,44 +304,36 @@ def compare_performer_scenes():
                 f"Studio created: {performer_details['name']} - Missing Scenes with ID: {studio_id}"
             )
 
-            local_scenes = performer_details["scenes"]
-            stash_ids = [sid["stash_id"] for sid in performer_details["stash_ids"]]
-            stashdb_scenes = query_stashdb_scenes(stash_ids)
-            missing_scenes = compare_scenes(local_scenes, stashdb_scenes)
-
-            if missing_scenes:
-                total_scenes = len(missing_scenes)
-                processed_scenes = 0
-
-                for scene in missing_scenes:
-                    # Create scene and link it to the new studio
-                    created_scene_id = create_scene(
-                        code=scene["code"],
-                        title=scene["title"],
-                        studio_url=scene["urls"][0]["url"] if scene["urls"] else None,
-                        date=scene["release_date"],
-                        cover_image=(
-                            scene["images"][0]["url"] if scene["images"] else None
-                        ),
-                    )
-                    if created_scene_id:
-                        update_scene_with_studio(created_scene_id, studio_id)
-                        logger.info(
-                            f"Scene {created_scene_id} created and associated with studio {studio_id}"
-                        )
-
-                    # Update progress
-                    processed_scenes += 1
-                    progress = processed_scenes / total_scenes
-                    logger.progress(progress)
-
-                logger.info(
-                    f"{total_scenes} missing scenes processed and associated with studio for performer {performer_details['name']}."
-                )
-            else:
-                logger.info(
-                    f"All scenes for performer {performer_details['name']} are up-to-date with StashDB."
-                )
+            # local_scenes = performer_details["scenes"]
+            # stash_ids = [sid["stash_id"] for sid in performer_details["stash_ids"]]
+            # stashdb_scenes = query_stashdb_scenes(stash_ids)
+            # missing_scenes = compare_scenes(local_scenes, stashdb_scenes)
+        #
+        # if missing_scenes:
+        #     total_scenes = len(missing_scenes)
+        #     processed_scenes = 0
+        #
+        #     for scene in missing_scenes:
+        #         # Create scene and link it to the new studio
+        #         created_scene_id = create_scene(scene)
+        #         if created_scene_id:
+        #             update_scene_with_studio(created_scene_id, studio_id)
+        #             logger.info(
+        #                 f"Scene {created_scene_id} created and associated with studio {studio_id}"
+        #             )
+        #
+        #         # Update progress
+        #         processed_scenes += 1
+        #         progress = processed_scenes / total_scenes
+        #         logger.progress(progress)
+        #
+        #     logger.info(
+        #         f"{total_scenes} missing scenes processed and associated with studio for performer {performer_details['name']}."
+        #     )
+        # else:
+        #     logger.info(
+        #         f"All scenes for performer {performer_details['name']} are up-to-date with StashDB."
+        #     )
         else:
             logger.error("Failed to retrieve details for performer.")
     else:
