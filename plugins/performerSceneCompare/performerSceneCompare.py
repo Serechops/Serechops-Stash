@@ -96,6 +96,30 @@ def get_most_recently_updated_performer():
     return None
 
 
+def get_studio_by_name(studio_name):
+    query = """
+        query FindStudios($filter: FindFilterType, $studio_filter: StudioFilterType) {
+            findStudios(filter: $filter, studio_filter: $studio_filter) {
+                count
+                studios {
+                    id
+                    name
+                    parent_studio {
+                        id
+                        name
+                    }
+                }
+            }
+        }
+    """
+    variables = {"filter": {"q": studio_name}}
+    result = missing_graphql_request(query, variables)
+    if result:
+        return result["findStudios"]
+    logger.error(f"No studios found with name {studio_name}.")
+    return None
+
+
 def get_performer_details(performer_id):
     query = """
         query FindPerformer($id: ID!) {
@@ -249,7 +273,14 @@ def create_scene(scene):
     return None
 
 
-def create_studio(performer_name):
+def get_or_create_studio(performer_name):
+    studio_name = f"{performer_name} - Missing Scenes"
+    studio = get_studio_by_name(studio_name)
+    if studio and studio["count"] > 0:
+        studio_id = studio["studios"][0]["id"]
+        logger.info(f"Studio found: {studio_name} with ID: {studio_id}")
+        return studio_id
+
     mutation = """
         mutation StudioCreate($input: StudioCreateInput!) {
             studioCreate(input: $input) {
@@ -296,7 +327,7 @@ def compare_performer_scenes():
             logger.info(f"Processing performer: {performer_details['name']}")
 
             # Create a studio for the missing scenes of this performer
-            studio_id = create_studio(performer_details["name"])
+            studio_id = get_or_create_studio(performer_details["name"])
             logger.info(
                 f"Studio created: {performer_details['name']} - Missing Scenes with ID: {studio_id}"
             )
