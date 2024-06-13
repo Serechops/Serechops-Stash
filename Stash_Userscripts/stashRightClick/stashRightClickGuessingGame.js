@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Who's In Your Stash?
 // @namespace    https://github.com/Serechops/Serechops-Stash
-// @version      2.1
+// @version      2.2
 // @description  Adds a performer guessing game to the Performers nav link in Stash.
 // @match        http://localhost:9999/*
 // @grant        GM_addStyle
