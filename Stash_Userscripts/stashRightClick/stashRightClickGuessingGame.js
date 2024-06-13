@@ -1,15 +1,15 @@
 // ==UserScript==
 // @name         Who's In Your Stash?
 // @namespace    https://github.com/Serechops/Serechops-Stash
-// @version      2.0
+// @version      2.1
 // @description  Adds a performer guessing game to the Performers nav link in Stash.
 // @match        http://localhost:9999/*
 // @grant        GM_addStyle
 // @grant        GM.xmlHttpRequest
 // @connect      localhost
 // @require      https://cdn.jsdelivr.net/npm/toastify-js@1.12.0/src/toastify.min.js
-// @downloadURL  https://github.com/Serechops/Serechops-Stash/raw/main/Stash_Userscripts/stashRightClick/stashRightClickGuessingGame.user.js
-// @updateURL    https://github.com/Serechops/Serechops-Stash/raw/main/Stash_Userscripts/stashRightClick/stashRightClickGuessingGame.user.js
+// @downloadURL  https://github.com/Serechops/Serechops-Stash/raw/main/Stash_Userscripts/stashRightClick/performersGuessingGame.user.js
+// @updateURL    https://github.com/Serechops/Serechops-Stash/raw/main/Stash_Userscripts/stashRightClick/performersGuessingGame.user.js
 // @run-at       document-end
 // ==/UserScript==
 
@@ -230,7 +230,7 @@
         `;
         try {
             const response = await graphqlRequest(query, {}, config.apiKey);
-            return response.data.allPerformers.filter(p => p.scene_count > 3);
+            return response.data.allPerformers.filter(p => p.scene_count > 3 && !p.image_path.includes('default=true'));
         } catch (error) {
             console.error('Error fetching performers:', error);
             return [];
@@ -255,7 +255,7 @@
         header.className = 'custom-game-header';
         header.innerHTML = `
             <h2>Who\'s In Your Stash?</h2>
-            <p>The following are three clues about your performer. Good Luck!</p>
+            <p>The following are three clues about your performer. Good luck!</p>
         `;
         modalContent.appendChild(header);
 
@@ -376,7 +376,11 @@
             answersContainer.style.display = 'none';
             resultElement.style.display = 'none';
 
-            const randomPerformer = performers[Math.floor(Math.random() * performers.length)];
+            let randomPerformer;
+            do {
+                randomPerformer = performers[Math.floor(Math.random() * performers.length)];
+            } while (randomPerformer.image_path.includes('default=true'));
+
             guessedPerformers.push(randomPerformer);
             updateModalForRound(randomPerformer);
         };
