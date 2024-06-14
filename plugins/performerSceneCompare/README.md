@@ -12,6 +12,7 @@ This script is designed to compare local performer scenes with those available o
 ## Requirements
 
 `pip install stashapp-tools`
+`pip install requests`
 
 ## Configuration
 
