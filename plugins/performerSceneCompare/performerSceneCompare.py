@@ -128,11 +128,13 @@ def get_performer_details(performer_id):
                 name
                 stash_ids {
                     stash_id
+                    endpoint
                 }
                 scenes {
                     title
                     stash_ids {
                         stash_id
+                        endpoint
                     }
                 }
             }
@@ -214,9 +216,10 @@ def query_stashdb_scenes(performer_stash_ids):
 
 def compare_scenes(local_scenes, stashdb_scenes):
     local_scene_ids = {
-        scene["stash_ids"][0]["stash_id"]
+        stash_id["stash_id"]
         for scene in local_scenes
-        if scene["stash_ids"]
+        for stash_id in scene["stash_ids"]
+        if stash_id.get("endpoint") == config.STASHDB_ENDPOINT
     }
 
     missing_scenes = [
