@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         stashRightClick for Performers
 // @namespace    https://github.com/Serechops/Serechops-Stash
-// @version      1.6
-// @description  Adds a custom right-click menu to .performer-card elements with options like "Missing Scenes" and "Change Image" using GraphQL queries.
+// @version      1.8
+// @description  Adds a custom right-click menu to .performer-card elements with options like "Missing Scenes", "Change Image", and "Auto-Tag" using GraphQL queries.
 // @match        http://localhost:9999/*
 // @grant        GM_addStyle
 // @grant        GM.xmlHttpRequest
@@ -139,6 +139,22 @@
             gap: 10px;
         }
 
+        .custom-image-option-container {
+            position: relative;
+            display: inline-block;
+        }
+
+        .image-dimensions {
+            position: absolute;
+            bottom: 5px;
+            left: 5px;
+            background-color: rgba(0, 0, 0, 0.5);
+            color: white;
+            padding: 2px 5px;
+            font-size: 10px;
+            border-radius: 3px;
+        }
+
         .custom-image-option {
             width: 100px;
             height: 150px;
@@ -185,7 +201,7 @@
 
         .custom-scene-option h3 {
             margin: 0;
-            font-size: 14px;
+            font-size: 12px;
             text-align: center;
         }
 
@@ -202,7 +218,7 @@
 
         #custom-sceneGallery {
             display: grid;
-            grid-template-columns: repeat(5, 1fr);
+            grid-template-columns: repeat(3, 1fr);
             gap: 10px;
         }
 
@@ -359,6 +375,8 @@
                 findPerformer(id: $id) {
                     images {
                         url
+                        width
+                        height
                     }
                 }
             }
@@ -535,7 +553,12 @@
         function renderImages(page) {
             const start = (page - 1) * imagesPerPage;
             const end = start + imagesPerPage;
-            const imageHTML = images.slice(start, end).map(img => `<img src="${img.url}" class="custom-image-option" data-url="${img.url}">`).join('');
+            const imageHTML = images.slice(start, end).map(img => `
+                <div class="custom-image-option-container">
+                    <img src="${img.url}" class="custom-image-option" data-url="${img.url}">
+                    <div class="image-dimensions">(${img.width} x ${img.height})</div>
+                </div>
+            `).join('');
             document.getElementById('custom-imageGallery').innerHTML = imageHTML;
 
             document.querySelectorAll('.custom-image-option').forEach(img => {
@@ -610,8 +633,8 @@
                 Toastify({
                     text: 'Please select an image',
                     backgroundColor: 'orange',
-                        position: "center",
-                        duration: 3000
+                    position: "center",
+                    duration: 3000
                 }).showToast();
             }
         };
@@ -636,6 +659,44 @@
             }
         } catch (error) {
             console.error('Error updating performer image:', error);
+            return null;
+        }
+    }
+
+    // Function to auto-tag performer
+    async function autoTagPerformer(performerID) {
+        const mutation = `
+            mutation MetadataAutoTag {
+                metadataAutoTag(input: { performers: "${performerID}" })
+            }
+        `;
+        try {
+            const response = await graphqlRequest(mutation, {}, config.apiKey);
+            if (response && response.data && response.data.metadataAutoTag) {
+                Toastify({
+                    text: 'Auto-tagging completed successfully',
+                    backgroundColor: 'green',
+                    position: "center",
+                    duration: 3000
+                }).showToast();
+                return response.data.metadataAutoTag;
+            } else {
+                Toastify({
+                    text: 'Failed to auto-tag performer',
+                    backgroundColor: 'red',
+                    position: "center",
+                    duration: 3000
+                }).showToast();
+                return null;
+            }
+        } catch (error) {
+            Toastify({
+                text: 'Error auto-tagging performer',
+                backgroundColor: 'red',
+                position: "center",
+                duration: 3000
+            }).showToast();
+            console.error('Error auto-tagging performer:', error);
             return null;
         }
     }
@@ -696,6 +757,15 @@
             }
         });
         menu.appendChild(changeImageLink);
+
+        const autoTagLink = document.createElement('a');
+        autoTagLink.href = '#';
+        autoTagLink.textContent = 'Auto-Tag...';
+        autoTagLink.addEventListener('click', async function(e) {
+            e.preventDefault();
+            await autoTagPerformer(performerID);
+        });
+        menu.appendChild(autoTagLink);
 
         document.body.appendChild(menu);
         return menu;
