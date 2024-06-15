@@ -54,7 +54,7 @@ def graphql_request(query, endpoint, api_key, variables=None):
             headers=headers,
             timeout=120,  # Set a timeout for the request
         )
-        logger.info(
+        logger.debug(
             f"Request to {endpoint} returned status code {response.status_code}"
         )
         response.raise_for_status()  # Raises HTTPError for bad responses (4XX, 5XX)
