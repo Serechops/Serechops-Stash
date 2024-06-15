@@ -158,6 +158,7 @@ def get_missing_performer_details(performer_id):
                     endpoint
                 }
                 scenes {
+                    id
                     title
                     stash_ids {
                         stash_id
@@ -312,6 +313,28 @@ def create_scene(scene, performer_id):
         logger.info(f"Scene created with ID: {scene_id}")
         return scene_id
     logger.error(f"Failed to create scene '{title}'")
+    return None
+
+
+def destroy_missing_scene(scene_id):
+    mutation = """
+        mutation SceneDestroy($input: SceneDestroyInput!) {
+            sceneDestroy(input: $input)
+        }
+    """
+    variables = {
+        "input": {
+            "id": scene_id,
+            "delete_file": False,
+            "delete_generated": True,
+        }
+    }
+    result = missing_graphql_request(mutation, variables)
+    logger.debug(f"GraphQL request result: {result}")
+    if result is not None and result.get("sceneDestroy") is True:
+        logger.info(f"Scene destroyed with ID: {scene_id}")
+        return None
+    logger.error(f"Failed to destroy scene '{scene_id}'")
     return None
 
 
@@ -470,10 +493,32 @@ def compare_performer_scenes():
             existing_missing_scenes = missing_performer_details["scenes"]
             stash_ids = [sid["stash_id"] for sid in performer_details["stash_ids"]]
             stashdb_scenes = query_stashdb_scenes(stash_ids)
+
+            for local_scene in local_scenes:
+                local_scene_stash_id = next(
+                    (
+                        sid["stash_id"]
+                        for sid in local_scene["stash_ids"]
+                        if sid.get("endpoint") == config.STASHDB_ENDPOINT
+                    ),
+                    None,
+                )
+                for existing_missing_scene in existing_missing_scenes:
+                    existing_missing_scene_stash_id = next(
+                        (
+                            sid["stash_id"]
+                            for sid in existing_missing_scene["stash_ids"]
+                            if sid.get("endpoint") == config.STASHDB_ENDPOINT
+                        ),
+                        None,
+                    )
+                    if local_scene_stash_id == existing_missing_scene_stash_id:
+                        destroy_missing_scene(existing_missing_scene["id"])
+                        logger.info(f"Scene {existing_missing_scene['id']} destroyed.")
+
             missing_scenes = compare_scenes(
                 local_scenes, existing_missing_scenes, stashdb_scenes
             )
-
             if missing_scenes:
                 total_scenes = len(missing_scenes)
                 processed_scenes = 0
