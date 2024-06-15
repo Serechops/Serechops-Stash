@@ -120,7 +120,7 @@ def get_studio_by_name(studio_name):
     return None
 
 
-def get_performer_details(performer_id):
+def get_local_performer_details(performer_id):
     query = """
         query FindPerformer($id: ID!) {
             findPerformer(id: $id) {
@@ -141,6 +141,33 @@ def get_performer_details(performer_id):
         }
     """
     result = local_graphql_request(query, {"id": performer_id})
+    if result:
+        return result["findPerformer"]
+    logger.error(f"No details found for performer ID {performer_id}.")
+    return None
+
+
+def get_missing_performer_details(performer_id):
+    query = """
+        query FindPerformer($id: ID!) {
+            findPerformer(id: $id) {
+                id
+                name
+                stash_ids {
+                    stash_id
+                    endpoint
+                }
+                scenes {
+                    title
+                    stash_ids {
+                        stash_id
+                        endpoint
+                    }
+                }
+            }
+        }
+    """
+    result = missing_graphql_request(query, {"id": performer_id})
     if result:
         return result["findPerformer"]
     logger.error(f"No details found for performer ID {performer_id}.")
@@ -214,22 +241,33 @@ def query_stashdb_scenes(performer_stash_ids):
     return scenes
 
 
-def compare_scenes(local_scenes, stashdb_scenes):
+def compare_scenes(local_scenes, existing_missing_scenes, stashdb_scenes):
     local_scene_ids = {
         stash_id["stash_id"]
         for scene in local_scenes
         for stash_id in scene["stash_ids"]
         if stash_id.get("endpoint") == config.STASHDB_ENDPOINT
     }
+    logger.debug(f"Local scene IDs: {local_scene_ids}")
+    existing_missing_scene_ids = {
+        stash_id["stash_id"]
+        for scene in existing_missing_scenes
+        for stash_id in scene["stash_ids"]
+        if stash_id.get("endpoint") == config.STASHDB_ENDPOINT
+    }
+    logger.debug(f"Existing missing scene IDs: {existing_missing_scene_ids}")
 
-    missing_scenes = [
-        scene for scene in stashdb_scenes if scene["id"] not in local_scene_ids
+    new_missing_scenes = [
+        scene
+        for scene in stashdb_scenes
+        if scene["id"] not in local_scene_ids
+        and scene["id"] not in existing_missing_scene_ids
     ]
-    logger.info(f"Found {len(missing_scenes)} missing scenes.")
-    return missing_scenes
+    logger.info(f"Found {len(new_missing_scenes)} new missing scenes.")
+    return new_missing_scenes
 
 
-def create_scene(scene):
+def create_scene(scene, performer_id):
     code = scene["code"]
     title = scene["title"]
     studio_url = scene["urls"][0]["url"] if scene["urls"] else None
@@ -261,6 +299,7 @@ def create_scene(scene):
             "url": studio_url,
             "date": formatted_date,
             "cover_image": cover_image,
+            "performer_ids": [performer_id],
             "stash_ids": [
                 {"endpoint": "https://stashdb.org/graphql", "stash_id": stash_id}
             ],
@@ -305,6 +344,82 @@ def get_or_create_studio(performer_name):
     return None
 
 
+def get_or_create_missing_performer(performer_name, performer_stash_id):
+    performers = find_performer_by_stash_id(performer_stash_id)
+    if performers and performers["count"] > 0:
+        performer_id = performers["performers"][0]["id"]
+        logger.info(
+            f"Performer found with stash ID {performer_stash_id} with ID: {performer_id}"
+        )
+        return performer_id
+
+    mutation = """
+        mutation PerformerCreate($input: PerformerCreateInput!) {
+            performerCreate(input: $input) {
+                id
+                name
+                stash_ids {
+                    stash_id
+                    endpoint
+                }
+            }
+        }
+    """
+    variables = {
+        "input": {
+            "name": performer_name,
+            "stash_ids": [
+                {"stash_id": performer_stash_id, "endpoint": config.STASHDB_ENDPOINT}
+            ],
+        }
+    }
+    result = missing_graphql_request(mutation, variables)
+
+    if result and "performerCreate" in result:
+        performer_id = result["performerCreate"]["id"]
+        logger.info(f"Performer created: {performer_name}")
+        return performer_id
+    logger.error(f"Failed to create performer '{performer_name}'")
+    return None
+
+
+def find_performer_by_stash_id(performer_stash_id):
+    query = """
+        query FindPerformers($performer_filter: PerformerFilterType) {
+            findPerformers(performer_filter: $performer_filter) {
+                count
+                performers {
+                    id
+                    name
+                    gender
+                    stash_ids {
+                        stash_id
+                        endpoint
+                    }
+                }
+            }
+        }
+    """
+    variables = {
+        "performer_filter": {
+            "stash_id_endpoint": {
+                "endpoint": config.STASHDB_ENDPOINT,
+                "stash_id": performer_stash_id,
+                "modifier": "EQUALS",
+            }
+        }
+    }
+    logger.info(f"Searching for performer with stash ID {performer_stash_id}")
+    logger.debug(f"Query: {query}")
+    logger.debug(f"Query variables: {variables}")
+    result = missing_graphql_request(query, variables)
+    logger.debug(f"GraphQL request result: {result}")
+    if result:
+        return result["findPerformers"]
+    logger.error(f"No performers found with stash ID {performer_stash_id}.")
+    return None
+
+
 def update_scene_with_studio(scene_id, studio_id):
     mutation = """
         mutation SceneUpdate($input: SceneUpdateInput!) {
@@ -325,9 +440,25 @@ def update_scene_with_studio(scene_id, studio_id):
 def compare_performer_scenes():
     performer_id = get_most_recently_updated_performer()
     if performer_id:
-        performer_details = get_performer_details(performer_id)
+        performer_details = get_local_performer_details(performer_id)
         if performer_details:
             logger.info(f"Processing performer: {performer_details['name']}")
+
+            performer_name = performer_details["name"]
+            performer_stash_id = next(
+                (
+                    sid["stash_id"]
+                    for sid in performer_details["stash_ids"]
+                    if sid.get("endpoint") == config.STASHDB_ENDPOINT
+                ),
+                None,
+            )
+            missing_performer_id = get_or_create_missing_performer(
+                performer_name, performer_stash_id
+            )
+            missing_performer_details = get_missing_performer_details(
+                missing_performer_id
+            )
 
             # Create a studio for the missing scenes of this performer
             studio_id = get_or_create_studio(performer_details["name"])
@@ -336,16 +467,19 @@ def compare_performer_scenes():
             )
 
             local_scenes = performer_details["scenes"]
+            existing_missing_scenes = missing_performer_details["scenes"]
             stash_ids = [sid["stash_id"] for sid in performer_details["stash_ids"]]
             stashdb_scenes = query_stashdb_scenes(stash_ids)
-            missing_scenes = compare_scenes(local_scenes, stashdb_scenes)
+            missing_scenes = compare_scenes(
+                local_scenes, existing_missing_scenes, stashdb_scenes
+            )
 
             if missing_scenes:
                 total_scenes = len(missing_scenes)
                 processed_scenes = 0
                 for scene in missing_scenes:
                     # Create scene and link it to the new studio
-                    created_scene_id = create_scene(scene)
+                    created_scene_id = create_scene(scene, missing_performer_id)
                     if created_scene_id:
                         update_scene_with_studio(created_scene_id, studio_id)
                         logger.info(
