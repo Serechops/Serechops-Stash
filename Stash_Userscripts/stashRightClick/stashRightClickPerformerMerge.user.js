@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         stashRightClickPerformerMerge
 // @namespace    https://github.com/Serechops/Serechops-Stash
-// @version      1.5
+// @version      1.7
 // @description  Adds a performer merge tool to the Performers page in Stash.
 // @match        http://localhost:9999/performers*
 // @grant        GM_addStyle
@@ -513,6 +513,15 @@
                 return acc;
             }, []);
 
+            let targetOriginalName = targetPerformer.name;
+
+            // Temporarily rename target performer if names clash
+            if (sourcePerformer.name === targetPerformer.name) {
+                await renamePerformer(targetPerformerId, `${targetPerformer.name}_temp`);
+                targetOriginalName = targetPerformer.name; // save original name
+                targetPerformer.name = `${targetPerformer.name}_temp`;
+            }
+
             for (const key in sourcePerformer) {
                 if (key === 'alias_list') {
                     // Merge unique aliases
@@ -537,14 +546,16 @@
             await updatePerformer(updatedData);
             await deletePerformer(sourcePerformerId);
             showToast('Performers merged successfully', 'success');
+
+            // Rename back to the original name
+            if (sourcePerformer.name === targetOriginalName) {
+                await renamePerformer(targetPerformerId, targetOriginalName);
+            }
+
             document.getElementById('merge-modal').remove();
         } catch (error) {
-            if (error.message.includes("performer with name") && error.message.includes("already exists")) {
-                showToast('Merge failed: Performer with the same name and disambiguation already exists.', 'error');
-            } else {
-                console.error('Error merging performers:', error);
-                showToast('Error merging performers', 'error');
-            }
+            console.error('Error merging performers:', error);
+            showToast('Error merging performers', 'error');
         }
     }
 
@@ -600,6 +611,19 @@
             pane.dataset.selectedPerformerData = JSON.stringify(performer);
         }
         return performer;
+    }
+
+    // Function to rename performer
+    async function renamePerformer(performerId, newName) {
+        const gqlMutation = `
+            mutation RenamePerformer($id: ID!, $name: String!) {
+                performerUpdate(input: { id: $id, name: $name }) {
+                    id
+                }
+            }
+        `;
+        const variables = { id: performerId, name: newName };
+        await graphqlRequest(gqlMutation, variables, config.apiKey);
     }
 
     // Function to update performer
