@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         stashRightClickPerformerMerge
 // @namespace    https://github.com/Serechops/Serechops-Stash
-// @version      1.4
+// @version      1.5
 // @description  Adds a performer merge tool to the Performers page in Stash.
 // @match        http://localhost:9999/performers*
 // @grant        GM_addStyle
@@ -164,6 +164,10 @@
         .merge-actions {
             text-align: center;
             margin-top: 20px;
+        }
+
+        .highlight {
+            background-color: #B03608;
         }
     `);
 
@@ -411,39 +415,76 @@
         pane.innerHTML = `
             <img src="${performer.image_path}/image.jpg" alt="${performer.name}">
             <h3>${performer.name}</h3>
-            <div><strong>ID:</strong> ${performer.id}</div>
-            <div><strong>Disambiguation:</strong> ${performer.disambiguation}</div>
-            <div><strong>URL:</strong> <a href="${performer.url}" target="_blank">${performer.url}</a></div>
-            <div><strong>Gender:</strong> ${performer.gender}</div>
-            <div><strong>Twitter:</strong> ${performer.twitter}</div>
-            <div><strong>Instagram:</strong> ${performer.instagram}</div>
-            <div><strong>Birthdate:</strong> ${performer.birthdate}</div>
-            <div><strong>Ethnicity:</strong> ${performer.ethnicity}</div>
-            <div><strong>Country:</strong> ${performer.country}</div>
-            <div><strong>Eye Color:</strong> ${performer.eye_color}</div>
-            <div><strong>Height (cm):</strong> ${performer.height_cm}</div>
-            <div><strong>Measurements:</strong> ${performer.measurements}</div>
-            <div><strong>Fake Tits:</strong> ${performer.fake_tits}</div>
-            <div><strong>Career Length:</strong> ${performer.career_length}</div>
-            <div><strong>Tattoos:</strong> ${performer.tattoos}</div>
-            <div><strong>Piercings:</strong> ${performer.piercings}</div>
-            <div><strong>Aliases:</strong> ${performer.alias_list.join(', ')}</div>
-            <div><strong>Scene Count:</strong> ${performer.scene_count}</div>
-            <div><strong>Image Count:</strong> ${performer.image_count}</div>
-            <div><strong>Gallery Count:</strong> ${performer.gallery_count}</div>
-            <div><strong>Movie Count:</strong> ${performer.movie_count}</div>
-            <div><strong>Performer Count:</strong> ${performer.performer_count}</div>
-            <div><strong>O Counter:</strong> ${performer.o_counter}</div>
-            <div><strong>Rating:</strong> ${performer.rating100 / 10}/10</div>
-            <div><strong>Details:</strong> ${performer.details}</div>
-            <div><strong>Death Date:</strong> ${performer.death_date}</div>
-            <div><strong>Hair Color:</strong> ${performer.hair_color}</div>
-            <div><strong>Weight:</strong> ${performer.weight}</div>
-            <div><strong>Created At:</strong> ${performer.created_at}</div>
-            <div><strong>Updated At:</strong> ${performer.updated_at}</div>
-            <div><strong>Stash IDs:</strong> ${stashIds}</div>
+            <div data-field="name"><strong>ID:</strong> ${performer.id}</div>
+            <div data-field="disambiguation"><strong>Disambiguation:</strong> ${performer.disambiguation}</div>
+            <div data-field="url"><strong>URL:</strong> <a href="${performer.url}" target="_blank">${performer.url}</a></div>
+            <div data-field="gender"><strong>Gender:</strong> ${performer.gender}</div>
+            <div data-field="twitter"><strong>Twitter:</strong> ${performer.twitter}</div>
+            <div data-field="instagram"><strong>Instagram:</strong> ${performer.instagram}</div>
+            <div data-field="birthdate"><strong>Birthdate:</strong> ${performer.birthdate}</div>
+            <div data-field="ethnicity"><strong>Ethnicity:</strong> ${performer.ethnicity}</div>
+            <div data-field="country"><strong>Country:</strong> ${performer.country}</div>
+            <div data-field="eye_color"><strong>Eye Color:</strong> ${performer.eye_color}</div>
+            <div data-field="height_cm"><strong>Height (cm):</strong> ${performer.height_cm}</div>
+            <div data-field="measurements"><strong>Measurements:</strong> ${performer.measurements}</div>
+            <div data-field="fake_tits"><strong>Fake Tits:</strong> ${performer.fake_tits}</div>
+            <div data-field="career_length"><strong>Career Length:</strong> ${performer.career_length}</div>
+            <div data-field="tattoos"><strong>Tattoos:</strong> ${performer.tattoos}</div>
+            <div data-field="piercings"><strong>Piercings:</strong> ${performer.piercings}</div>
+            <div data-field="alias_list"><strong>Aliases:</strong> ${performer.alias_list.join(', ')}</div>
+            <div data-field="scene_count"><strong>Scene Count:</strong> ${performer.scene_count}</div>
+            <div data-field="image_count"><strong>Image Count:</strong> ${performer.image_count}</div>
+            <div data-field="gallery_count"><strong>Gallery Count:</strong> ${performer.gallery_count}</div>
+            <div data-field="movie_count"><strong>Movie Count:</strong> ${performer.movie_count}</div>
+            <div data-field="performer_count"><strong>Performer Count:</strong> ${performer.performer_count}</div>
+            <div data-field="o_counter"><strong>O Counter:</strong> ${performer.o_counter}</div>
+            <div data-field="rating100"><strong>Rating:</strong> ${performer.rating100 / 10}/10</div>
+            <div data-field="details"><strong>Details:</strong> ${performer.details}</div>
+            <div data-field="death_date"><strong>Death Date:</strong> ${performer.death_date}</div>
+            <div data-field="hair_color"><strong>Hair Color:</strong> ${performer.hair_color}</div>
+            <div data-field="weight"><strong>Weight:</strong> ${performer.weight}</div>
+            <div data-field="created_at"><strong>Created At:</strong> ${performer.created_at}</div>
+            <div data-field="updated_at"><strong>Updated At:</strong> ${performer.updated_at}</div>
+            <div data-field="stash_ids"><strong>Stash IDs:</strong> ${stashIds}</div>
         `;
         pane.dataset.selectedPerformerId = performer.id;
+        pane.dataset.selectedPerformerData = JSON.stringify(performer);
+
+        // Highlight differences if both panes have performers selected
+        if (document.getElementById('merge-pane-left').dataset.selectedPerformerId && document.getElementById('merge-pane-right').dataset.selectedPerformerId) {
+            highlightDifferences();
+        }
+    }
+
+    // Function to highlight differences between two selected performers
+    function highlightDifferences() {
+        const leftPane = document.getElementById('merge-pane-left');
+        const rightPane = document.getElementById('merge-pane-right');
+
+        const leftPerformer = JSON.parse(leftPane.dataset.selectedPerformerData);
+        const rightPerformer = JSON.parse(rightPane.dataset.selectedPerformerData);
+
+        const fields = [
+            'name', 'disambiguation', 'url', 'gender', 'twitter', 'instagram',
+            'birthdate', 'ethnicity', 'country', 'eye_color', 'height_cm',
+            'measurements', 'fake_tits', 'career_length', 'tattoos', 'piercings',
+            'alias_list', 'scene_count', 'image_count', 'gallery_count', 'movie_count',
+            'performer_count', 'o_counter', 'rating100', 'details', 'death_date',
+            'hair_color', 'weight', 'created_at', 'updated_at', 'stash_ids'
+        ];
+
+        fields.forEach(field => {
+            const leftFieldElement = leftPane.querySelector(`[data-field="${field}"]`);
+            const rightFieldElement = rightPane.querySelector(`[data-field="${field}"]`);
+
+            if (leftFieldElement && rightFieldElement && JSON.stringify(leftPerformer[field]) !== JSON.stringify(rightPerformer[field])) {
+                leftFieldElement.classList.add('highlight');
+                rightFieldElement.classList.add('highlight');
+            } else {
+                if (leftFieldElement) leftFieldElement.classList.remove('highlight');
+                if (rightFieldElement) rightFieldElement.classList.remove('highlight');
+            }
+        });
     }
 
     // Function to merge performers
@@ -498,8 +539,12 @@
             showToast('Performers merged successfully', 'success');
             document.getElementById('merge-modal').remove();
         } catch (error) {
-            console.error('Error merging performers:', error);
-            showToast('Error merging performers', 'error');
+            if (error.message.includes("performer with name") && error.message.includes("already exists")) {
+                showToast('Merge failed: Performer with the same name and disambiguation already exists.', 'error');
+            } else {
+                console.error('Error merging performers:', error);
+                showToast('Error merging performers', 'error');
+            }
         }
     }
 
@@ -549,7 +594,12 @@
         `;
         const variables = { id: performerId };
         const response = await graphqlRequest(gqlQuery, variables, config.apiKey);
-        return response.data.findPerformer;
+        const performer = response.data.findPerformer;
+        const pane = document.querySelector(`[data-selected-performer-id="${performerId}"]`);
+        if (pane) {
+            pane.dataset.selectedPerformerData = JSON.stringify(performer);
+        }
+        return performer;
     }
 
     // Function to update performer
