@@ -61,3 +61,47 @@ Find this configuration at the top of each `stashRightClick` userscript and adju
 3. Select an option to add tags, performers, or galleries/scenes.
 4. Use the search input to filter and select the items to add.
 5. The changes will be applied using GraphQL mutations.
+
+
+# Performer Merge Tool
+
+The Performer Merge Tool is a userscript that adds a performer merge functionality to the Performers page in Stash. This script allows users to search performers by name or Stash ID and merge performer records while preserving unique information such as aliases, disambiguations, and Stash IDs.
+
+## Features
+
+- Search performers by name or Stash ID.
+- Merge performer records while appending unique entries for aliases and disambiguations.
+- Preserve and merge Stash IDs, with friendly names for known endpoints (e.g., StashDB, ThePornDB).
+- User-friendly modal interface for selecting and merging performers.
+
+## Installation
+
+1. Install a userscript manager extension for your browser like [Tampermonkey](https://www.tampermonkey.net/) or [Greasemonkey](https://www.greasespot.net/).
+2. [Install the Performer Merge Tool userscript]([https://github.com/Serechops/Serechops-Stash/raw/main/Stash_Userscripts/stashRightClick/stashRightClickPerformerMerge.user.js]).
+
+## Configuration
+
+Edit the userscript to configure your server details:
+
+```
+javascript
+const userConfig = {
+    scheme: 'http', // or 'https'
+    host: 'localhost', // your server IP or hostname
+    port: 9999, // your server port
+    apiKey: '' // your API key
+};
+```
+
+## Usage
+- Navigate to the Performers page in Stash.
+- Right-click on the "More" button (`...`) to open the custom menu.
+- Click on "Merge Performers" to open the merge modal.
+- Search for performers by name or Stash ID in the left and right search fields.
+- Select the performers to compare and merge.
+- Click on "Merge Left to Right" or "Merge Right to Left" to perform the merge.
+
+## Note
+
+When deciding on which direction to merge please keep in mind that the `starting` direction will be destroyed after the merge is complete.
+`LEFT > RIGHT = LEFT IS DESTROYED, RIGHT > LEFT = RIGHT IS DESTROYED`
