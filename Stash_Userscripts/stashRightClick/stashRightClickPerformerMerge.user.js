@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         stashRightClickPerformerMerge
 // @namespace    https://github.com/Serechops/Serechops-Stash
-// @version      1.8
+// @version      2.0
 // @description  Adds a performer merge tool to the Performers page in Stash.
 // @match        http://localhost:9999/performers*
 // @grant        GM_addStyle
@@ -171,8 +171,23 @@
         }
     `);
 
+    // Debounce function to limit the rate of function calls
+    function debounce(func, wait) {
+        let timeout;
+        return function(...args) {
+            clearTimeout(timeout);
+            timeout = setTimeout(() => func.apply(this, args), wait);
+        };
+    }
+
     // Function to create the custom menu
     function createCustomMenu(event) {
+        // Remove existing menu if any
+        const existingMenu = document.getElementById('custom-menu');
+        if (existingMenu) {
+            existingMenu.remove();
+        }
+
         const menu = document.createElement('div');
         menu.id = 'custom-menu';
 
@@ -256,21 +271,21 @@
         document.body.appendChild(modal);
         modal.style.display = 'block';
 
-        document.getElementById('performer-search-left').addEventListener('input', async (e) => {
+        document.getElementById('performer-search-left').addEventListener('input', debounce(async (e) => {
             const searchQuery = e.target.value;
             if (searchQuery.length >= 3) {
                 const performers = await searchPerformers(searchQuery);
                 updateMergePane('merge-pane-left', performers);
             }
-        });
+        }, 500));
 
-        document.getElementById('performer-search-right').addEventListener('input', async (e) => {
+        document.getElementById('performer-search-right').addEventListener('input', debounce(async (e) => {
             const searchQuery = e.target.value;
             if (searchQuery.length >= 3) {
                 const performers = await searchPerformers(searchQuery);
                 updateMergePane('merge-pane-right', performers);
             }
-        });
+        }, 500));
 
         document.getElementById('merge-left-to-right').addEventListener('click', () => mergePerformers('left-to-right'));
         document.getElementById('merge-right-to-left').addEventListener('click', () => mergePerformers('right-to-left'));
@@ -577,6 +592,15 @@
             const sourcePerformer = await fetchPerformerDetails(sourcePerformerId);
             const targetPerformer = await fetchPerformerDetails(targetPerformerId);
 
+            const validFields = [
+                'id', 'name', 'disambiguation', 'url', 'gender', 'twitter', 'instagram',
+                'birthdate', 'ethnicity', 'country', 'eye_color', 'height_cm',
+                'measurements', 'fake_tits', 'career_length', 'tattoos', 'piercings',
+                'alias_list', 'scene_count', 'image_count', 'gallery_count', 'performer_count',
+                'o_counter', 'rating100', 'details', 'death_date', 'hair_color', 'weight',
+                'created_at', 'updated_at', 'stash_ids'
+            ];
+
             const updatedData = { id: targetPerformerId };
             const appendedStashIds = [...targetPerformer.stash_ids, ...sourcePerformer.stash_ids].reduce((acc, id) => {
                 const existing = acc.find(e => e.stash_id === id.stash_id);
@@ -585,21 +609,23 @@
             }, []);
 
             for (const key in sourcePerformer) {
-                if (key === 'alias_list') {
-                    // Merge unique aliases
-                    const mergedAliases = Array.from(new Set([...targetPerformer.alias_list, ...sourcePerformer.alias_list]));
-                    updatedData.alias_list = mergedAliases;
-                } else if (key === 'disambiguation') {
-                    // Merge disambiguations
-                    const mergedDisambiguation = targetPerformer.disambiguation
-                        ? `${targetPerformer.disambiguation}, ${sourcePerformer.disambiguation}`
-                        : sourcePerformer.disambiguation;
-                    updatedData.disambiguation = mergedDisambiguation;
-                } else if (key === 'stash_ids') {
-                    // Append stash IDs
-                    updatedData.stash_ids = appendedStashIds;
-                } else if (!targetPerformer[key] && sourcePerformer[key]) {
-                    updatedData[key] = sourcePerformer[key];
+                if (validFields.includes(key)) {
+                    if (key === 'alias_list') {
+                        // Merge unique aliases
+                        const mergedAliases = Array.from(new Set([...targetPerformer.alias_list, ...sourcePerformer.alias_list]));
+                        updatedData.alias_list = mergedAliases;
+                    } else if (key === 'disambiguation') {
+                        // Merge disambiguations
+                        const mergedDisambiguation = targetPerformer.disambiguation
+                            ? `${targetPerformer.disambiguation}, ${sourcePerformer.disambiguation}`
+                            : sourcePerformer.disambiguation;
+                        updatedData.disambiguation = mergedDisambiguation;
+                    } else if (key === 'stash_ids') {
+                        // Append stash IDs
+                        updatedData.stash_ids = appendedStashIds;
+                    } else if (!targetPerformer[key] && sourcePerformer[key]) {
+                        updatedData[key] = sourcePerformer[key];
+                    }
                 }
             }
 
@@ -648,7 +674,6 @@
                     scene_count
                     image_count
                     gallery_count
-                    movie_count
                     performer_count
                     o_counter
                     rating100
