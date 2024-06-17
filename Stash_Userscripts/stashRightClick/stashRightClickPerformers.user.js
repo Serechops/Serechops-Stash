@@ -1,7 +1,7 @@
 // ==UserScript==
-// @name         stashRightClick for Performers
+// @name         stashRightClickPerformers
 // @namespace    https://github.com/Serechops/Serechops-Stash
-// @version      1.8
+// @version      2.0
 // @description  Adds a custom right-click menu to .performer-card elements with options like "Missing Scenes", "Change Image", and "Auto-Tag" using GraphQL queries.
 // @match        http://localhost:9999/*
 // @grant        GM_addStyle
@@ -354,8 +354,10 @@
                 }
             }
         `;
+        console.log("GraphQL query for fetching performer's StashDB ID:", query);
         try {
             const response = await graphqlRequest(query, { id: performerID }, config.apiKey);
+            console.log("Response for performer's StashDB ID:", response);
             if (response && response.data && response.data.findPerformer) {
                 return response.data.findPerformer.stash_ids.map(id => id.stash_id);
             } else {
@@ -368,8 +370,8 @@
         }
     }
 
-    // Function to fetch performer images
-    async function fetchPerformerImages(performerStashID) {
+    // Function to fetch performer images from StashDB
+    async function fetchPerformerImagesFromStashDB(performerStashID) {
         const query = `
             query FindPerformer($id: ID!) {
                 findPerformer(id: $id) {
@@ -381,16 +383,55 @@
                 }
             }
         `;
+        console.log("GraphQL query for fetching performer images from StashDB:", query);
         try {
             const response = await gqlQuery('https://stashdb.org/graphql', query, { id: performerStashID }, config.stashDBApiKey);
+            console.log("Response for performer images from StashDB:", response);
             if (response && response.data && response.data.findPerformer) {
                 return response.data.findPerformer.images;
             } else {
-                console.error('No images found for performer:', performerStashID);
+                console.error('No images found for performer in StashDB:', performerStashID);
                 return [];
             }
         } catch (error) {
-            console.error('Error fetching performer images:', error);
+            console.error('Error fetching performer images from StashDB:', error);
+            return [];
+        }
+    }
+
+    // Function to fetch performer images from local server
+    async function fetchPerformerImagesFromLocal(performerID) {
+        const query = `
+            query FindImages($performer_id: [ID!]!) {
+                findImages(
+                    image_filter: { performers: { value: $performer_id, modifier: EQUALS } }
+                    filter: { per_page: -1 }
+                ) {
+                    images {
+                        id
+                        files {
+                            width
+                            height
+                        }
+                        paths {
+                            thumbnail
+                        }
+                    }
+                }
+            }
+        `;
+        console.log("GraphQL query for fetching performer images from local:", query);
+        try {
+            const response = await graphqlRequest(query, { performer_id: [performerID] }, config.apiKey);
+            console.log("Response for performer images from local:", response);
+            if (response && response.data && response.data.findImages) {
+                return response.data.findImages.images;
+            } else {
+                console.error('No images found for performer in local gallery:', performerID);
+                return [];
+            }
+        } catch (error) {
+            console.error('Error fetching performer images from local:', error);
             return [];
         }
     }
@@ -411,8 +452,10 @@
                 }
             }
         `;
+        console.log("GraphQL query for fetching performer details:", query);
         try {
             const response = await graphqlRequest(query, { id: performerID }, config.apiKey);
+            console.log("Response for performer details:", response);
             if (response && response.data && response.data.findPerformer) {
                 return response.data.findPerformer;
             } else {
@@ -460,8 +503,10 @@
                 }
             }
         `;
+        console.log("GraphQL query for fetching StashDB scenes:", query);
         try {
             const response = await gqlQuery('https://stashdb.org/graphql', query, { stash_ids, page }, config.stashDBApiKey);
+            console.log("Response for StashDB scenes:", response);
             if (response && response.data && response.data.queryScenes) {
                 return response.data.queryScenes;
             } else {
@@ -544,7 +589,7 @@
     }
 
     // Function to create the image selection modal
-    function createImageSelectionModal(images, performerID) {
+    function createImageSelectionModal(images, performerID, source) {
         const totalImages = images.length;
         let currentPage = 1;
         const imagesPerPage = 16;
@@ -555,8 +600,8 @@
             const end = start + imagesPerPage;
             const imageHTML = images.slice(start, end).map(img => `
                 <div class="custom-image-option-container">
-                    <img src="${img.url}" class="custom-image-option" data-url="${img.url}">
-                    <div class="image-dimensions">(${img.width} x ${img.height})</div>
+                    <img src="${source === 'StashDB' ? img.url : img.paths.thumbnail}" class="custom-image-option" data-url="${source === 'StashDB' ? img.url : img.paths.thumbnail}">
+                    <div class="image-dimensions">(${img.files ? img.files[0]?.width : img.width} x ${img.files ? img.files[0]?.height : img.height})</div>
                 </div>
             `).join('');
             document.getElementById('custom-imageGallery').innerHTML = imageHTML;
@@ -584,7 +629,7 @@
             <div id="custom-imageSelectionModal" class="custom-modal">
                 <div class="custom-modal-content">
                     <span class="custom-close">&times;</span>
-                    <center><h2>StashDB Performer Images</h2></center>
+                    <center><h2>${source} Performer Images</h2></center>
                     <div id="custom-imageGallery"></div>
                     <div id="custom-pagination-controls"></div>
                     <button id="custom-applyImage">Apply</button>
@@ -649,8 +694,10 @@
                 }
             }
         `;
+        console.log("GraphQL mutation for updating performer image:", mutation);
         try {
             const response = await graphqlRequest(mutation, { id: performerID, image: imageUrl }, config.apiKey);
+            console.log("Response for updating performer image:", response);
             if (response && response.data && response.data.performerUpdate) {
                 return response.data.performerUpdate.id;
             } else {
@@ -670,8 +717,10 @@
                 metadataAutoTag(input: { performers: "${performerID}" })
             }
         `;
+        console.log("GraphQL mutation for auto-tagging performer:", mutation);
         try {
             const response = await graphqlRequest(mutation, {}, config.apiKey);
+            console.log("Response for auto-tagging performer:", response);
             if (response && response.data && response.data.metadataAutoTag) {
                 Toastify({
                     text: 'Auto-tagging completed successfully',
@@ -713,7 +762,7 @@
             e.preventDefault();
             const stashIDs = await fetchPerformerStashDBID(performerID);
             if (stashIDs) {
-                const images = await fetchPerformerImages(stashIDs[0]);
+                const images = await fetchPerformerImagesFromStashDB(stashIDs[0]);
                 showLoadingSpinner(images);
                 const localDetails = await fetchPerformerDetails(performerID);
                 const stashDBScenes = [];
@@ -740,14 +789,14 @@
 
         const changeImageLink = document.createElement('a');
         changeImageLink.href = '#';
-        changeImageLink.textContent = 'Change Image...';
+        changeImageLink.textContent = 'Change Image from StashDB...';
         changeImageLink.addEventListener('click', async function(e) {
             e.preventDefault();
             const stashIDs = await fetchPerformerStashDBID(performerID);
             if (stashIDs && stashIDs.length > 0) {
-                const images = await fetchPerformerImages(stashIDs[0]);
+                const images = await fetchPerformerImagesFromStashDB(stashIDs[0]);
                 if (images && images.length > 0) {
-                    createImageSelectionModal(images, performerID);
+                    createImageSelectionModal(images, performerID, "StashDB");
                     document.getElementById('custom-imageSelectionModal').style.display = 'block';
                 } else {
                     console.error('No images found for performer');
@@ -757,6 +806,21 @@
             }
         });
         menu.appendChild(changeImageLink);
+
+        const changeImageFromGalleryLink = document.createElement('a');
+        changeImageFromGalleryLink.href = '#';
+        changeImageFromGalleryLink.textContent = 'Change Image from Gallery...';
+        changeImageFromGalleryLink.addEventListener('click', async function(e) {
+            e.preventDefault();
+            const images = await fetchPerformerImagesFromLocal(performerID);
+            if (images && images.length > 0) {
+                createImageSelectionModal(images, performerID, "Gallery");
+                document.getElementById('custom-imageSelectionModal').style.display = 'block';
+            } else {
+                console.error('No images found for performer');
+            }
+        });
+        menu.appendChild(changeImageFromGalleryLink);
 
         const autoTagLink = document.createElement('a');
         autoTagLink.href = '#';
@@ -803,6 +867,7 @@
 
     // GraphQL request functions
     async function graphqlRequest(query, variables = {}, apiKey = '') {
+        console.log("Making GraphQL request with variables:", variables);
         const response = await fetch(config.serverUrl, {
             method: 'POST',
             headers: {
@@ -811,10 +876,15 @@
             },
             body: JSON.stringify({ query, variables })
         });
-        return response.json();
+        const json = await response.json();
+        console.log("GraphQL response:", json);
+        return json;
     }
 
     async function gqlQuery(endpoint, query, variables = {}, apiKey = '') {
+        console.log("Making GraphQL request to endpoint:", endpoint);
+        console.log("GraphQL query:", query);
+        console.log("Variables:", variables);
         return new Promise((resolve, reject) => {
             GM.xmlHttpRequest({
                 method: 'POST',
@@ -825,9 +895,12 @@
                 },
                 data: JSON.stringify({ query, variables }),
                 onload: function(response) {
-                    resolve(JSON.parse(response.responseText));
+                    const jsonResponse = JSON.parse(response.responseText);
+                    console.log("GraphQL response from GM.xmlHttpRequest:", jsonResponse);
+                    resolve(jsonResponse);
                 },
                 onerror: function(error) {
+                    console.error("Error in GM.xmlHttpRequest:", error);
                     reject(error);
                 }
             });
