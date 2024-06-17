@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         stashRightClickPerformerMerge
 // @namespace    https://github.com/Serechops/Serechops-Stash
-// @version      1.7
+// @version      1.8
 // @description  Adds a performer merge tool to the Performers page in Stash.
 // @match        http://localhost:9999/performers*
 // @grant        GM_addStyle
@@ -401,20 +401,20 @@
         performers.forEach(performer => {
             const performerDiv = document.createElement('div');
             performerDiv.className = 'performer-result';
-            performerDiv.textContent = performer.name;
+            performerDiv.textContent = performer.name + (performer.disambiguation ? ` (${performer.disambiguation})` : '');
             performerDiv.onclick = () => selectPerformer(paneId, performer);
             pane.appendChild(performerDiv);
         });
     }
 
     // Function to select a performer for comparison
-    function selectPerformer(paneId, performer) {
+    async function selectPerformer(paneId, performer) {
         const pane = document.getElementById(paneId);
         const stashIds = performer.stash_ids.map(id => `${friendlyEndpoints[id.endpoint] || id.endpoint}: ${id.stash_id}`).join(', ');
 
         pane.innerHTML = `
             <img src="${performer.image_path}/image.jpg" alt="${performer.name}">
-            <h3>${performer.name}</h3>
+            <h3>${performer.name} ${performer.disambiguation ? `(${performer.disambiguation})` : ''}</h3>
             <div data-field="name"><strong>ID:</strong> ${performer.id}</div>
             <div data-field="disambiguation"><strong>Disambiguation:</strong> ${performer.disambiguation}</div>
             <div data-field="url"><strong>URL:</strong> <a href="${performer.url}" target="_blank">${performer.url}</a></div>
@@ -449,6 +449,10 @@
         `;
         pane.dataset.selectedPerformerId = performer.id;
         pane.dataset.selectedPerformerData = JSON.stringify(performer);
+
+        // Fetch galleries and scenes for the selected performer
+        await searchGalleries(paneId, performer.id);
+        await searchScenes(paneId, performer.id);
 
         // Highlight differences if both panes have performers selected
         if (document.getElementById('merge-pane-left').dataset.selectedPerformerId && document.getElementById('merge-pane-right').dataset.selectedPerformerId) {
@@ -487,6 +491,73 @@
         });
     }
 
+    // Function to search galleries for a performer
+    async function searchGalleries(paneId, performerId) {
+        const gqlQuery = `
+            query FindGalleries($performer_id: [ID!]) {
+                findGalleries(
+                    gallery_filter: { performers: { modifier: EQUALS, value: $performer_id } },
+                    filter: { per_page: -1 }
+                ) {
+                    galleries {
+                        id
+                    }
+                }
+            }
+        `;
+        const variables = { performer_id: [performerId] };
+
+        try {
+            const response = await graphqlRequest(gqlQuery, variables, config.apiKey);
+            const galleryIds = response.data.findGalleries.galleries.map(gallery => gallery.id);
+            console.log(`Galleries for ${paneId}:`, galleryIds);
+            document.getElementById(paneId).dataset.galleryIds = JSON.stringify(galleryIds);
+        } catch (error) {
+            console.error(`Error searching galleries for ${paneId}:`, error);
+        }
+    }
+
+    // Function to search scenes for a performer
+    async function searchScenes(paneId, performerId) {
+        const gqlQuery = `
+            query FindScenes($performer_id: [ID!]) {
+                findScenes(
+                    scene_filter: { performers: { modifier: EQUALS, value: $performer_id } },
+                    filter: { per_page: -1 }
+                ) {
+                    scenes {
+                        id
+                    }
+                }
+            }
+        `;
+        const variables = { performer_id: [performerId] };
+
+        try {
+            const response = await graphqlRequest(gqlQuery, variables, config.apiKey);
+            const sceneIds = response.data.findScenes.scenes.map(scene => scene.id);
+            console.log(`Scenes for ${paneId}:`, sceneIds);
+            document.getElementById(paneId).dataset.sceneIds = JSON.stringify(sceneIds);
+        } catch (error) {
+            console.error(`Error searching scenes for ${paneId}:`, error);
+        }
+    }
+
+    // Function to transfer related items (galleries and scenes) to the target performer
+    async function transferRelatedItems(sourcePerformerId, targetPerformerId) {
+        const sourcePane = document.getElementById(`merge-pane-${sourcePerformerId === document.getElementById('merge-pane-left').dataset.selectedPerformerId ? 'left' : 'right'}`);
+        const galleryIds = JSON.parse(sourcePane.dataset.galleryIds || '[]');
+        const sceneIds = JSON.parse(sourcePane.dataset.sceneIds || '[]');
+
+        for (const galleryId of galleryIds) {
+            await updateGallery(galleryId, targetPerformerId);
+        }
+
+        for (const sceneId of sceneIds) {
+            await updateScene(sceneId, targetPerformerId);
+        }
+    }
+
     // Function to merge performers
     async function mergePerformers(direction) {
         const leftPane = document.getElementById('merge-pane-left');
@@ -513,15 +584,6 @@
                 return acc;
             }, []);
 
-            let targetOriginalName = targetPerformer.name;
-
-            // Temporarily rename target performer if names clash
-            if (sourcePerformer.name === targetPerformer.name) {
-                await renamePerformer(targetPerformerId, `${targetPerformer.name}_temp`);
-                targetOriginalName = targetPerformer.name; // save original name
-                targetPerformer.name = `${targetPerformer.name}_temp`;
-            }
-
             for (const key in sourcePerformer) {
                 if (key === 'alias_list') {
                     // Merge unique aliases
@@ -543,15 +605,15 @@
 
             console.log('Updated Data for Mutation:', updatedData); // Log the mutation data
 
+            await updatePerformer({ id: targetPerformerId, name: `${targetPerformer.name}_temp` });
             await updatePerformer(updatedData);
             await deletePerformer(sourcePerformerId);
+            await updatePerformer({ id: targetPerformerId, name: targetPerformer.name });
+
+            // Transfer related items (galleries and scenes) to the target performer
+            await transferRelatedItems(sourcePerformerId, targetPerformerId);
+
             showToast('Performers merged successfully', 'success');
-
-            // Rename back to the original name
-            if (sourcePerformer.name === targetOriginalName) {
-                await renamePerformer(targetPerformerId, targetOriginalName);
-            }
-
             document.getElementById('merge-modal').remove();
         } catch (error) {
             console.error('Error merging performers:', error);
@@ -613,19 +675,6 @@
         return performer;
     }
 
-    // Function to rename performer
-    async function renamePerformer(performerId, newName) {
-        const gqlMutation = `
-            mutation RenamePerformer($id: ID!, $name: String!) {
-                performerUpdate(input: { id: $id, name: $name }) {
-                    id
-                }
-            }
-        `;
-        const variables = { id: performerId, name: newName };
-        await graphqlRequest(gqlMutation, variables, config.apiKey);
-    }
-
     // Function to update performer
     async function updatePerformer(performerData) {
         const gqlMutation = `
@@ -667,6 +716,50 @@
 
         if (response.errors) {
             console.error('Mutation Errors:', response.errors);
+        }
+    }
+
+    // Function to update gallery
+    async function updateGallery(galleryId, performerId) {
+        const gqlMutation = `
+            mutation GalleryUpdate($input: GalleryUpdateInput!) {
+                galleryUpdate(input: $input) {
+                    id
+                }
+            }
+        `;
+        const input = { id: galleryId, performer_ids: [performerId] };
+
+        console.log('Updating gallery:', input); // Log the update data
+
+        const response = await graphqlRequest(gqlMutation, { input }, config.apiKey);
+
+        console.log('Gallery Update Response:', response); // Log the mutation response
+
+        if (response.errors) {
+            console.error('Gallery Update Errors:', response.errors);
+        }
+    }
+
+    // Function to update scene
+    async function updateScene(sceneId, performerId) {
+        const gqlMutation = `
+            mutation SceneUpdate($input: SceneUpdateInput!) {
+                sceneUpdate(input: $input) {
+                    id
+                }
+            }
+        `;
+        const input = { id: sceneId, performer_ids: [performerId] };
+
+        console.log('Updating scene:', input); // Log the update data
+
+        const response = await graphqlRequest(gqlMutation, { input }, config.apiKey);
+
+        console.log('Scene Update Response:', response); // Log the mutation response
+
+        if (response.errors) {
+            console.error('Scene Update Errors:', response.errors);
         }
     }
 
