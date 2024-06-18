@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         stashRightClickPerformers
 // @namespace    https://github.com/Serechops/Serechops-Stash
-// @version      2.0
+// @version      2.1
 // @description  Adds a custom right-click menu to .performer-card elements with options like "Missing Scenes", "Change Image", and "Auto-Tag" using GraphQL queries.
 // @match        http://localhost:9999/*
 // @grant        GM_addStyle
@@ -109,7 +109,7 @@
         }
 
         .custom-modal-content {
-            background: rgba(0, 0, 0, 0.5);
+            background: rgba(0, 0, 0, 5);
             margin: 5% auto;
             padding: 20px;
             border: 1px solid #888;
@@ -148,7 +148,7 @@
             position: absolute;
             bottom: 5px;
             left: 5px;
-            background-color: rgba(0, 0, 0, 0.5);
+            background-color: rgba(0, 0, 0, 0.6);
             color: white;
             padding: 2px 5px;
             font-size: 10px;
@@ -186,7 +186,7 @@
             margin: 0 5px;
             cursor: pointer;
             color: #007bff;
-            background: rgba(0, 0, 0, 0.5);
+            background: rgba(0, 0, 0, 5);
             text-decoration: underline;
         }
 
@@ -232,7 +232,7 @@
             transform: translate(-50%, -50%);
             width: 200px;
             height: 300px;
-            background-color: rgba(0, 0, 0, 0.8);
+            background-color: rgba(0, 0, 0, 0.5);
             border-radius: 25%;
             overflow: hidden;
         }
@@ -281,7 +281,7 @@
 
         .loading-header {
         outline: 1px solid black;
-        background: rgba(0, 0, 0, 0.5);
+        background: rgba(0, 0, 0, 5);
        }
     `);
 
@@ -325,7 +325,6 @@
             dimOverlay.style.display = 'block';
         }
     }
-
 
     function hideLoadingSpinner() {
         const spinner = document.getElementById('loading-spinner');
@@ -401,10 +400,10 @@
 
     // Function to fetch performer images from local server
     async function fetchPerformerImagesFromLocal(performerID) {
-        const query = `
-            query FindImages($performer_id: [ID!]!) {
+        const looseImagesQuery = `
+            query FindLooseImages($performer_id: [ID!]!) {
                 findImages(
-                    image_filter: { performers: { value: $performer_id, modifier: EQUALS } }
+                    image_filter: { performers: { value: $performer_id, modifier: INCLUDES } }
                     filter: { per_page: -1 }
                 ) {
                     images {
@@ -420,15 +419,57 @@
                 }
             }
         `;
-        console.log("GraphQL query for fetching performer images from local:", query);
+
+        const galleriesQuery = `
+            query FindGalleries($performer_id: ID!) {
+                findGalleries(
+                    gallery_filter: { performers: { value: [$performer_id], modifier: INCLUDES } }
+                    filter: { per_page: -1 }
+                ) {
+                    galleries {
+                        id
+                    }
+                }
+            }
+        `;
+
+        const galleryImagesQuery = `
+            query FindGalleryImages($gallery_ids: [ID!]!) {
+                findImages(
+                    image_filter: { galleries: { value: $gallery_ids, modifier: INCLUDES } }
+                    filter: { per_page: -1 }
+                ) {
+                    images {
+                        id
+                        files {
+                            width
+                            height
+                        }
+                        paths {
+                            thumbnail
+                        }
+                    }
+                }
+            }
+        `;
+
+        console.log("GraphQL query for fetching performer loose images:", looseImagesQuery);
+        console.log("GraphQL query for fetching performer galleries:", galleriesQuery);
+
         try {
-            const response = await graphqlRequest(query, { performer_id: [performerID] }, config.apiKey);
-            console.log("Response for performer images from local:", response);
-            if (response && response.data && response.data.findImages) {
-                return response.data.findImages.images;
+            const looseImagesResponse = await graphqlRequest(looseImagesQuery, { performer_id: [performerID] }, config.apiKey);
+            const looseImages = looseImagesResponse.data.findImages.images;
+
+            const galleriesResponse = await graphqlRequest(galleriesQuery, { performer_id: performerID }, config.apiKey);
+            const galleryIDs = galleriesResponse.data.findGalleries.galleries.map(g => g.id);
+
+            if (galleryIDs.length > 0) {
+                const galleryImagesResponse = await graphqlRequest(galleryImagesQuery, { gallery_ids: galleryIDs }, config.apiKey);
+                const galleryImages = galleryImagesResponse.data.findImages.images;
+
+                return looseImages.concat(galleryImages);
             } else {
-                console.error('No images found for performer in local gallery:', performerID);
-                return [];
+                return looseImages;
             }
         } catch (error) {
             console.error('Error fetching performer images from local:', error);
@@ -868,6 +909,7 @@
     // GraphQL request functions
     async function graphqlRequest(query, variables = {}, apiKey = '') {
         console.log("Making GraphQL request with variables:", variables);
+        console.log("GraphQL query:", query);
         const response = await fetch(config.serverUrl, {
             method: 'POST',
             headers: {
