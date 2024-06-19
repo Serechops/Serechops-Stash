@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         stashRightClick for Galleries
 // @namespace    https://github.com/Serechops/Serechops-Stash
-// @version      1.2
+// @version      1.3
 // @description  Adds a custom right-click menu to .gallery-card elements with options to add tags, performers, or scenes using GraphQL mutations.
 // @author       Serechops
 // @match        http://localhost:9999/*
@@ -75,7 +75,7 @@
 
     // Custom CSS for the popup
     const customCSS = `
-        #popup {
+        #gallery-popup {
             position: absolute;
             background: rgba(0, 0, 0, 0.5);
             backdrop-filter: blur(10px);
@@ -87,32 +87,32 @@
             max-height: 80%;
             overflow-y: auto;
         }
-        #popup h2 {
+        #gallery-popup h2 {
             margin-top: 0;
             cursor: move; /* Make the header cursor indicate that it's draggable */
         }
-        #popup form label {
+        #gallery-popup form label {
             display: block;
             margin-top: 10px;
         }
-        #popup form input, #popup form select {
+        #gallery-popup form input, #gallery-popup form select {
             width: 100%;
             padding: 8px;
             margin-top: 5px;
             box-sizing: border-box;
         }
-        #popup form button {
+        #gallery-popup form button {
             margin-top: 15px;
             padding: 10px;
             cursor: pointer;
             background: rgba(0, 0, 0, 0.5);
             color: #fff;
         }
-        #popup input[type="text"], #popup select {
+        #gallery-popup input[type="text"], #gallery-popup select {
             color: black;
         }
 
-        #custom-menu {
+        #gallery-custom-menu {
             background-color: #000;
             background: rgba(0, 0, 0, 0.6) !important;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
@@ -123,9 +123,10 @@
             padding: 10px;
         }
 
-        #custom-menu a {
+        #gallery-custom-menu a {
             display: block;
             margin-bottom: 5px;
+            color: white;
         }
     `;
 
@@ -149,7 +150,7 @@
     // Function to create the custom menu
     function createCustomMenu(galleryId) {
         const menu = document.createElement('div');
-        menu.id = 'custom-menu';
+        menu.id = 'gallery-custom-menu';
         menu.style.position = 'absolute';
         menu.style.backgroundColor = '#000000';
         menu.style.border = '1px solid #ccc';
@@ -235,16 +236,16 @@
     function createTabulatorPopup(type, galleryId, fetchFunction, event) {
         console.log(`Creating Tabulator popup for ${type}`);
         const popup = document.createElement('div');
-        popup.id = 'popup';
+        popup.id = 'gallery-popup';
         document.body.appendChild(popup); // Append first to get proper dimensions
 
         const form = document.createElement('form');
         form.innerHTML = `
             <h2>Add ${type} to Gallery</h2>
-            <input type="text" id="${type.toLowerCase()}-search" placeholder="Search ${type}">
-            <div id="${type.toLowerCase()}-table"></div>
-            <button type="button" id="add-${type.toLowerCase()}">Add ${type}</button>
-            <button type="button" id="cancel">Cancel</button>
+            <input type="text" id="gallery-${type.toLowerCase()}-search" placeholder="Search ${type}">
+            <div id="gallery-${type.toLowerCase()}-table"></div>
+            <button type="button" id="gallery-add-${type.toLowerCase()}">Add ${type}</button>
+            <button type="button" id="gallery-cancel">Cancel</button>
         `;
         popup.appendChild(form);
         currentPopup = popup;
@@ -271,7 +272,7 @@
             };
         };
 
-        const table = new Tabulator(`#${type.toLowerCase()}-table`, {
+        const table = new Tabulator(`#gallery-${type.toLowerCase()}-table`, {
             layout: "fitColumns",
             height: "300px",
             placeholder: "No Data Available",
@@ -296,13 +297,13 @@
         }
 
         // Add input field for filtering
-        const filterInput = document.getElementById(`${type.toLowerCase()}-search`);
+        const filterInput = document.getElementById(`gallery-${type.toLowerCase()}-search`);
         filterInput.addEventListener('input', debounce((e) => {
             const query = e.target.value;
             fetchData(query);
         }, 300));
 
-        document.getElementById(`add-${type.toLowerCase()}`).addEventListener('click', async function() {
+        document.getElementById(`gallery-add-${type.toLowerCase()}`).addEventListener('click', async function() {
             const selectedRows = table.getSelectedData();
             const selectedIds = selectedRows.map(row => row.id);
             if (type === 'Tags') {
@@ -315,7 +316,7 @@
             popup.remove();
         });
 
-        document.getElementById('cancel').addEventListener('click', function() {
+        document.getElementById('gallery-cancel').addEventListener('click', function() {
             popup.remove();
         });
 

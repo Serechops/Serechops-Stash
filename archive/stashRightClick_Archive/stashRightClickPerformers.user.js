@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         stashRightClickPerformers
 // @namespace    https://github.com/Serechops/Serechops-Stash
-// @version      2.2
+// @version      2.1
 // @description  Adds a custom right-click menu to .performer-card elements with options like "Missing Scenes", "Change Image", and "Auto-Tag" using GraphQL queries.
 // @match        http://localhost:9999/*
 // @grant        GM_addStyle
@@ -43,7 +43,7 @@
         @import url('https://cdn.jsdelivr.net/npm/toastify-js@1.12.0/src/toastify.min.css');
         @import url('https://unpkg.com/tabulator-tables@5.0.8/dist/css/tabulator_midnight.min.css');
 
-        #performers-custom-popup {
+        #custom-popup {
             position: absolute;
             background: rgba(0, 0, 0, 0.5);
             backdrop-filter: blur(10px);
@@ -55,32 +55,32 @@
             max-height: 80%;
             overflow-y: auto;
         }
-        #performers-custom-popup h2 {
+        #custom-popup h2 {
             margin-top: 0;
             cursor: move; /* Make the header cursor indicate that it's draggable */
         }
-        #performers-custom-popup form label {
+        #custom-popup form label {
             display: block;
             margin-top: 10px;
         }
-        #performers-custom-popup form input, #performers-custom-popup form select {
+        #custom-popup form input, #custom-popup form select {
             width: 100%;
             padding: 8px;
             margin-top: 5px;
             box-sizing: border-box;
         }
-        #performers-custom-popup form button {
+        #custom-popup form button {
             margin-top: 15px;
             padding: 10px;
             cursor: pointer;
             background: rgba(0, 0, 0, 0.5);
             color: #fff;
         }
-        #performers-custom-popup input[type="text"], #performers-custom-popup select {
+        #custom-popup input[type="text"], #custom-popup select {
             color: black;
         }
 
-        #performers-custom-menu {
+        #custom-menu {
             background-color: #000;
             background: rgba(0, 0, 0, 0.3);
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
@@ -91,13 +91,12 @@
             padding: 10px;
         }
 
-        #performers-custom-menu a {
+        #custom-menu a {
             display: block;
             margin-bottom: 5px;
-            color: white;
         }
 
-        .performers-custom-modal {
+        .custom-modal {
             display: none;
             position: fixed;
             z-index: 10001;
@@ -106,11 +105,11 @@
             width: 100%;
             height: 100%;
             overflow: auto;
-            background-color: rgba(0, 0, 0, 0.5);
+            background-color: rgba(0, 0, 0, 0.8);
         }
 
-        .performers-custom-modal-content {
-            background: rgba(0, 0, 0, 0.5);
+        .custom-modal-content {
+            background: rgba(0, 0, 0, 5);
             margin: 5% auto;
             padding: 20px;
             border: 1px solid #888;
@@ -120,32 +119,32 @@
             overflow-y: auto;
         }
 
-        .performers-custom-close {
+        .custom-close {
             color: #aaa;
             float: right;
             font-size: 28px;
             font-weight: bold;
         }
 
-        .performers-custom-close:hover,
-        .performers-custom-close:focus {
+        .custom-close:hover,
+        .custom-close:focus {
             color: black;
             text-decoration: none;
             cursor: pointer;
         }
 
-        #performers-custom-imageGallery {
+        #custom-imageGallery {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
             gap: 10px;
         }
 
-        .performers-custom-image-option-container {
+        .custom-image-option-container {
             position: relative;
             display: inline-block;
         }
 
-        .performers-image-dimensions {
+        .image-dimensions {
             position: absolute;
             bottom: 5px;
             left: 5px;
@@ -156,7 +155,7 @@
             border-radius: 3px;
         }
 
-        .performers-custom-image-option {
+        .custom-image-option {
             width: 100px;
             height: 150px;
             object-fit: cover;
@@ -164,11 +163,11 @@
             border: 2px solid transparent;
         }
 
-        .performers-custom-image-option.selected {
+        .custom-image-option.selected {
             border-color: #007bff;
         }
 
-        #performers-custom-applyImage {
+        #custom-applyImage {
             display: block;
             margin: 10px auto;
             padding: 10px 20px;
@@ -178,20 +177,20 @@
             cursor: pointer;
         }
 
-        #performers-custom-pagination-controls {
+        #custom-pagination-controls {
             text-align: center;
             margin-top: 10px;
         }
 
-        .performers-custom-page-link {
+        .custom-page-link {
             margin: 0 5px;
             cursor: pointer;
             color: #007bff;
-            background: rgba(0, 0, 0, 0);
+            background: rgba(0, 0, 0, 5);
             text-decoration: underline;
         }
 
-        .performers-custom-scene-option {
+        .custom-scene-option {
             cursor: pointer;
             border-bottom: 1px solid #ccc;
             padding: 10px;
@@ -200,31 +199,31 @@
             align-items: center;
         }
 
-        .performers-custom-scene-option h3 {
+        .custom-scene-option h3 {
             margin: 0;
             font-size: 12px;
             text-align: center;
         }
 
-        .performers-custom-scene-option img {
+        .custom-scene-option img {
             max-width: 100%;
             height: auto;
         }
 
-        .performers-custom-scene-option p, .performers-custom-scene-option a {
+        .custom-scene-option p, .custom-scene-option a {
             margin: 5px 0;
             font-size: 12px;
             text-align: center;
         }
 
-        #performers-custom-sceneGallery {
+        #custom-sceneGallery {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
             gap: 10px;
         }
 
         /* Loading spinner styles */
-        #performers-loading-spinner {
+        #loading-spinner {
             display: none;
             position: fixed;
             z-index: 10002;
@@ -238,7 +237,7 @@
             overflow: hidden;
         }
 
-        #performers-loading-spinner img {
+        #loading-spinner img {
         position: absolute;
         width: 100%;
         height: 100%;
@@ -253,7 +252,7 @@
          }
 
 
-        #performers-loading-spinner .performers-loading-header {
+        #loading-spinner .loading-header {
         position: absolute;
         bottom: 10px;
         width: 100%;
@@ -269,7 +268,7 @@
             100% { transform: translateX(-100%); }
         }
 
-        #performers-dim-overlay {
+        #dim-overlay {
             display: none;
             position: fixed;
             z-index: 10001;
@@ -280,20 +279,20 @@
             background-color: rgba(0, 0, 0, 0.5);
         }
 
-        .performers-loading-header {
+        .loading-header {
         outline: 1px solid black;
-        background: rgba(0, 0, 0, 0.5);
+        background: rgba(0, 0, 0, 5);
        }
     `);
 
-    const spinnerHTML = `<div id="performers-loading-spinner"><img src=""></div>`;
-    const dimOverlayHTML = `<div id="performers-dim-overlay"></div>`;
+    const spinnerHTML = `<div id="loading-spinner"><img src=""></div>`;
+    const dimOverlayHTML = `<div id="dim-overlay"></div>`;
     document.body.insertAdjacentHTML('beforeend', spinnerHTML);
     document.body.insertAdjacentHTML('beforeend', dimOverlayHTML);
 
     let slideshowInterval;
     function startSlideshow(images) {
-        const spinner = document.getElementById('performers-loading-spinner');
+        const spinner = document.getElementById('loading-spinner');
         let currentIndex = 0;
 
         function showNextImage() {
@@ -317,10 +316,10 @@
     }
 
     function showLoadingSpinner(images) {
-        const spinner = document.getElementById('performers-loading-spinner');
-        const dimOverlay = document.getElementById('performers-dim-overlay');
+        const spinner = document.getElementById('loading-spinner');
+        const dimOverlay = document.getElementById('dim-overlay');
         if (spinner) {
-            spinner.innerHTML = '<div class="performers-loading-header">Fetching Scenes...</div>';
+            spinner.innerHTML = '<div class="loading-header">Fetching Scenes...</div>';
             startSlideshow(images);
             spinner.style.display = 'block';
             dimOverlay.style.display = 'block';
@@ -328,8 +327,8 @@
     }
 
     function hideLoadingSpinner() {
-        const spinner = document.getElementById('performers-loading-spinner');
-        const dimOverlay = document.getElementById('performers-dim-overlay');
+        const spinner = document.getElementById('loading-spinner');
+        const dimOverlay = document.getElementById('dim-overlay');
         if (spinner) {
             clearInterval(slideshowInterval);
             spinner.style.display = 'none';
@@ -573,14 +572,14 @@
     function createMissingScenesModal(missingScenes) {
         const totalScenes = missingScenes.length;
         let currentPage = 1;
-        const scenesPerPage = 27;
+        const scenesPerPage = 25;
         const totalPages = Math.ceil(totalScenes / scenesPerPage);
 
         function renderScenes(page) {
             const start = (page - 1) * scenesPerPage;
             const end = start + scenesPerPage;
             const scenesHTML = missingScenes.slice(start, end).sort((a, b) => new Date(b.release_date) - new Date(a.release_date)).map(scene => `
-                <div class="performers-custom-scene-option" data-id="${scene.id}">
+                <div class="custom-scene-option" data-id="${scene.id}">
                     <h3>${scene.title}</h3>
                     <img src="${scene.images[0]?.url || ''}" alt="${scene.title}">
                     <p>Release Date: ${scene.release_date}</p>
@@ -589,14 +588,14 @@
                     <a href="https://stashdb.org/scenes/${scene.id}" target="_blank">Find on StashDB</a>
                 </div>
             `).join('');
-            document.getElementById('performers-custom-sceneGallery').innerHTML = scenesHTML;
+            document.getElementById('custom-sceneGallery').innerHTML = scenesHTML;
 
-            document.getElementById('performers-custom-pagination-controls-scenes').innerHTML = `
-                ${page > 1 ? `<span class="performers-custom-page-link" data-page="${page - 1}">Previous</span>` : ''}
-                ${page < totalPages ? `<span class="performers-custom-page-link" data-page="${page + 1}">Next</span>` : ''}
+            document.getElementById('custom-pagination-controls-scenes').innerHTML = `
+                ${page > 1 ? `<span class="custom-page-link" data-page="${page - 1}">Previous</span>` : ''}
+                ${page < totalPages ? `<span class="custom-page-link" data-page="${page + 1}">Next</span>` : ''}
             `;
 
-            document.querySelectorAll('.performers-custom-page-link').forEach(link => {
+            document.querySelectorAll('.custom-page-link').forEach(link => {
                 link.onclick = function() {
                     renderScenes(parseInt(link.getAttribute('data-page')));
                 };
@@ -604,20 +603,20 @@
         }
 
         const modalHTML = `
-            <div id="performers-custom-missingScenesModal" class="performers-custom-modal">
-                <div class="performers-custom-modal-content">
-                    <span class="performers-custom-close">&times;</span>
+            <div id="custom-missingScenesModal" class="custom-modal">
+                <div class="custom-modal-content">
+                    <span class="custom-close">&times;</span>
                     <center><h2>Missing Scenes from StashDB</h2></center>
-                    <div id="performers-custom-sceneGallery"></div>
-                    <div id="performers-custom-pagination-controls-scenes"></div>
+                    <div id="custom-sceneGallery"></div>
+                    <div id="custom-pagination-controls-scenes"></div>
                 </div>
             </div>
         `;
         document.body.insertAdjacentHTML('beforeend', modalHTML);
         renderScenes(currentPage);
 
-        const modal = document.getElementById('performers-custom-missingScenesModal');
-        const span = document.getElementsByClassName('performers-custom-close')[0];
+        const modal = document.getElementById('custom-missingScenesModal');
+        const span = document.getElementsByClassName('custom-close')[0];
         span.onclick = function() {
             modal.style.display = 'none';
             modal.remove();
@@ -634,33 +633,33 @@
     function createImageSelectionModal(images, performerID, source) {
         const totalImages = images.length;
         let currentPage = 1;
-        const imagesPerPage = 40;
+        const imagesPerPage = 16;
         const totalPages = Math.ceil(totalImages / imagesPerPage);
 
         function renderImages(page) {
             const start = (page - 1) * imagesPerPage;
             const end = start + imagesPerPage;
             const imageHTML = images.slice(start, end).map(img => `
-                <div class="performers-custom-image-option-container">
-                    <img src="${source === 'StashDB' ? img.url : img.paths.thumbnail}" class="performers-custom-image-option" data-url="${source === 'StashDB' ? img.url : img.paths.thumbnail}">
-                    <div class="performers-image-dimensions">(${img.files ? img.files[0]?.width : img.width} x ${img.files ? img.files[0]?.height : img.height})</div>
+                <div class="custom-image-option-container">
+                    <img src="${source === 'StashDB' ? img.url : img.paths.thumbnail}" class="custom-image-option" data-url="${source === 'StashDB' ? img.url : img.paths.thumbnail}">
+                    <div class="image-dimensions">(${img.files ? img.files[0]?.width : img.width} x ${img.files ? img.files[0]?.height : img.height})</div>
                 </div>
             `).join('');
-            document.getElementById('performers-custom-imageGallery').innerHTML = imageHTML;
+            document.getElementById('custom-imageGallery').innerHTML = imageHTML;
 
-            document.querySelectorAll('.performers-custom-image-option').forEach(img => {
+            document.querySelectorAll('.custom-image-option').forEach(img => {
                 img.onclick = function() {
-                    document.querySelectorAll('.performers-custom-image-option').forEach(img => img.classList.remove('selected'));
+                    document.querySelectorAll('.custom-image-option').forEach(img => img.classList.remove('selected'));
                     img.classList.add('selected');
                 };
             });
 
-            document.getElementById('performers-custom-pagination-controls').innerHTML = `
-                ${page > 1 ? `<span class="performers-custom-page-link" data-page="${page - 1}">Previous</span>` : ''}
-                ${page < totalPages ? `<span class="performers-custom-page-link" data-page="${page + 1}">Next</span>` : ''}
+            document.getElementById('custom-pagination-controls').innerHTML = `
+                ${page > 1 ? `<span class="custom-page-link" data-page="${page - 1}">Previous</span>` : ''}
+                ${page < totalPages ? `<span class="custom-page-link" data-page="${page + 1}">Next</span>` : ''}
             `;
 
-            document.querySelectorAll('.performers-custom-page-link').forEach(link => {
+            document.querySelectorAll('.custom-page-link').forEach(link => {
                 link.onclick = function() {
                     renderImages(parseInt(link.getAttribute('data-page')));
                 };
@@ -668,21 +667,21 @@
         }
 
         const modalHTML = `
-            <div id="performers-custom-imageSelectionModal" class="performers-custom-modal">
-                <div class="performers-custom-modal-content">
-                    <span class="performers-custom-close">&times;</span>
+            <div id="custom-imageSelectionModal" class="custom-modal">
+                <div class="custom-modal-content">
+                    <span class="custom-close">&times;</span>
                     <center><h2>${source} Performer Images</h2></center>
-                    <div id="performers-custom-imageGallery"></div>
-                    <div id="performers-custom-pagination-controls"></div>
-                    <button id="performers-custom-applyImage">Apply</button>
+                    <div id="custom-imageGallery"></div>
+                    <div id="custom-pagination-controls"></div>
+                    <button id="custom-applyImage">Apply</button>
                 </div>
             </div>
         `;
         document.body.insertAdjacentHTML('beforeend', modalHTML);
         renderImages(currentPage);
 
-        const modal = document.getElementById('performers-custom-imageSelectionModal');
-        const span = document.getElementsByClassName('performers-custom-close')[0];
+        const modal = document.getElementById('custom-imageSelectionModal');
+        const span = document.getElementsByClassName('custom-close')[0];
         span.onclick = function() {
             modal.style.display = 'none';
             modal.remove();
@@ -694,15 +693,14 @@
             }
         };
 
-        document.getElementById('performers-custom-applyImage').onclick = async function() {
-            const selectedImage = document.querySelector('.performers-custom-image-option.selected');
+        document.getElementById('custom-applyImage').onclick = async function() {
+            const selectedImage = document.querySelector('.custom-image-option.selected');
             if (selectedImage) {
                 const imageUrl = selectedImage.getAttribute('data-url');
                 const success = await updatePerformerImage(performerID, imageUrl);
                 if (success) {
                     modal.style.display = 'none';
                     modal.remove();
-                    updatePerformerImageInDOM(performerID, imageUrl); // Update the image in the DOM
                     Toastify({
                         text: 'Image updated successfully',
                         backgroundColor: 'green',
@@ -726,17 +724,6 @@
                 }).showToast();
             }
         };
-    }
-
-    // Function to update performer image in the DOM
-    function updatePerformerImageInDOM(performerID, imageUrl) {
-        const performerCard = document.querySelector(`.performer-card a[href$="/performers/${performerID}"]`);
-        if (performerCard) {
-            const imgElement = performerCard.querySelector('img');
-            if (imgElement) {
-                imgElement.src = imageUrl;
-            }
-        }
     }
 
     // Function to update performer image
@@ -807,7 +794,7 @@
     // Function to create the custom menu
     function createCustomMenu(performerID) {
         const menu = document.createElement('div');
-        menu.id = 'performers-custom-menu';
+        menu.id = 'custom-menu';
 
         const missingScenesLink = document.createElement('a');
         missingScenesLink.href = '#';
@@ -830,7 +817,7 @@
                 if (localDetails && stashDBScenes) {
                     const missingScenes = compareScenes(localDetails.scenes, stashDBScenes);
                     createMissingScenesModal(missingScenes);
-                    document.getElementById('performers-custom-missingScenesModal').style.display = 'block';
+                    document.getElementById('custom-missingScenesModal').style.display = 'block';
                 } else {
                     console.error('Failed to fetch performer details or StashDB scenes');
                 }
@@ -851,7 +838,7 @@
                 const images = await fetchPerformerImagesFromStashDB(stashIDs[0]);
                 if (images && images.length > 0) {
                     createImageSelectionModal(images, performerID, "StashDB");
-                    document.getElementById('performers-custom-imageSelectionModal').style.display = 'block';
+                    document.getElementById('custom-imageSelectionModal').style.display = 'block';
                 } else {
                     console.error('No images found for performer');
                 }
@@ -869,7 +856,7 @@
             const images = await fetchPerformerImagesFromLocal(performerID);
             if (images && images.length > 0) {
                 createImageSelectionModal(images, performerID, "Gallery");
-                document.getElementById('performers-custom-imageSelectionModal').style.display = 'block';
+                document.getElementById('custom-imageSelectionModal').style.display = 'block';
             } else {
                 console.error('No images found for performer');
             }
@@ -900,13 +887,11 @@
         const handleClickOutside = (e) => {
             if (!menu.contains(e.target)) {
                 menu.remove();
-                currentMenu = null;
                 document.removeEventListener('click', handleClickOutside);
             }
         };
 
         document.addEventListener('click', handleClickOutside);
-        currentMenu = menu;
     }
 
     // Function to handle right-click on performer cards

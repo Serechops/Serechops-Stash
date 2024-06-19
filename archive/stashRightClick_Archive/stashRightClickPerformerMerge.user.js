@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         stashRightClickPerformerMerge
 // @namespace    https://github.com/Serechops/Serechops-Stash
-// @version      2.2
+// @version      2.0
 // @description  Adds a performer merge tool to the Performers page in Stash.
 // @match        http://localhost:9999/performers*
 // @grant        GM_addStyle
@@ -37,7 +37,7 @@
 
     // Inject CSS for the custom modal and styling
     GM_addStyle(`
-        #performermerge-custom-menu {
+        #custom-menu {
             background-color: #000;
             background: rgba(0, 0, 0, 0.3);
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
@@ -48,18 +48,18 @@
             padding: 10px;
         }
 
-        #performermerge-custom-menu a {
+        #custom-menu a {
             display: block;
             margin-bottom: 5px;
             color: white;
             text-decoration: none;
         }
 
-        #performermerge-custom-menu a:hover {
+        #custom-menu a:hover {
             text-decoration: underline;
         }
 
-        #performermerge-merge-modal {
+        #merge-modal {
             display: none;
             position: fixed;
             z-index: 10001;
@@ -71,7 +71,7 @@
             background-color: rgba(0, 0, 0, 0.5);
         }
 
-        .performermerge-merge-modal-content {
+        .merge-modal-content {
             background: rgba(0, 0, 0, 0.3);
             margin: 5% auto;
             padding: 20px;
@@ -82,43 +82,43 @@
             overflow-y: auto;
         }
 
-        .performermerge-merge-close {
+        .merge-close {
             color: red;
             float: right;
             font-size: 28px;
             font-weight: bold;
         }
 
-        .performermerge-merge-close:hover,
-        .performermerge-merge-close:focus {
+        .merge-close:hover,
+        .merge-close:focus {
             color: red;
             text-decoration: none;
             cursor: pointer;
         }
 
-        .performermerge-merge-header {
+        .merge-header {
             text-align: center;
             font-size: 24px;
             margin-bottom: 20px;
         }
 
-        .performermerge-merge-search {
+        .merge-search {
             margin-bottom: 20px;
         }
 
-        .performermerge-merge-search input {
+        .merge-search input {
             width: 100%;
             padding: 10px;
             margin-bottom: 10px;
             color: black;
         }
 
-        .performermerge-merge-container {
+        .merge-container {
             display: flex;
             justify-content: space-between;
         }
 
-        .performermerge-merge-pane {
+        .merge-pane {
             width: 48%;
             background-color: rgba(0, 0, 0, 0.5);
             padding: 10px;
@@ -126,7 +126,7 @@
             border: 1px solid #ccc;
         }
 
-        .performermerge-merge-pane img {
+        .merge-pane img {
             display: block;
             margin: 0 auto 10px auto;
             max-width: 100px;
@@ -134,7 +134,7 @@
             border-radius: 8px;
         }
 
-        .performermerge-merge-pane .performermerge-performer-result {
+        .merge-pane .performer-result {
             padding: 8px;
             margin: 5px 0;
             background-color: rgba(0, 0, 0, 0.5);
@@ -144,11 +144,11 @@
             text-align: center;
         }
 
-        .performermerge-merge-pane .performermerge-performer-result:hover {
+        .merge-pane .performer-result:hover {
             background-color: green;
         }
 
-        .performermerge-merge-button {
+        .merge-button {
             margin-top: 10px;
             padding: 10px;
             background-color: #333;
@@ -157,16 +157,16 @@
             cursor: pointer;
         }
 
-        .performermerge-merge-button:hover {
+        .merge-button:hover {
             background-color: #444;
         }
 
-        .performermerge-merge-actions {
+        .merge-actions {
             text-align: center;
             margin-top: 20px;
         }
 
-        .performermerge-highlight {
+        .highlight {
             background-color: #B03608;
         }
     `);
@@ -183,13 +183,13 @@
     // Function to create the custom menu
     function createCustomMenu(event) {
         // Remove existing menu if any
-        const existingMenu = document.getElementById('performermerge-custom-menu');
+        const existingMenu = document.getElementById('custom-menu');
         if (existingMenu) {
             existingMenu.remove();
         }
 
         const menu = document.createElement('div');
-        menu.id = 'performermerge-custom-menu';
+        menu.id = 'custom-menu';
 
         const mergePerformersLink = document.createElement('a');
         mergePerformersLink.href = '#';
@@ -197,8 +197,7 @@
         mergePerformersLink.addEventListener('click', async function(e) {
             e.preventDefault();
             menu.remove();
-            const performerId = getPerformerIdFromUrl();
-            await showMergeModal(performerId);
+            await showMergeModal();
         });
         menu.appendChild(mergePerformersLink);
 
@@ -222,30 +221,21 @@
         document.addEventListener('click', handleClickOutside);
     }
 
-    // Function to get performer ID from URL
-    function getPerformerIdFromUrl() {
-        const urlParts = window.location.pathname.split('/');
-        if (urlParts.length > 2 && urlParts[1] === 'performers') {
-            return urlParts[2];
-        }
-        return null;
-    }
-
     // Function to show the merge modal
-    async function showMergeModal(performerId) {
+    async function showMergeModal() {
         const modal = document.createElement('div');
-        modal.id = 'performermerge-merge-modal';
+        modal.id = 'merge-modal';
 
         const modalContent = document.createElement('div');
-        modalContent.className = 'performermerge-merge-modal-content';
+        modalContent.className = 'merge-modal-content';
 
         const header = document.createElement('div');
-        header.className = 'performermerge-merge-header';
+        header.className = 'merge-header';
         header.textContent = 'Merge Performers';
         modalContent.appendChild(header);
 
         const closeButton = document.createElement('span');
-        closeButton.className = 'performermerge-merge-close';
+        closeButton.className = 'merge-close';
         closeButton.innerHTML = '&times;';
         closeButton.onclick = () => {
             modal.style.display = 'none';
@@ -254,26 +244,26 @@
         modalContent.appendChild(closeButton);
 
         const searchContainer = document.createElement('div');
-        searchContainer.className = 'performermerge-merge-search';
+        searchContainer.className = 'merge-search';
         searchContainer.innerHTML = `
-            <input type="text" id="performermerge-performer-search-left" placeholder="Search Performer by Name or Stash ID (Left)">
-            <input type="text" id="performermerge-performer-search-right" placeholder="Search Performer by Name or Stash ID (Right)">
+            <input type="text" id="performer-search-left" placeholder="Search Performer by Name or Stash ID (Left)">
+            <input type="text" id="performer-search-right" placeholder="Search Performer by Name or Stash ID (Right)">
         `;
         modalContent.appendChild(searchContainer);
 
         const container = document.createElement('div');
-        container.className = 'performermerge-merge-container';
+        container.className = 'merge-container';
         container.innerHTML = `
-            <div class="performermerge-merge-pane" id="performermerge-merge-pane-left"></div>
-            <div class="performermerge-merge-pane" id="performermerge-merge-pane-right"></div>
+            <div class="merge-pane" id="merge-pane-left"></div>
+            <div class="merge-pane" id="merge-pane-right"></div>
         `;
         modalContent.appendChild(container);
 
         const actions = document.createElement('div');
-        actions.className = 'performermerge-merge-actions';
+        actions.className = 'merge-actions';
         actions.innerHTML = `
-            <button class="performermerge-merge-button" id="performermerge-merge-left-to-right">Merge Left to Right</button>
-            <button class="performermerge-merge-button" id="performermerge-merge-right-to-left">Merge Right to Left</button>
+            <button class="merge-button" id="merge-left-to-right">Merge Left to Right</button>
+            <button class="merge-button" id="merge-right-to-left">Merge Right to Left</button>
         `;
         modalContent.appendChild(actions);
 
@@ -281,33 +271,24 @@
         document.body.appendChild(modal);
         modal.style.display = 'block';
 
-        document.getElementById('performermerge-performer-search-left').addEventListener('input', debounce(async (e) => {
+        document.getElementById('performer-search-left').addEventListener('input', debounce(async (e) => {
             const searchQuery = e.target.value;
             if (searchQuery.length >= 3) {
                 const performers = await searchPerformers(searchQuery);
-                updateMergePane('performermerge-merge-pane-left', performers);
+                updateMergePane('merge-pane-left', performers);
             }
         }, 500));
 
-        document.getElementById('performermerge-performer-search-right').addEventListener('input', debounce(async (e) => {
+        document.getElementById('performer-search-right').addEventListener('input', debounce(async (e) => {
             const searchQuery = e.target.value;
             if (searchQuery.length >= 3) {
                 const performers = await searchPerformers(searchQuery);
-                updateMergePane('performermerge-merge-pane-right', performers);
+                updateMergePane('merge-pane-right', performers);
             }
         }, 500));
 
-        document.getElementById('performermerge-merge-left-to-right').addEventListener('click', () => mergePerformers('left-to-right'));
-        document.getElementById('performermerge-merge-right-to-left').addEventListener('click', () => mergePerformers('right-to-left'));
-
-        // Auto-populate the left performer panel if performerId is present
-        if (performerId) {
-            const performer = await fetchPerformerDetails(performerId);
-            if (performer) {
-                document.getElementById('performermerge-performer-search-left').value = performer.name;
-                selectPerformer('performermerge-merge-pane-left', performer);
-            }
-        }
+        document.getElementById('merge-left-to-right').addEventListener('click', () => mergePerformers('left-to-right'));
+        document.getElementById('merge-right-to-left').addEventListener('click', () => mergePerformers('right-to-left'));
     }
 
     // Function to search performers
@@ -434,7 +415,7 @@
         pane.innerHTML = '';
         performers.forEach(performer => {
             const performerDiv = document.createElement('div');
-            performerDiv.className = 'performermerge-performer-result';
+            performerDiv.className = 'performer-result';
             performerDiv.textContent = performer.name + (performer.disambiguation ? ` (${performer.disambiguation})` : '');
             performerDiv.onclick = () => selectPerformer(paneId, performer);
             pane.appendChild(performerDiv);
@@ -489,15 +470,15 @@
         await searchScenes(paneId, performer.id);
 
         // Highlight differences if both panes have performers selected
-        if (document.getElementById('performermerge-merge-pane-left').dataset.selectedPerformerId && document.getElementById('performermerge-merge-pane-right').dataset.selectedPerformerId) {
+        if (document.getElementById('merge-pane-left').dataset.selectedPerformerId && document.getElementById('merge-pane-right').dataset.selectedPerformerId) {
             highlightDifferences();
         }
     }
 
     // Function to highlight differences between two selected performers
     function highlightDifferences() {
-        const leftPane = document.getElementById('performermerge-merge-pane-left');
-        const rightPane = document.getElementById('performermerge-merge-pane-right');
+        const leftPane = document.getElementById('merge-pane-left');
+        const rightPane = document.getElementById('merge-pane-right');
 
         const leftPerformer = JSON.parse(leftPane.dataset.selectedPerformerData);
         const rightPerformer = JSON.parse(rightPane.dataset.selectedPerformerData);
@@ -516,11 +497,11 @@
             const rightFieldElement = rightPane.querySelector(`[data-field="${field}"]`);
 
             if (leftFieldElement && rightFieldElement && JSON.stringify(leftPerformer[field]) !== JSON.stringify(rightPerformer[field])) {
-                leftFieldElement.classList.add('performermerge-highlight');
-                rightFieldElement.classList.add('performermerge-highlight');
+                leftFieldElement.classList.add('highlight');
+                rightFieldElement.classList.add('highlight');
             } else {
-                if (leftFieldElement) leftFieldElement.classList.remove('performermerge-highlight');
-                if (rightFieldElement) rightFieldElement.classList.remove('performermerge-highlight');
+                if (leftFieldElement) leftFieldElement.classList.remove('highlight');
+                if (rightFieldElement) rightFieldElement.classList.remove('highlight');
             }
         });
     }
@@ -579,7 +560,7 @@
 
     // Function to transfer related items (galleries and scenes) to the target performer
     async function transferRelatedItems(sourcePerformerId, targetPerformerId) {
-        const sourcePane = document.getElementById(`performermerge-merge-pane-${sourcePerformerId === document.getElementById('performermerge-merge-pane-left').dataset.selectedPerformerId ? 'left' : 'right'}`);
+        const sourcePane = document.getElementById(`merge-pane-${sourcePerformerId === document.getElementById('merge-pane-left').dataset.selectedPerformerId ? 'left' : 'right'}`);
         const galleryIds = JSON.parse(sourcePane.dataset.galleryIds || '[]');
         const sceneIds = JSON.parse(sourcePane.dataset.sceneIds || '[]');
 
@@ -594,8 +575,8 @@
 
     // Function to merge performers
     async function mergePerformers(direction) {
-        const leftPane = document.getElementById('performermerge-merge-pane-left');
-        const rightPane = document.getElementById('performermerge-merge-pane-right');
+        const leftPane = document.getElementById('merge-pane-left');
+        const rightPane = document.getElementById('merge-pane-right');
         const leftPerformerId = leftPane.dataset.selectedPerformerId;
         const rightPerformerId = rightPane.dataset.selectedPerformerId;
 
@@ -648,9 +629,6 @@
                 }
             }
 
-            // Remove duplicate aliases
-            updatedData.alias_list = [...new Set(updatedData.alias_list)];
-
             console.log('Updated Data for Mutation:', updatedData); // Log the mutation data
 
             await updatePerformer({ id: targetPerformerId, name: `${targetPerformer.name}_temp` });
@@ -662,7 +640,7 @@
             await transferRelatedItems(sourcePerformerId, targetPerformerId);
 
             showToast('Performers merged successfully', 'success');
-            document.getElementById('performermerge-merge-modal').remove();
+            document.getElementById('merge-modal').remove();
         } catch (error) {
             console.error('Error merging performers:', error);
             showToast('Error merging performers', 'error');

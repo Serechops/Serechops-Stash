@@ -1,8 +1,8 @@
 // ==UserScript==
-// @name         stashRightClick for Scenes with Video Player
+// @name         stashRightClick for Scenes
 // @namespace    https://github.com/Serechops/Serechops-Stash
-// @version      2.8
-// @description  Adds a custom right-click menu to .scene-card elements with options to add tags, performers, or galleries using GraphQL mutations. Updated with debounced searchable dropdowns, improved popup positioning, appending tags/performers/galleries instead of replacing them, and includes a popout video player for scenes with video files. Now includes a custom playlist functionality.
+// @version      2.2
+// @description  Adds a custom right-click menu to .scene-card elements with options to add tags, performers, or galleries using GraphQL mutations. Updated with debounced searchable dropdowns and improved popup positioning, and appending tags/performers/galleries instead of replacing them.
 // @author       Serechops
 // @match        http://localhost:9999/*
 // @grant        GM_addStyle
@@ -13,18 +13,18 @@
 // @run-at       document-end
 // ==/UserScript==
 
-/******************************************
- * USER CONFIGURATION
- ******************************************/
-const userConfig = {
-    scheme: 'http', // or 'https'
-    host: 'localhost', // your server IP or hostname
-    port: 9999, // your server port
-    apiKey: '' // your API key
-};
-
-(function() {
+(async function() {
     'use strict';
+
+    /******************************************
+     * USER CONFIGURATION
+     ******************************************/
+    const userConfig = {
+        scheme: 'http', // or 'https'
+        host: 'localhost', // your server IP or hostname
+        port: 9999, // your server port
+        apiKey: '' // your API key
+    };
 
     // Build API URL
     const apiUrl = `${userConfig.scheme}://${userConfig.host}:${userConfig.port}/graphql`;
@@ -35,12 +35,12 @@ const userConfig = {
         apiKey: userConfig.apiKey
     };
 
-    // Inject CSS
+    // inject CSS
     GM_addStyle(`
         @import url('https://cdn.jsdelivr.net/npm/toastify-js@1.12.0/src/toastify.min.css');
         @import url('https://unpkg.com/tabulator-tables@5.0.8/dist/css/tabulator_midnight.min.css');
 
-        #scenes-popup {
+        #popup {
             position: absolute;
             background: rgba(0, 0, 0, 0.5);
             backdrop-filter: blur(10px);
@@ -52,32 +52,32 @@ const userConfig = {
             max-height: 80%;
             overflow-y: auto;
         }
-        #scenes-popup h2 {
+        #popup h2 {
             margin-top: 0;
             cursor: move; /* Make the header cursor indicate that it's draggable */
         }
-        #scenes-popup form label {
+        #popup form label {
             display: block;
             margin-top: 10px;
         }
-        #scenes-popup form input, #scenes-popup form select {
+        #popup form input, #popup form select {
             width: 100%;
             padding: 8px;
             margin-top: 5px;
             box-sizing: border-box;
         }
-        #scenes-popup form button {
+        #popup form button {
             margin-top: 15px;
             padding: 10px;
             cursor: pointer;
-            background: rgba(0, 0, 0, 0);
+            background: rgba(0, 0, 0, 0.5);
             color: #fff;
         }
-        #scenes-popup input[type="text"], #scenes-popup select {
+        #popup input[type="text"], #popup select {
             color: black;
         }
 
-        #scenes-custom-menu {
+        #custom-menu {
             background-color: #000;
             background: rgba(0, 0, 0, 0.3);
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
@@ -88,39 +88,9 @@ const userConfig = {
             padding: 10px;
         }
 
-        #scenes-custom-menu a {
+        #custom-menu a {
             display: block;
             margin-bottom: 5px;
-            color: white;
-        }
-
-        #playlist {
-            position: absolute;
-            top: 0;
-            right: -300px;
-            width: 300px;
-            height: 100%;
-            background: #333;
-            color: white;
-            overflow-y: auto;
-            transition: right 0.3s;
-            z-index: 10002;
-        }
-        #playlist.show {
-            right: 0;
-        }
-        #playlist ul {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-        }
-        #playlist li {
-            padding: 10px;
-            cursor: pointer;
-            border-bottom: 1px solid #555;
-        }
-        #playlist li:hover {
-            background: #444;
         }
     `);
 
@@ -158,17 +128,15 @@ const userConfig = {
     // Store the currently opened right-click menu to close it if another right-click occurs
     let currentMenu = null;
     let currentPopup = null;
-    let popoutWindow = null;
-    let playlist = [];
 
     // Function to create the custom menu
     function createCustomMenu(sceneId) {
         const menu = document.createElement('div');
-        menu.id = 'scenes-custom-menu';
+        menu.id = 'custom-menu';
 
         const viewLink = document.createElement('a');
         viewLink.href = '#';
-        viewLink.textContent = 'Popout Scene...';
+        viewLink.textContent = 'View Scene';
         viewLink.addEventListener('click', function(e) {
             e.preventDefault();
             fetchSceneStreams(sceneId);
@@ -201,15 +169,6 @@ const userConfig = {
             createTabulatorPopup('Galleries', sceneId, fetchGalleries, event);
         });
         menu.appendChild(addGalleriesLink);
-
-        const addToPlaylistLink = document.createElement('a');
-        addToPlaylistLink.href = '#';
-        addToPlaylistLink.textContent = 'Add to Playlist...';
-        addToPlaylistLink.addEventListener('click', function(e) {
-            e.preventDefault();
-            addToPlaylist(sceneId);
-        });
-        menu.appendChild(addToPlaylistLink);
 
         const editSceneLink = document.createElement('a');
         editSceneLink.href = '#';
@@ -251,7 +210,7 @@ const userConfig = {
     function createTabulatorPopup(type, sceneId, fetchFunction, event) {
         console.log(`Creating Tabulator popup for ${type}`);
         const popup = document.createElement('div');
-        popup.id = 'scenes-popup';
+        popup.id = 'popup';
         document.body.appendChild(popup); // Append first to get proper dimensions
 
         const form = document.createElement('form');
@@ -473,176 +432,20 @@ const userConfig = {
             .then(res => res.data.findScene.galleries.map(gallery => gallery.id));
     }
 
-    // Function to fetch scene streams and open in a new VideoJS player
+    // Function to fetch scene streams and navigate to the direct stream
     async function fetchSceneStreams(sceneId) {
         const query = `query ($id: ID!) {
-            findScene(id: $id) {
-                id
-                title
-                sceneStreams {
-                    url
-                    mime_type
-                    label
-                }
+            sceneStreams(id: $id) {
+                url mime_type label
             }
         }`;
         const variables = { id: sceneId };
         return await fetchGQL(query, variables)
             .then(res => {
-                const scene = res.data.findScene;
-                const directStream = scene.sceneStreams.find(stream => stream.label === 'Direct stream');
-                if (directStream) {
-                    openPopoutPlayer(directStream.url, scene.title, sceneId);
-                } else {
-                    toastError('Direct stream not found', res);
-                }
+                const directStream = res.data.sceneStreams.find(scene => scene.label === 'Direct stream');
+                if (directStream) window.location.href = directStream.url;
+                else toastError('Direct stream not found', res);
             }).catch(err => toastError('Failed to fetch scene streams', err));
-    }
-
-    // Function to open a popout VideoJS player with custom playlist
-    function openPopoutPlayer(streamUrl, title, sceneId) {
-        popoutWindow = window.open('', '_blank', 'width=800,height=450');
-        if (!popoutWindow) {
-            toastError('Failed to open popout window');
-            return;
-        }
-
-        // Add the current video to the playlist
-        playlist.push({ title, url: streamUrl });
-
-        popoutWindow.document.write(`
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <title>${title}</title>
-                <link href="https://vjs.zencdn.net/8.2.0/video-js.min.css" rel="stylesheet">
-                <style>
-                    body { margin: 0; overflow: hidden; }
-                    #player { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
-                    #playlist {
-                        position: absolute;
-                        top: 0;
-                        right: -300px;
-                        width: 300px;
-                        height: 100%;
-                        background: rgba(0, 0, 0, 0.5);
-                        color: white;
-                        overflow-y: auto;
-                        transition: right 0.3s;
-                        z-index: 10002;
-                    }
-                    #playlist.show {
-                        right: 0;
-                    }
-                    #playlist ul {
-                        list-style: none;
-                        padding: 0;
-                        margin: 0;
-                    }
-                    #playlist li {
-                        padding: 10px;
-                        cursor: pointer;
-                        border-bottom: 1px solid #555;
-                    }
-                    #playlist li:hover {
-                        background: #444;
-                    }
-                </style>
-            </head>
-            <body>
-                <video-js id="player" class="video-js vjs-fluid" controls preload="auto" playsinline></video-js>
-                <div id="playlist">
-                    <ul></ul>
-                </div>
-                <script src="https://vjs.zencdn.net/8.2.0/video.min.js"></script>
-                <script>
-                    var player = videojs('player');
-                    var playlist = ${JSON.stringify(playlist)};
-                    var playlistContainer = document.getElementById('playlist');
-                    var playlistToggle = document.createElement('button');
-                    playlistToggle.textContent = 'Toggle Playlist';
-                    playlistToggle.style.position = 'absolute';
-                    playlistToggle.style.top = '10px';
-                    playlistToggle.style.left = '10px';
-                    playlistToggle.onclick = function() {
-                        playlistContainer.classList.toggle('show');
-                    };
-                    document.body.appendChild(playlistToggle);
-
-                    var playlistUl = playlistContainer.querySelector('ul');
-
-                    function updatePlaylist() {
-                        playlistUl.innerHTML = '';
-                        playlist.forEach(function(item, index) {
-                            var li = document.createElement('li');
-                            li.textContent = item.title;
-                            li.onclick = function() {
-                                player.src({ src: item.url, type: 'video/mp4' });
-                                player.play();
-                            };
-                            playlistUl.appendChild(li);
-                        });
-                    }
-
-                    updatePlaylist();
-
-                    window.updatePlaylistFromMain = function(newItem) {
-                        playlist.push(newItem);
-                        updatePlaylist();
-                    };
-                </script>
-            </body>
-            </html>
-        `);
-
-        popoutWindow.document.close();
-
-        // Center the popout window on the screen
-        const screenX = window.screenX !== undefined ? window.screenX : window.screenLeft;
-        const screenY = window.screenY !== undefined ? window.screenY : window.screenTop;
-        const outerWidth = window.outerWidth !== undefined ? window.outerWidth : document.documentElement.clientWidth;
-        const outerHeight = window.outerHeight !== undefined ? window.outerHeight : (document.documentElement.clientHeight - 22);
-
-        const left = screenX + Math.max(outerWidth - popoutWindow.outerWidth, 0) / 2;
-        const top = screenY + Math.max(outerHeight - popoutWindow.outerHeight, 0) / 2;
-        popoutWindow.moveTo(left, top);
-    }
-
-    // Function to add a scene to the playlist
-    async function addToPlaylist(sceneId) {
-        if (!popoutWindow || popoutWindow.closed) {
-            toastError('Popout player is not open');
-            return;
-        }
-
-        const query = `query ($id: ID!) {
-            findScene(id: $id) {
-                id
-                title
-                sceneStreams {
-                    url
-                    mime_type
-                    label
-                }
-            }
-        }`;
-        const variables = { id: sceneId };
-        return await fetchGQL(query, variables)
-            .then(res => {
-                const scene = res.data.findScene;
-                const directStream = scene.sceneStreams.find(stream => stream.label === 'Direct stream');
-                if (directStream) {
-                    const newItem = {
-                        title: scene.title,
-                        url: directStream.url
-                    };
-                    playlist.push(newItem);
-                    popoutWindow.updatePlaylistFromMain(newItem);
-                    toastSuccess('Added to playlist');
-                } else {
-                    toastError('Direct stream not found', res);
-                }
-            }).catch(err => toastError('Failed to add to playlist', err));
     }
 
     // Function to open the edit scene page and select the 'Edit' tab
@@ -660,14 +463,12 @@ const userConfig = {
     }
 
     // Add event listener to .scene-card elements
-    document.addEventListener('contextmenu', async function(event) {
+    document.addEventListener('contextmenu', function(event) {
         const sceneCard = event.target.closest('.scene-card .scene-card-link');
         if (sceneCard) {
-            event.preventDefault(); // Prevent default context menu
             const sceneId = getSceneIdFromUrl(sceneCard.href);
-            if (sceneId) {
-                showCustomMenu(event, sceneId);
-            }
+            if (sceneId) showCustomMenu(event, sceneId);
         }
     });
+
 })();

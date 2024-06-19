@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         stashRightClick for Images
 // @namespace    https://github.com/Serechops/Serechops-Stash
-// @version      1.2
+// @version      1.1
 // @description  Adds a custom right-click menu to .image-card elements with options to add tags, performers, or galleries using GraphQL mutations.
 // @author       Serechops
 // @match        http://localhost:9999/*
@@ -126,7 +126,6 @@
         #custom-menu a {
             display: block;
             margin-bottom: 5px;
-            color: white;
         }
     `;
 
@@ -535,8 +534,8 @@
             try {
                 // Fetch scene title
                 const sceneQuery = `
-                    query FindScene($id: ID!) {
-                        findScene(id: $id) {
+                    query FindScene {
+                        findScene(id: "${sceneId}") {
                             title
                         }
                     }
@@ -548,7 +547,7 @@
                         'Content-Type': 'application/json',
                         'Authorization': `ApiKey ${config.apiKey}`
                     },
-                    body: JSON.stringify({ query: sceneQuery, variables: { id: sceneId } }),
+                    body: JSON.stringify({ query: sceneQuery }),
                 });
 
                 const sceneResult = await sceneResponse.json();
@@ -574,8 +573,8 @@
     // Function to create a gallery
     async function createGallery(galleryTitle) {
         const mutation = `
-            mutation GalleryCreate($input: GalleryCreateInput!) {
-                galleryCreate(input: $input) {
+            mutation GalleryCreate {
+                galleryCreate(input: { title: "${galleryTitle}" }) {
                     id
                 }
             }
@@ -588,7 +587,7 @@
                     'Content-Type': 'application/json',
                     'Authorization': `ApiKey ${config.apiKey}`
                 },
-                body: JSON.stringify({ query: mutation, variables: { input: { title: galleryTitle } } }),
+                body: JSON.stringify({ query: mutation }),
             });
             const data = await response.json();
             return data.data.galleryCreate.id;
@@ -601,8 +600,8 @@
     // Function to update an image with a gallery ID
     async function updateImage(imageId, galleryId) {
         const mutation = `
-            mutation ImageUpdate($input: ImageUpdateInput!) {
-                imageUpdate(input: $input) {
+            mutation ImageUpdate {
+                imageUpdate(input: { id: "${imageId}", gallery_ids: ["${galleryId}"] }) {
                     id
                 }
             }
@@ -615,7 +614,7 @@
                     'Content-Type': 'application/json',
                     'Authorization': `ApiKey ${config.apiKey}`
                 },
-                body: JSON.stringify({ query: mutation, variables: { input: { id: imageId, gallery_ids: [galleryId] } } }),
+                body: JSON.stringify({ query: mutation }),
             });
             const data = await response.json();
             return data.data.imageUpdate.id;
@@ -628,8 +627,8 @@
     // Function to update a scene with a gallery ID
     async function updateScene(sceneId, galleryId) {
         const mutation = `
-            mutation SceneUpdate($input: SceneUpdateInput!) {
-                sceneUpdate(input: $input) {
+            mutation SceneUpdate {
+                sceneUpdate(input: { id: "${sceneId}", gallery_ids: ["${galleryId}"] }) {
                     id
                 }
             }
@@ -642,7 +641,7 @@
                     'Content-Type': 'application/json',
                     'Authorization': `ApiKey ${config.apiKey}`
                 },
-                body: JSON.stringify({ query: mutation, variables: { input: { id: sceneId, gallery_ids: [galleryId] } } }),
+                body: JSON.stringify({ query: mutation }),
             });
             const data = await response.json();
             return data.data.sceneUpdate.id;

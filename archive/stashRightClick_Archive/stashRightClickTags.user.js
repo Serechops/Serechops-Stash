@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         stashRightClickTags
 // @namespace    https://github.com/Serechops/Serechops-Stash
-// @version      1.1
+// @version      1.0
 // @description  Adds a custom right-click menu to .tag-card elements with options like "Auto-Tag" and "Delete Tag" using GraphQL queries.
 // @match        http://localhost:9999/*
 // @grant        GM_addStyle
@@ -39,7 +39,7 @@
     GM_addStyle(`
         @import url('https://cdn.jsdelivr.net/npm/toastify-js@1.12.0/src/toastify.min.css');
 
-        #tags-custom-menu {
+        #custom-menu {
             background-color: #000;
             background: rgba(0, 0, 0, 0.3);
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
@@ -50,13 +50,12 @@
             padding: 10px;
         }
 
-        #tags-custom-menu a {
+        #custom-menu a {
             display: block;
             margin-bottom: 5px;
-            color: white;
         }
 
-        .tags-loading-header {
+        .loading-header {
             outline: 1px solid black;
             background: rgba(0, 0, 0, 0.5);
         }
@@ -206,7 +205,7 @@
     // Function to create the custom menu
     function createCustomMenu(tagID) {
         const menu = document.createElement('div');
-        menu.id = 'tags-custom-menu';
+        menu.id = 'custom-menu';
 
         const autoTagLink = document.createElement('a');
         autoTagLink.href = '#';
@@ -241,13 +240,11 @@
         const handleClickOutside = (e) => {
             if (!menu.contains(e.target)) {
                 menu.remove();
-                currentMenu = null;
                 document.removeEventListener('click', handleClickOutside);
             }
         };
 
         document.addEventListener('click', handleClickOutside);
-        currentMenu = menu;
     }
 
     // Function to handle right-click on tag cards
