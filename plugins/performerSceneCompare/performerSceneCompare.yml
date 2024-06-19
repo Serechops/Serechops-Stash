@@ -4,11 +4,15 @@ version: 0.1.1
 url: https://github.com/Serechops/Serechops-Stash
 exec:
   - python
-  - "{pluginDir}/performerSceneCompare.py"  # Adjust to your script's name and location
+  - "{pluginDir}/performerSceneCompare.py" # Adjust to your script's name and location
 interface: raw
 hooks:
   - name: PerformerCompare
     description: Compares local performer scenes with StashDB on demand.
     triggeredBy:
       - Performer.Update.Post
-
+tasks:
+  - name: Process performers
+    description: Create missing scenes of performers to another Stash instance
+    defaultArgs:
+      mode: process_performers

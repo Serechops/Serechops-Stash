@@ -401,9 +401,10 @@ def get_or_create_studio_by_stash_id(studio):
             "stash_ids": [{"stash_id": stash_id, "endpoint": config.STASHDB_ENDPOINT}],
         }
     }
+    logger.debug(f"Creating scene: {studio_name}")
     result = missing_graphql_request(mutation, variables)
-
-    if result and "studioCreate" in result:
+    logger.debug(f"GraphQL request result: {result}")
+    if result and "studioCreate" in result and result["studioCreate"]:
         studio_id = result["studioCreate"]["id"]
         logger.info(f"Studio created: {studio_name}")
         return studio_id
@@ -447,6 +448,35 @@ def get_or_create_missing_performer(performer_name, performer_stash_id):
         logger.info(f"Performer created: {performer_name}")
         return performer_id
     logger.error(f"Failed to create performer '{performer_name}'")
+    return None
+
+
+def find_local_favorite_performers():
+    query = """
+        query FindPerformers($performer_filter: PerformerFilterType) {
+            findPerformers(performer_filter: $performer_filter) {
+                count
+                performers {
+                    id
+                    name
+                    gender
+                    stash_ids {
+                        stash_id
+                        endpoint
+                    }
+                }
+            }
+        }
+    """
+    variables = {"performer_filter": {"filter_favorites": True}}
+    logger.info(f"Searching for local favorite performers")
+    logger.debug(f"Query: {query}")
+    logger.debug(f"Query variables: {variables}")
+    result = local_graphql_request(query, variables)
+    logger.debug(f"GraphQL request result: {result}")
+    if result:
+        return result["findPerformers"]
+    logger.error(f"No favorite performer data found.")
     return None
 
 
@@ -504,12 +534,7 @@ def update_scene_with_studio(scene_id, studio_id):
         logger.error(f"Failed to update scene {scene_id} with studio {studio_id}")
 
 
-def compare_performer_scenes():
-    performer_id = get_most_recently_updated_performer()
-    if not performer_id:
-        logger.error("No recently updated performer found.")
-        return
-
+def process_performer(performer_id: int):
     performer_details = get_local_performer_details(performer_id)
     if not performer_details:
         logger.error("Failed to retrieve details for performer.")
@@ -587,6 +612,18 @@ def compare_performer_scenes():
     logger.info(
         f"{total_scenes} missing scenes processed and associated with studio for performer {performer_details['name']}."
     )
+
+
+def compare_performer_scenes():
+    json_input = json.loads(sys.stdin.read())
+    logger.debug(f"Input: {json_input}")
+
+    favorite_performers = find_local_favorite_performers()
+    logger.debug(f"Favorite performers: {favorite_performers}")
+
+    for performer in favorite_performers["performers"]:
+        performer_id = performer["id"]
+        process_performer(performer_id)
 
 
 if __name__ == "__main__":
