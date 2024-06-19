@@ -120,6 +120,39 @@ def get_studio_by_name(studio_name):
     return None
 
 
+def get_studio_by_name_by_stash_id(stash_id):
+    query = """
+        query FindStudios($filter: FindFilterType, $studio_filter: StudioFilterType) {
+            findStudios(filter: $filter, studio_filter: $studio_filter) {
+                count
+                studios {
+                    id
+                    name
+                    parent_studio {
+                        id
+                        name
+                    }
+                }
+            }
+        }
+    """
+    variables = {
+        "filter": {},
+        "studio_filter": {
+            "stash_id_endpoint": {
+                "endpoint": config.STASHDB_ENDPOINT,
+                "modifier": "EQUALS",
+                "stash_id": stash_id,
+            }
+        },
+    }
+    result = missing_graphql_request(query, variables)
+    if result:
+        return result["findStudios"]
+    logger.error(f"No studios found with Stash ID {stash_id}.")
+    return None
+
+
 def get_local_performer_details(performer_id):
     query = """
         query FindPerformer($id: ID!) {
@@ -338,12 +371,16 @@ def destroy_missing_scene(scene_id):
     return None
 
 
-def get_or_create_studio(performer_name):
-    studio_name = f"{performer_name} - Missing Scenes"
-    studio = get_studio_by_name(studio_name)
+def get_or_create_studio_by_stash_id(studio):
+    stash_id = studio["id"]
+    studio_name = studio["name"]
+
+    studio = get_studio_by_name_by_stash_id(stash_id)
     if studio and studio["count"] > 0:
         studio_id = studio["studios"][0]["id"]
-        logger.info(f"Studio found: {studio_name} with ID: {studio_id}")
+        logger.info(
+            f"Studio found: StashDB ID {stash_id} with Stashapp ID: {studio_id}"
+        )
         return studio_id
 
     mutation = """
@@ -351,19 +388,26 @@ def get_or_create_studio(performer_name):
             studioCreate(input: $input) {
                 id
                 name
+                stash_ids {
+                    stash_id
+                    endpoint
+                }
             }
         }
     """
-    variables = {"input": {"name": f"{performer_name} - Missing Scenes"}}
+    variables = {
+        "input": {
+            "name": studio_name,
+            "stash_ids": [{"stash_id": stash_id, "endpoint": config.STASHDB_ENDPOINT}],
+        }
+    }
     result = missing_graphql_request(mutation, variables)
 
     if result and "studioCreate" in result:
         studio_id = result["studioCreate"]["id"]
-        logger.info(
-            f"Studio created: {performer_name} - Missing Scenes with ID: {studio_id}"
-        )
+        logger.info(f"Studio created: {studio_name}")
         return studio_id
-    logger.error(f"Failed to create studio for performer '{performer_name}'")
+    logger.error(f"Failed to create studio for performer '{studio_name}'")
     return None
 
 
@@ -487,12 +531,6 @@ def compare_performer_scenes():
     )
     missing_performer_details = get_missing_performer_details(missing_performer_id)
 
-    # Create a studio for the missing scenes of this performer
-    studio_id = get_or_create_studio(performer_details["name"])
-    logger.info(
-        f"Studio created: {performer_details['name']} - Missing Scenes with ID: {studio_id}"
-    )
-
     local_scenes = performer_details["scenes"]
     existing_missing_scenes = missing_performer_details["scenes"]
     stash_ids = [sid["stash_id"] for sid in performer_details["stash_ids"]]
@@ -531,12 +569,14 @@ def compare_performer_scenes():
     total_scenes = len(missing_scenes)
     processed_scenes = 0
     for scene in missing_scenes:
+        scene_studio_id = get_or_create_studio_by_stash_id(scene["studio"])
+
         # Create scene and link it to the new studio
         created_scene_id = create_scene(scene, missing_performer_id)
         if created_scene_id:
-            update_scene_with_studio(created_scene_id, studio_id)
+            update_scene_with_studio(created_scene_id, scene_studio_id)
             logger.info(
-                f"Scene {created_scene_id} created and associated with studio {studio_id}"
+                f"Scene {created_scene_id} created and associated with studio {scene_studio_id}"
             )
 
             # Update progress
