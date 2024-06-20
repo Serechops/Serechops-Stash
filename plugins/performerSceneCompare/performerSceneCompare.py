@@ -75,27 +75,6 @@ def graphql_request(query, endpoint, api_key, variables=None):
     return None
 
 
-def get_most_recently_updated_performer():
-    query = """
-        query AllPerformers {
-            allPerformers {
-                id
-                updated_at
-            }
-        }
-    """
-    result = local_graphql_request(query)
-    if result and result["allPerformers"]:
-        # Sort performers by 'updated_at' field in descending order
-        sorted_performers = sorted(
-            result["allPerformers"], key=lambda x: x["updated_at"], reverse=True
-        )
-        if sorted_performers:
-            return sorted_performers[0]["id"]
-    logger.error("No performers found.")
-    return None
-
-
 def get_studio_by_name(studio_name):
     query = """
         query FindStudios($filter: FindFilterType, $studio_filter: StudioFilterType) {
