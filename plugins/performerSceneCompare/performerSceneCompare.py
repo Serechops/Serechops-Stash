@@ -248,6 +248,10 @@ def query_stashdb_scenes(performer_stash_ids):
                     }
                     duration
                     code
+                    tags {
+                        id
+                        name
+                    }
                 }
                 count
             }
@@ -272,7 +276,15 @@ def query_stashdb_scenes(performer_stash_ids):
             page += 1
         else:
             break
-    return scenes
+
+    filtered_scenes = []
+    for scene in scenes:
+        if scene["tags"]:
+            exclude_tags = config.EXCLUDE_TAGS
+            if not any(tag["name"] in exclude_tags for tag in scene["tags"]):
+                filtered_scenes.append(scene)
+
+    return filtered_scenes
 
 
 def compare_scenes(local_scenes, existing_missing_scenes, stashdb_scenes):
