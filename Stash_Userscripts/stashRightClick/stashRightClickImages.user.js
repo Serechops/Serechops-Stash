@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         stashRightClick for Images
 // @namespace    https://github.com/Serechops/Serechops-Stash
-// @version      1.2
+// @version      1.3
 // @description  Adds a custom right-click menu to .image-card elements with options to add tags, performers, or galleries using GraphQL mutations.
 // @author       Serechops
 // @match        http://localhost:9999/*
@@ -283,14 +283,21 @@
             };
         };
 
+        const tableColumns = [
+            { title: "ID", field: "id" },
+            { title: type === 'Scenes' ? 'Title' : 'Name', field: type === 'Scenes' ? 'title' : 'name' },
+        ];
+
+        if (type === 'Performers') {
+            tableColumns.push({ title: "Disambiguation", field: "disambiguation" });
+        }
+
         const table = new Tabulator(`#${type.toLowerCase()}-table`, {
             layout: "fitColumns",
             height: "300px",
             placeholder: "No Data Available",
             selectable: true,
-            columns: [
-                { title: type === 'Scenes' ? 'Title' : 'Name', field: type === 'Scenes' ? 'title' : 'name' },
-            ],
+            columns: tableColumns,
         });
 
         async function fetchData(query) {
@@ -373,6 +380,7 @@
                     performers {
                         id
                         name
+                        disambiguation
                     }
                 }
             }

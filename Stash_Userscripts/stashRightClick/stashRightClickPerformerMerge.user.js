@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         stashRightClickPerformerMerge
 // @namespace    https://github.com/Serechops/Serechops-Stash
-// @version      2.2
+// @version      2.3
 // @description  Adds a performer merge tool to the Performers page in Stash.
 // @match        http://localhost:9999/performers*
 // @grant        GM_addStyle
@@ -435,7 +435,7 @@
         performers.forEach(performer => {
             const performerDiv = document.createElement('div');
             performerDiv.className = 'performermerge-performer-result';
-            performerDiv.textContent = performer.name + (performer.disambiguation ? ` (${performer.disambiguation})` : '');
+            performerDiv.textContent = `${performer.name} (ID: ${performer.id})${performer.disambiguation ? ` - ${performer.disambiguation}` : ''}`;
             performerDiv.onclick = () => selectPerformer(paneId, performer);
             pane.appendChild(performerDiv);
         });

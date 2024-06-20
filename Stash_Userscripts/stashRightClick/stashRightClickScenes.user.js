@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         stashRightClick for Scenes with Video Player
 // @namespace    https://github.com/Serechops/Serechops-Stash
-// @version      2.8
+// @version      2.9
 // @description  Adds a custom right-click menu to .scene-card elements with options to add tags, performers, or galleries using GraphQL mutations. Updated with debounced searchable dropdowns, improved popup positioning, appending tags/performers/galleries instead of replacing them, and includes a popout video player for scenes with video files. Now includes a custom playlist functionality.
 // @author       Serechops
 // @match        http://localhost:9999/*
@@ -287,14 +287,21 @@ const userConfig = {
             };
         };
 
+        const tableColumns = [
+            { title: "ID", field: "id" },
+            { title: type === 'Galleries' ? 'Title' : 'Name', field: type === 'Galleries' ? 'title' : 'name' },
+        ];
+
+        if (type === 'Performers') {
+            tableColumns.push({ title: "Disambiguation", field: "disambiguation" });
+        }
+
         const table = new Tabulator(`#${type.toLowerCase()}-table`, {
             layout: "fitColumns",
             height: "300px",
             placeholder: "No Data Available",
             selectable: true,
-            columns: [
-                { title: "Name", field: type === 'Galleries' ? 'title' : 'name' },
-            ],
+            columns: tableColumns,
         });
 
         async function fetchData(query) {
@@ -362,7 +369,7 @@ const userConfig = {
         console.log('Fetching performers for query:', query);
         const gqlQuery = `query ($filter: String!) {
             findPerformers(performer_filter: { name: { value: $filter, modifier: INCLUDES } }, filter: { per_page: -1 }) {
-                performers { id name }
+                performers { id name disambiguation }
             }
         }`;
         return await fetchGQL(gqlQuery, { filter: query })
