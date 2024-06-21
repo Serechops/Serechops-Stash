@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         stashRightClickPerformers
 // @namespace    https://github.com/Serechops/Serechops-Stash
-// @version      2.2
-// @description  Adds a custom right-click menu to .performer-card elements with options like "Missing Scenes", "Change Image", and "Auto-Tag" using GraphQL queries.
+// @version      2.3
+// @description  Adds a custom right-click menu to .performer-card elements with options like "Missing Scenes", "Change Image", and "Auto-Tag" using GraphQL queries. Also allows batch image change for selected performers.
 // @match        http://localhost:9999/*
 // @grant        GM_addStyle
 // @grant        GM.xmlHttpRequest
@@ -631,7 +631,7 @@
     }
 
     // Function to create the image selection modal
-    function createImageSelectionModal(images, performerID, source) {
+    function createImageSelectionModal(images, performerID, performerName, source, onFinish) {
         const totalImages = images.length;
         let currentPage = 1;
         const imagesPerPage = 40;
@@ -672,6 +672,7 @@
                 <div class="performers-custom-modal-content">
                     <span class="performers-custom-close">&times;</span>
                     <center><h2>${source} Performer Images</h2></center>
+                    <center><h3>${performerName}</h3></center>
                     <div id="performers-custom-imageGallery"></div>
                     <div id="performers-custom-pagination-controls"></div>
                     <button id="performers-custom-applyImage">Apply</button>
@@ -686,11 +687,13 @@
         span.onclick = function() {
             modal.style.display = 'none';
             modal.remove();
+            if (onFinish) onFinish();
         };
         window.onclick = function(event) {
             if (event.target == modal) {
                 modal.style.display = 'none';
                 modal.remove();
+                if (onFinish) onFinish();
             }
         };
 
@@ -700,8 +703,6 @@
                 const imageUrl = selectedImage.getAttribute('data-url');
                 const success = await updatePerformerImage(performerID, imageUrl);
                 if (success) {
-                    modal.style.display = 'none';
-                    modal.remove();
                     updatePerformerImageInDOM(performerID, imageUrl); // Update the image in the DOM
                     Toastify({
                         text: 'Image updated successfully',
@@ -717,6 +718,9 @@
                         duration: 3000
                     }).showToast();
                 }
+                modal.style.display = 'none';
+                modal.remove();
+                if (onFinish) onFinish();
             } else {
                 Toastify({
                     text: 'Please select an image',
@@ -847,10 +851,12 @@
         changeImageLink.addEventListener('click', async function(e) {
             e.preventDefault();
             const stashIDs = await fetchPerformerStashDBID(performerID);
+            const performerDetails = await fetchPerformerDetails(performerID);
+            const performerName = performerDetails ? performerDetails.name : 'Unknown';
             if (stashIDs && stashIDs.length > 0) {
                 const images = await fetchPerformerImagesFromStashDB(stashIDs[0]);
                 if (images && images.length > 0) {
-                    createImageSelectionModal(images, performerID, "StashDB");
+                    createImageSelectionModal(images, performerID, performerName, "StashDB");
                     document.getElementById('performers-custom-imageSelectionModal').style.display = 'block';
                 } else {
                     console.error('No images found for performer');
@@ -867,8 +873,10 @@
         changeImageFromGalleryLink.addEventListener('click', async function(e) {
             e.preventDefault();
             const images = await fetchPerformerImagesFromLocal(performerID);
+            const performerDetails = await fetchPerformerDetails(performerID);
+            const performerName = performerDetails ? performerDetails.name : 'Unknown';
             if (images && images.length > 0) {
-                createImageSelectionModal(images, performerID, "Gallery");
+                createImageSelectionModal(images, performerID, performerName, "Gallery");
                 document.getElementById('performers-custom-imageSelectionModal').style.display = 'block';
             } else {
                 console.error('No images found for performer');
@@ -885,8 +893,70 @@
         });
         menu.appendChild(autoTagLink);
 
+        const batchChangeImageLink = document.createElement('a');
+        batchChangeImageLink.href = '#';
+        batchChangeImageLink.textContent = 'Batch Change Image...';
+        batchChangeImageLink.addEventListener('click', async function(e) {
+            e.preventDefault();
+            const selectedPerformers = getSelectedPerformers();
+            if (selectedPerformers.length > 0) {
+                let currentPerformerIndex = 0;
+                async function processNextPerformer() {
+                    if (currentPerformerIndex < selectedPerformers.length) {
+                        const performerID = selectedPerformers[currentPerformerIndex];
+                        const performerDetails = await fetchPerformerDetails(performerID);
+                        const performerName = performerDetails ? performerDetails.name : 'Unknown';
+                        const stashIDs = await fetchPerformerStashDBID(performerID);
+                        if (stashIDs && stashIDs.length > 0) {
+                            const images = await fetchPerformerImagesFromStashDB(stashIDs[0]);
+                            if (images && images.length > 0) {
+                                createImageSelectionModal(images, performerID, performerName, "StashDB", () => {
+                                    currentPerformerIndex++;
+                                    processNextPerformer();
+                                });
+                                document.getElementById('performers-custom-imageSelectionModal').style.display = 'block';
+                            } else {
+                                console.error('No images found for performer');
+                                currentPerformerIndex++;
+                                processNextPerformer();
+                            }
+                        } else {
+                            console.error('Failed to fetch performer StashDB ID');
+                            currentPerformerIndex++;
+                            processNextPerformer();
+                        }
+                    }
+                }
+                processNextPerformer();
+            } else {
+                Toastify({
+                    text: 'Please select performers',
+                    backgroundColor: 'orange',
+                    position: "center",
+                    duration: 3000
+                }).showToast();
+            }
+        });
+        menu.appendChild(batchChangeImageLink);
+
         document.body.appendChild(menu);
         return menu;
+    }
+
+    // Function to get selected performers
+    function getSelectedPerformers() {
+        const selectedPerformers = [];
+        document.querySelectorAll('.performer-card .card-check:checked').forEach(checkbox => {
+            const performerCard = checkbox.closest('.performer-card');
+            const performerLink = performerCard.querySelector('a');
+            if (performerLink) {
+                const performerID = getPerformerID(performerLink.href);
+                if (performerID) {
+                    selectedPerformers.push(performerID);
+                }
+            }
+        });
+        return selectedPerformers;
     }
 
     // Function to show the custom menu
