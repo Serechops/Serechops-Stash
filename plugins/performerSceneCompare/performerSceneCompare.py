@@ -362,9 +362,7 @@ def find_local_favorite_performers():
     while True:
         performer_filter = {"filter_favorites": True}
         filter = {"page": page, "per_page": 25}
-        logger.debug(f"Performer filter: {performer_filter}\nFilter: {filter}")
         result = local_stash.find_performers(performer_filter, filter)
-        logger.debug(f"Result: {result}")
         performers.extend(result)
         if len(result) < 25:
             break
