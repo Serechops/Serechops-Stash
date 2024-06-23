@@ -274,7 +274,7 @@ def compare_scenes(local_scenes, existing_missing_scenes, stashdb_scenes):
     return new_missing_scenes
 
 
-def create_scene(scene, performer_id):
+def create_scene(scene, performer_id, studio_id):
     code = scene["code"]
     title = scene["title"]
     studio_url = scene["urls"][0]["url"] if scene["urls"] else None
@@ -291,33 +291,24 @@ def create_scene(scene, performer_id):
         logger.error(f"Invalid date format for scene '{title}': {date}")
         return None
 
-    mutation = """
-        mutation SceneCreate($input: SceneCreateInput!) {
-            sceneCreate(input: $input) {
-                id
-                title
-            }
-        }
-    """
-    variables = {
-        "input": {
-            "code": code,
+    result = missing_stash.create_scene(
+        {
             "title": title,
+            "code": code,
             "url": studio_url,
             "date": formatted_date,
-            "cover_image": cover_image,
+            "studio_id": studio_id,
             "performer_ids": [performer_id],
+            "cover_image": cover_image,
             "stash_ids": [
                 {"endpoint": "https://stashdb.org/graphql", "stash_id": stash_id}
             ],
         }
-    }
-    result = missing_graphql_request(mutation, variables)
-    logger.debug(f"GraphQL request result: {result}")
-    if result and "sceneCreate" in result:
-        scene_id = result["sceneCreate"]["id"]
-        logger.info(f"Scene created with ID: {scene_id}")
-        return scene_id
+    )
+
+    if result:
+        return result["id"]
+
     logger.error(f"Failed to create scene '{title}'")
     return None
 
@@ -442,23 +433,6 @@ def find_local_favorite_performers():
     return filtered_performers
 
 
-def update_scene_with_studio(scene_id, studio_id):
-    mutation = """
-        mutation SceneUpdate($input: SceneUpdateInput!) {
-            sceneUpdate(input: $input) {
-                id
-                title
-            }
-        }
-    """
-    variables = {"input": {"id": scene_id, "studio_id": studio_id}}
-    result = missing_graphql_request(mutation, variables)
-    if result and "sceneUpdate" in result:
-        logger.info(f"Scene {scene_id} updated to include studio {studio_id}")
-    else:
-        logger.error(f"Failed to update scene {scene_id} with studio {studio_id}")
-
-
 def process_performer(performer_id: int):
     local_performer_details = local_stash.find_performer(
         performer_id,
@@ -568,12 +542,9 @@ def process_performer(performer_id: int):
         scene_studio_id = get_or_create_studio_by_stash_id(scene["studio"])
 
         # Create scene and link it to the new studio
-        created_scene_id = create_scene(scene, missing_performer_id)
+        created_scene_id = create_scene(scene, missing_performer_id, scene_studio_id)
         if created_scene_id:
-            update_scene_with_studio(created_scene_id, scene_studio_id)
-            logger.info(
-                f"Scene {scene['title']} (ID: {created_scene_id}) created and associated with studio {scene_studio_id}"
-            )
+            logger.info(f"Scene {scene['title']} (ID: {created_scene_id}) created")
 
             # Update progress
             created_scene_stash_id = scene["id"]
