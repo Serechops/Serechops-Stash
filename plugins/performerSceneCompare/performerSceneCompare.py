@@ -51,53 +51,6 @@ def gql_query(endpoint, query, variables=None, api_key=None):
         return None
 
 
-def local_graphql_request(query, variables=None):
-    return graphql_request(
-        query, config.LOCAL_GQL_ENDPOINT, config.LOCAL_API_KEY, variables
-    )
-
-
-def missing_graphql_request(query, variables=None):
-    return graphql_request(
-        query, config.MISSING_GQL_ENDPOINT, config.MISSING_API_KEY, variables
-    )
-
-
-def graphql_request(query, endpoint, api_key, variables=None):
-    headers = {
-        "Accept-Encoding": "gzip, deflate, br",
-        "Content-Type": "application/json",
-        "Accept": "application/json",
-        "ApiKey": api_key,  # Use the local API key if available
-    }
-    try:
-        response = requests.post(
-            endpoint,
-            json={"query": query, "variables": variables},
-            headers=headers,
-            timeout=120,  # Set a timeout for the request
-        )
-        logger.trace(
-            f"Request to {endpoint} returned status code {response.status_code}"
-        )
-        response.raise_for_status()  # Raises HTTPError for bad responses (4XX, 5XX)
-        try:
-            data = response.json()
-            return data.get("data")
-        except json.JSONDecodeError:
-            logger.error(f"Failed to decode JSON from response: {response.text}")
-            return None
-    except requests.HTTPError as http_err:
-        logger.error(f"HTTP error occurred: {http_err} - Response: {response.text}")
-    except requests.Timeout:
-        logger.error("The request timed out")
-    except requests.RequestException as err:
-        logger.error(f"Error during requests to {endpoint}: {err}")
-    except Exception as e:
-        logger.error(f"An unexpected error occurred: {e}")
-    return None
-
-
 def query_stashdb_performer_image(performer_stash_id):
     query = """
         query FindPerformer($id: ID!) {
