@@ -512,15 +512,61 @@ def process_performer(performer_id: int):
     )
 
 
+def process_updated_scene(stash_id: str):
+    scenes = missing_stash.find_scenes(
+        {
+            "stash_id_endpoint": {
+                "stash_id": stash_id,
+                "endpoint": config.STASHDB_ENDPOINT,
+                "modifier": "EQUALS",
+            }
+        }
+    )
+    if scenes and len(scenes) > 0:
+        if len(scenes) > 1:
+            logger.warning(
+                f"Multiple scenes found with stash ID {stash_id}. Using the first one."
+            )
+
+        scene = scenes[0]
+        missing_stash.destroy_scene(scene["id"])
+        logger.debug(f"Scene {scene['title']} (ID: {scene['id']}) destroyed.")
+
+
 def compare_performer_scenes():
-    # json_input = json.loads(sys.stdin.read())
-    # logger.debug(f"Input: {json_input}")
+    raw_input = sys.stdin.read()
+    json_input = json.loads(raw_input)
+    logger.debug(f"Input: {json_input}")
 
-    favorite_performers = find_local_favorite_performers()
+    if (
+        json_input
+        and "args" in json_input
+        and "mode" in json_input["args"]
+        and json_input["args"]["mode"] == "process_performers"
+    ):
+        favorite_performers = find_local_favorite_performers()
 
-    for performer in favorite_performers:
-        performer_id = performer["id"]
-        process_performer(performer_id)
+        for performer in favorite_performers:
+            performer_id = performer["id"]
+            process_performer(performer_id)
+    elif (
+        json_input
+        and "args" in json_input
+        and "hookContext" in json_input["args"]
+        and "type" in json_input["args"]["hookContext"]
+        and json_input["args"]["hookContext"]["type"] == "Scene.Update.Post"
+    ):
+        stash_id = next(
+            (
+                sid["stash_id"]
+                for sid in json_input["args"]["hookContext"]["input"]["stash_ids"]
+                if sid.get("endpoint") == config.STASHDB_ENDPOINT
+            ),
+            None,
+        )
+        process_updated_scene(stash_id)
+    else:
+        logger.error(f"Invalid input: {raw_input}")
 
 
 if __name__ == "__main__":
