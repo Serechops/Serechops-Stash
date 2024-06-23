@@ -337,17 +337,17 @@ def get_or_create_missing_performer(performer_name, performer_stash_id):
         return performer_id
 
     image_url = query_stashdb_performer_image(performer_stash_id)
-    logger.debug(f"Performer image URL: {image_url}")
 
-    performer = missing_stash.create_performer(
-        {
-            "name": performer_name,
-            "stash_ids": [
-                {"stash_id": performer_stash_id, "endpoint": config.STASHDB_ENDPOINT}
-            ],
-            "image": image_url,
-        }
-    )
+    performer_in = {
+        "name": performer_name,
+        "stash_ids": [
+            {"stash_id": performer_stash_id, "endpoint": config.STASHDB_ENDPOINT}
+        ],
+    }
+    if image_url:
+        performer_in["image"] = image_url
+
+    performer = missing_stash.create_performer(performer_in)
     if performer:
         logger.info(f"Performer created: {performer_name}")
         return performer["id"]
