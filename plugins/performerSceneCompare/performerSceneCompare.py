@@ -122,39 +122,6 @@ def get_studio_by_name(studio_name):
     return None
 
 
-def get_studio_by_name_by_stash_id(stash_id):
-    query = """
-        query FindStudios($filter: FindFilterType, $studio_filter: StudioFilterType) {
-            findStudios(filter: $filter, studio_filter: $studio_filter) {
-                count
-                studios {
-                    id
-                    name
-                    parent_studio {
-                        id
-                        name
-                    }
-                }
-            }
-        }
-    """
-    variables = {
-        "filter": {},
-        "studio_filter": {
-            "stash_id_endpoint": {
-                "endpoint": config.STASHDB_ENDPOINT,
-                "modifier": "EQUALS",
-                "stash_id": stash_id,
-            }
-        },
-    }
-    result = missing_graphql_request(query, variables)
-    if result:
-        return result["findStudios"]
-    logger.error(f"No studios found with Stash ID {stash_id}.")
-    return None
-
-
 def get_local_performer_details(performer_id):
     query = """
         query FindPerformer($id: ID!) {
@@ -461,12 +428,27 @@ def get_or_create_studio_by_stash_id(studio):
     stash_id = studio["id"]
     studio_name = studio["name"]
 
-    studio = get_studio_by_name_by_stash_id(stash_id)
-    if studio and studio["count"] > 0:
-        studio_id = studio["studios"][0]["id"]
-        logger.info(
-            f"Studio found: StashDB ID {stash_id} with Stashapp ID: {studio_id}"
-        )
+    studio = missing_stash.find_studios(
+        {
+            "name": {
+                "value": studio_name,
+                "modifier": "EQUALS",
+            },
+            "stash_id_endpoint": {
+                "stash_id": stash_id,
+                "endpoint": config.STASHDB_ENDPOINT,
+                "modifier": "EQUALS",
+            },
+        }
+    )
+    if studio and len(studio) > 0:
+        if len(studio) > 1:
+            logger.warning(
+                f"Multiple studios found with stash ID {stash_id}. Using the first one."
+            )
+
+        studio_id = studio[0]["id"]
+        logger.debug(f"Studio found with stash ID {stash_id} with ID: {studio_id}")
         return studio_id
 
     studio_image = query_stashdb_studio_image(stash_id)
