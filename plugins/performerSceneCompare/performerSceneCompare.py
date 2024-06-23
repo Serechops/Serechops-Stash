@@ -407,7 +407,7 @@ def get_or_create_missing_performer(performer_name, performer_stash_id):
     performers = find_performer_by_stash_id(performer_stash_id)
     if performers and performers["count"] > 0:
         performer_id = performers["performers"][0]["id"]
-        logger.info(
+        logger.debug(
             f"Performer found with stash ID {performer_stash_id} with ID: {performer_id}"
         )
         return performer_id
@@ -516,7 +516,7 @@ def find_performer_by_stash_id(performer_stash_id):
             }
         }
     }
-    logger.info(f"Searching for performer with stash ID {performer_stash_id}")
+    logger.debug(f"Searching for performer with stash ID {performer_stash_id}")
     logger.debug(f"Query: {query}")
     logger.debug(f"Query variables: {variables}")
     result = missing_graphql_request(query, variables)
