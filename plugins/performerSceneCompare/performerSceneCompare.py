@@ -3,6 +3,7 @@ import json
 import os
 import sys
 import stashapi.log as logger
+from stashapi.stashapp import StashInterface
 from datetime import datetime
 
 # Ensure the script can locate config.py
@@ -10,6 +11,28 @@ script_dir = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(script_dir)
 
 import config  # Import the configuration
+
+
+local_stash = StashInterface(
+    {
+        "scheme": config.LOCAL_GQL_SCHEME,
+        "host": config.LOCAL_GQL_HOST,
+        "port": config.LOCAL_GQL_PORT,
+        "apikey": config.LOCAL_API_KEY,
+        "logger": logger,
+    }
+)
+
+
+missing_stash = StashInterface(
+    {
+        "scheme": config.MISSING_GQL_SCHEME,
+        "host": config.MISSING_GQL_HOST,
+        "port": config.MISSING_GQL_PORT,
+        "apikey": config.MISSING_API_KEY,
+        "logger": logger,
+    }
+)
 
 
 def gql_query(endpoint, query, variables=None, api_key=None):
@@ -404,9 +427,26 @@ def get_or_create_studio_by_stash_id(studio):
 
 
 def get_or_create_missing_performer(performer_name, performer_stash_id):
-    performers = find_performer_by_stash_id(performer_stash_id)
-    if performers and performers["count"] > 0:
-        performer_id = performers["performers"][0]["id"]
+    existing_performers = missing_stash.find_performers(
+        {
+            "name": {
+                "value": performer_name,
+                "modifier": "EQUALS",
+            },
+            "stash_id_endpoint": {
+                "stash_id": performer_stash_id,
+                "endpoint": config.STASHDB_ENDPOINT,
+                "modifier": "EQUALS",
+            },
+        }
+    )
+    if existing_performers and len(existing_performers) > 0:
+        if len(existing_performers) > 1:
+            logger.warning(
+                f"Multiple performers found with stash ID {performer_stash_id}. Using the first one."
+            )
+
+        performer_id = existing_performers[0]["id"]
         logger.debug(
             f"Performer found with stash ID {performer_stash_id} with ID: {performer_id}"
         )
@@ -457,44 +497,18 @@ def find_local_favorite_performers():
             break
         page += 1
 
-    return performers
+    # TEMP: Only use Kelly Collins
+    filtered_performers = []
+    for performer in performers:
+        stash_ids = performer["stash_ids"]
+        if any(
+            sid["endpoint"] == config.STASHDB_ENDPOINT
+            and sid["stash_id"] == "bfbf1de8-0208-4282-a3cd-7abe2d0588c0"
+            for sid in stash_ids
+        ):
+            filtered_performers.append(performer)
 
-
-def find_performer_by_stash_id(performer_stash_id):
-    query = """
-        query FindPerformers($performer_filter: PerformerFilterType) {
-            findPerformers(performer_filter: $performer_filter) {
-                count
-                performers {
-                    id
-                    name
-                    gender
-                    stash_ids {
-                        stash_id
-                        endpoint
-                    }
-                }
-            }
-        }
-    """
-    variables = {
-        "performer_filter": {
-            "stash_id_endpoint": {
-                "endpoint": config.STASHDB_ENDPOINT,
-                "stash_id": performer_stash_id,
-                "modifier": "EQUALS",
-            }
-        }
-    }
-    logger.debug(f"Searching for performer with stash ID {performer_stash_id}")
-    logger.debug(f"Query: {query}")
-    logger.debug(f"Query variables: {variables}")
-    result = missing_graphql_request(query, variables)
-    logger.debug(f"GraphQL request result: {result}")
-    if result:
-        return result["findPerformers"]
-    logger.error(f"No performers found with stash ID {performer_stash_id}.")
-    return None
+    return filtered_performers
 
 
 def update_scene_with_studio(scene_id, studio_id):
@@ -598,6 +612,8 @@ def compare_performer_scenes():
     logger.info(f"Local Stash version: {local_stash.version}")
     logger.info(f"Missing Stash version: {missing_stash.version}")
 
+    # json_input = json.loads(sys.stdin.read())
+    # logger.debug(f"Input: {json_input}")
 
     favorite_performers = find_local_favorite_performers()
     logger.debug(f"Favorite performers: {favorite_performers}")
