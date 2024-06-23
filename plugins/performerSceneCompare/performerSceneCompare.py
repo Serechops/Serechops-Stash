@@ -77,7 +77,7 @@ def graphql_request(query, endpoint, api_key, variables=None):
             headers=headers,
             timeout=120,  # Set a timeout for the request
         )
-        logger.debug(
+        logger.trace(
             f"Request to {endpoint} returned status code {response.status_code}"
         )
         response.raise_for_status()  # Raises HTTPError for bad responses (4XX, 5XX)
@@ -284,14 +284,14 @@ def compare_scenes(local_scenes, existing_missing_scenes, stashdb_scenes):
         for stash_id in scene["stash_ids"]
         if stash_id.get("endpoint") == config.STASHDB_ENDPOINT
     }
-    logger.debug(f"Local scene IDs: {local_scene_ids}")
+    logger.trace(f"Local scene IDs: {local_scene_ids}")
     existing_missing_scene_ids = {
         stash_id["stash_id"]
         for scene in existing_missing_scenes
         for stash_id in scene["stash_ids"]
         if stash_id.get("endpoint") == config.STASHDB_ENDPOINT
     }
-    logger.debug(f"Existing missing scene IDs: {existing_missing_scene_ids}")
+    logger.trace(f"Existing missing scene IDs: {existing_missing_scene_ids}")
 
     new_missing_scenes = [
         scene
@@ -299,7 +299,6 @@ def compare_scenes(local_scenes, existing_missing_scenes, stashdb_scenes):
         if scene["id"] not in local_scene_ids
         and scene["id"] not in existing_missing_scene_ids
     ]
-    logger.info(f"Found {len(new_missing_scenes)} new missing scenes.")
     return new_missing_scenes
 
 
@@ -348,28 +347,6 @@ def create_scene(scene, performer_id):
         logger.info(f"Scene created with ID: {scene_id}")
         return scene_id
     logger.error(f"Failed to create scene '{title}'")
-    return None
-
-
-def destroy_missing_scene(scene_id):
-    mutation = """
-        mutation SceneDestroy($input: SceneDestroyInput!) {
-            sceneDestroy(input: $input)
-        }
-    """
-    variables = {
-        "input": {
-            "id": scene_id,
-            "delete_file": False,
-            "delete_generated": True,
-        }
-    }
-    result = missing_graphql_request(mutation, variables)
-    logger.debug(f"GraphQL request result: {result}")
-    if result is not None and result.get("sceneDestroy") is True:
-        logger.info(f"Scene destroyed with ID: {scene_id}")
-        return None
-    logger.error(f"Failed to destroy scene '{scene_id}'")
     return None
 
 
@@ -558,6 +535,7 @@ def process_performer(performer_id: int):
     stash_ids = [sid["stash_id"] for sid in performer_details["stash_ids"]]
     stashdb_scenes = query_stashdb_scenes(stash_ids)
 
+    destroyed_scenes_stash_ids = []
     for local_scene in local_scenes:
         local_scene_stash_id = next(
             (
@@ -577,19 +555,18 @@ def process_performer(performer_id: int):
                 None,
             )
             if local_scene_stash_id == existing_missing_scene_stash_id:
-                destroy_missing_scene(existing_missing_scene["id"])
-                logger.info(f"Scene {existing_missing_scene['id']} destroyed.")
+                missing_stash.destroy_scene(existing_missing_scene["id"])
+                destroyed_scenes_stash_ids.append(existing_missing_scene_stash_id)
+                logger.debug(
+                    f"Scene {existing_missing_scene['title']} (ID: {existing_missing_scene['id']}) destroyed."
+                )
 
     missing_scenes = compare_scenes(
         local_scenes, existing_missing_scenes, stashdb_scenes
     )
-    if not missing_scenes:
-        logger.info(
-            f"All scenes for performer {performer_details['name']} are up-to-date with StashDB."
-        )
 
     total_scenes = len(missing_scenes)
-    processed_scenes = 0
+    created_scenes_stash_ids = []
     for scene in missing_scenes:
         scene_studio_id = get_or_create_studio_by_stash_id(scene["studio"])
 
@@ -598,16 +575,28 @@ def process_performer(performer_id: int):
         if created_scene_id:
             update_scene_with_studio(created_scene_id, scene_studio_id)
             logger.info(
-                f"Scene {created_scene_id} created and associated with studio {scene_studio_id}"
+                f"Scene {scene['title']} (ID: {created_scene_id}) created and associated with studio {scene_studio_id}"
             )
 
             # Update progress
-            processed_scenes += 1
-            progress = processed_scenes / total_scenes
+            created_scene_stash_id = next(
+                (
+                    sid["stash_id"]
+                    for sid in scene["stash_ids"]
+                    if sid.get("endpoint") == config.STASHDB_ENDPOINT
+                ),
+                None,
+            )
+            created_scenes_stash_ids.append(created_scene_stash_id)
+            progress = len(created_scenes_stash_ids) / total_scenes
             logger.progress(progress)
 
+    if len(created_scenes_stash_ids) == 0 and len(destroyed_scenes_stash_ids) == 0:
+        logger.info(f"Performer {performer_details['name']}: No changes detected.")
+        return
+
     logger.info(
-        f"{total_scenes} missing scenes processed and associated with studio for performer {performer_details['name']}."
+        f"Performer {performer_details['name']}: {len(destroyed_scenes_stash_ids)} previously missing scenes destroyed and {len(created_scenes_stash_ids)} new missing scenes created."
     )
 
 
