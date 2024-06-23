@@ -98,34 +98,6 @@ def graphql_request(query, endpoint, api_key, variables=None):
     return None
 
 
-def get_missing_performer_details(performer_id):
-    query = """
-        query FindPerformer($id: ID!) {
-            findPerformer(id: $id) {
-                id
-                name
-                stash_ids {
-                    stash_id
-                    endpoint
-                }
-                scenes {
-                    id
-                    title
-                    stash_ids {
-                        stash_id
-                        endpoint
-                    }
-                }
-            }
-        }
-    """
-    result = missing_graphql_request(query, {"id": performer_id})
-    if result:
-        return result["findPerformer"]
-    logger.error(f"No details found for performer ID {performer_id}.")
-    return None
-
-
 def query_stashdb_performer_image(performer_stash_id):
     query = """
         query FindPerformer($id: ID!) {
@@ -488,7 +460,7 @@ def update_scene_with_studio(scene_id, studio_id):
 
 
 def process_performer(performer_id: int):
-    performer_details = local_stash.find_performer(
+    local_performer_details = local_stash.find_performer(
         performer_id,
         False,
         """
@@ -508,19 +480,17 @@ def process_performer(performer_id: int):
         }
         """,
     )
-    if not performer_details:
+    if not local_performer_details:
         logger.error("Failed to retrieve details for performer.")
         return
 
-    logger.info(performer_details)
+    logger.info(f"Processing performer: {local_performer_details['name']}")
 
-    logger.info(f"Processing performer: {performer_details['name']}")
-
-    performer_name = performer_details["name"]
+    performer_name = local_performer_details["name"]
     performer_stash_id = next(
         (
             sid["stash_id"]
-            for sid in performer_details["stash_ids"]
+            for sid in local_performer_details["stash_ids"]
             if sid.get("endpoint") == config.STASHDB_ENDPOINT
         ),
         None,
@@ -528,12 +498,39 @@ def process_performer(performer_id: int):
     missing_performer_id = get_or_create_missing_performer(
         performer_name, performer_stash_id
     )
-    missing_performer_details = get_missing_performer_details(missing_performer_id)
+    missing_performer_details = missing_stash.find_performer(
+        missing_performer_id,
+        False,
+        """
+        id
+        name
+        stash_ids {
+            stash_id
+            endpoint
+        }
+        scenes {
+            id
+            title
+            stash_ids {
+                stash_id
+                endpoint
+            }
+        }
+        """,
+    )
 
-    local_scenes = performer_details["scenes"]
+    local_scenes = local_performer_details["scenes"]
     existing_missing_scenes = missing_performer_details["scenes"]
-    stash_ids = [sid["stash_id"] for sid in performer_details["stash_ids"]]
-    stashdb_scenes = query_stashdb_scenes(stash_ids)
+
+    performer_stash_id = next(
+        (
+            sid["stash_id"]
+            for sid in local_performer_details["stash_ids"]
+            if sid.get("endpoint") == config.STASHDB_ENDPOINT
+        ),
+        None,
+    )
+    stashdb_scenes = query_stashdb_scenes(performer_stash_id)
 
     destroyed_scenes_stash_ids = []
     for local_scene in local_scenes:
@@ -579,24 +576,19 @@ def process_performer(performer_id: int):
             )
 
             # Update progress
-            created_scene_stash_id = next(
-                (
-                    sid["stash_id"]
-                    for sid in scene["stash_ids"]
-                    if sid.get("endpoint") == config.STASHDB_ENDPOINT
-                ),
-                None,
-            )
+            created_scene_stash_id = scene["id"]
             created_scenes_stash_ids.append(created_scene_stash_id)
             progress = len(created_scenes_stash_ids) / total_scenes
             logger.progress(progress)
 
     if len(created_scenes_stash_ids) == 0 and len(destroyed_scenes_stash_ids) == 0:
-        logger.info(f"Performer {performer_details['name']}: No changes detected.")
+        logger.info(
+            f"Performer {local_performer_details['name']}: No changes detected."
+        )
         return
 
     logger.info(
-        f"Performer {performer_details['name']}: {len(destroyed_scenes_stash_ids)} previously missing scenes destroyed and {len(created_scenes_stash_ids)} new missing scenes created."
+        f"Performer {local_performer_details['name']}: {len(destroyed_scenes_stash_ids)} previously missing scenes destroyed and {len(created_scenes_stash_ids)} new missing scenes created."
     )
 
 
@@ -608,7 +600,6 @@ def compare_performer_scenes():
     # logger.debug(f"Input: {json_input}")
 
     favorite_performers = find_local_favorite_performers()
-    logger.debug(f"Favorite performers: {favorite_performers}")
 
     for performer in favorite_performers:
         performer_id = performer["id"]
