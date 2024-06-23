@@ -246,6 +246,42 @@ def query_stashdb_performer_image(performer_stash_id):
     return None
 
 
+def query_stashdb_studio_image(performer_stash_id):
+    query = """
+        query FindStudio($id: ID!) {
+            findStudio(id: $id) {
+                id
+                images {
+                    id
+                    url
+                }
+            }
+        }
+    """
+    result = gql_query(
+        config.STASHDB_ENDPOINT,
+        query,
+        {"id": performer_stash_id},
+        config.STASHDB_API_KEY,
+    )
+    if result:
+        performer_data = result["data"]["findStudio"]
+        if (
+            performer_data
+            and performer_data["images"]
+            and len(performer_data["images"]) > 0
+        ):
+            return performer_data["images"][0]["url"]
+        else:
+            logger.error(
+                f"No image found for studio with Stash ID {performer_stash_id}."
+            )
+            return None
+
+    logger.error(f"Failed to query studio with Stash ID {performer_stash_id}.")
+    return None
+
+
 def query_stashdb_scenes(performer_stash_ids):
     query = """
         query QueryScenes($stash_ids: [ID!]!, $page: Int!) {
@@ -433,6 +469,8 @@ def get_or_create_studio_by_stash_id(studio):
         )
         return studio_id
 
+    studio_image = query_stashdb_studio_image(stash_id)
+
     mutation = """
         mutation StudioCreate($input: StudioCreateInput!) {
             studioCreate(input: $input) {
@@ -448,6 +486,7 @@ def get_or_create_studio_by_stash_id(studio):
     variables = {
         "input": {
             "name": studio_name,
+            "image": studio_image,
             "stash_ids": [{"stash_id": stash_id, "endpoint": config.STASHDB_ENDPOINT}],
         }
     }
