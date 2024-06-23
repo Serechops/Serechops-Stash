@@ -238,6 +238,12 @@ def create_scene(scene, performer_id, studio_id):
     date = scene["release_date"]
     cover_image = scene["images"][0]["url"] if scene["images"] else None
     stash_id = scene["id"]
+    tags = scene["tags"]
+    tag_ids = []
+
+    for tag in tags:
+        tag_id = missing_stash.find_tag({"name": tag["name"]}, create=True)
+        tag_ids.append(tag_id["id"])
 
     try:
         # Ensure the date is in the correct format
@@ -256,6 +262,7 @@ def create_scene(scene, performer_id, studio_id):
             "date": formatted_date,
             "studio_id": studio_id,
             "performer_ids": [performer_id],
+            "tag_ids": tag_ids,
             "cover_image": cover_image,
             "stash_ids": [{"endpoint": config.STASHDB_ENDPOINT, "stash_id": stash_id}],
         }
