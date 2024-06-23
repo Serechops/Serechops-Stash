@@ -418,7 +418,7 @@ def get_or_create_missing_performer(performer_name, performer_stash_id):
 
         performer_id = existing_performers[0]["id"]
         logger.debug(
-            f"Performer found with stash ID {performer_stash_id} with ID: {performer_id}"
+            f"Missing performer found with stash ID {performer_stash_id} with ID: {performer_id}"
         )
         return performer_id
 
