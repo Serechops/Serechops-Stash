@@ -332,7 +332,7 @@ def get_or_create_missing_performer(performer_name, performer_stash_id):
 
         performer_id = existing_performers[0]["id"]
         logger.debug(
-            f"Missing performer found with stash ID {performer_stash_id} with ID: {performer_id}"
+            f"Performer {performer_name}: Matched with Stash ID {performer_stash_id} to missing Stash ID {performer_id}"
         )
         return performer_id
 
@@ -407,7 +407,7 @@ def process_performer(performer_id: int):
         logger.error("Failed to retrieve details for performer.")
         return
 
-    logger.info(f"Processing performer: {local_performer_details['name']}")
+    logger.info(f"Performer {local_performer_details['name']}: Processing...")
 
     performer_name = local_performer_details["name"]
     performer_stash_id = next(
