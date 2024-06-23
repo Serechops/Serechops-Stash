@@ -428,7 +428,7 @@ def get_or_create_studio_by_stash_id(studio):
     stash_id = studio["id"]
     studio_name = studio["name"]
 
-    studio = missing_stash.find_studios(
+    studios = missing_stash.find_studios(
         {
             "name": {
                 "value": studio_name,
@@ -441,45 +441,32 @@ def get_or_create_studio_by_stash_id(studio):
             },
         }
     )
-    if studio and len(studio) > 0:
-        if len(studio) > 1:
+    if studios and len(studios) > 0:
+        if len(studios) > 1:
             logger.warning(
                 f"Multiple studios found with stash ID {stash_id}. Using the first one."
             )
 
-        studio_id = studio[0]["id"]
+        studio_id = studios[0]["id"]
         logger.debug(f"Studio found with stash ID {stash_id} with ID: {studio_id}")
         return studio_id
 
     studio_image = query_stashdb_studio_image(stash_id)
 
-    mutation = """
-        mutation StudioCreate($input: StudioCreateInput!) {
-            studioCreate(input: $input) {
-                id
-                name
-                stash_ids {
-                    stash_id
-                    endpoint
-                }
-            }
-        }
-    """
-    variables = {
-        "input": {
+    logger.debug(f"Creating studio: {studio_name}")
+    studio = missing_stash.create_studio(
+        {
             "name": studio_name,
-            "image": studio_image,
             "stash_ids": [{"stash_id": stash_id, "endpoint": config.STASHDB_ENDPOINT}],
+            "image": studio_image,
         }
-    }
-    logger.debug(f"Creating scene: {studio_name}")
-    result = missing_graphql_request(mutation, variables)
-    logger.debug(f"GraphQL request result: {result}")
-    if result and "studioCreate" in result and result["studioCreate"]:
-        studio_id = result["studioCreate"]["id"]
+    )
+    if studio:
+        studio_id = studio["id"]
         logger.info(f"Studio created: {studio_name}")
         return studio_id
-    logger.error(f"Failed to create studio for performer '{studio_name}'")
+    
+    logger.error(f"Failed to create studio '{studio_name}'")
     return None
 
 
