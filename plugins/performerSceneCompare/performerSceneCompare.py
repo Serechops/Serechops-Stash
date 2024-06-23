@@ -98,30 +98,6 @@ def graphql_request(query, endpoint, api_key, variables=None):
     return None
 
 
-def get_studio_by_name(studio_name):
-    query = """
-        query FindStudios($filter: FindFilterType, $studio_filter: StudioFilterType) {
-            findStudios(filter: $filter, studio_filter: $studio_filter) {
-                count
-                studios {
-                    id
-                    name
-                    parent_studio {
-                        id
-                        name
-                    }
-                }
-            }
-        }
-    """
-    variables = {"filter": {"q": studio_name}}
-    result = missing_graphql_request(query, variables)
-    if result:
-        return result["findStudios"]
-    logger.error(f"No studios found with name {studio_name}.")
-    return None
-
-
 def get_missing_performer_details(performer_id):
     query = """
         query FindPerformer($id: ID!) {
