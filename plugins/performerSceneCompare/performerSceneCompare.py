@@ -443,49 +443,19 @@ def get_or_create_missing_performer(performer_name, performer_stash_id):
 
 
 def find_local_favorite_performers():
-    query = """
-        query FindPerformers($performer_filter: PerformerFilterType, $filter: FindFilterType) {
-            findPerformers(performer_filter: $performer_filter, filter: $filter) {
-                count
-                performers {
-                    id
-                    name
-                    gender
-                    favorite
-                    stash_ids {
-                        stash_id
-                        endpoint
-                    }
-                }
-            }
-        }
-    """
-
     performers = []
     page = 1
-    total_performers = None
-    logger.info(f"Searching for local favorite performers")
+    logger.debug(f"Searching for local favorite performers...")
     while True:
-        variables = {
-            "performer_filter": {"filter_favorites": True},
-            "filter": {"page": page},
-        }
-        logger.debug(f"Query: {query}")
-        logger.debug(f"Query variables: {variables}")
-        result = local_graphql_request(query, variables)
-        logger.debug(f"GraphQL request result: {result}")
-        if result:
-            performersData = result["findPerformers"]
-            performers.extend(performersData["performers"])
-            total_performers = total_performers or performersData["count"]
-            if (
-                len(performers) >= total_performers
-                or len(performersData["performers"]) < 25
-            ):
-                break
-            page += 1
-        else:
+        performer_filter = {"filter_favorites": True}
+        filter = {"page": page, "per_page": 25}
+        logger.debug(f"Performer filter: {performer_filter}\nFilter: {filter}")
+        result = local_stash.find_performers(performer_filter, filter)
+        logger.debug(f"Result: {result}")
+        performers.extend(result)
+        if len(result) < 25:
             break
+        page += 1
 
     return performers
 
@@ -625,8 +595,9 @@ def process_performer(performer_id: int):
 
 
 def compare_performer_scenes():
-    json_input = json.loads(sys.stdin.read())
-    logger.debug(f"Input: {json_input}")
+    logger.info(f"Local Stash version: {local_stash.version}")
+    logger.info(f"Missing Stash version: {missing_stash.version}")
+
 
     favorite_performers = find_local_favorite_performers()
     logger.debug(f"Favorite performers: {favorite_performers}")
