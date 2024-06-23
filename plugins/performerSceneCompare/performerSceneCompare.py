@@ -253,9 +253,7 @@ def create_scene(scene, performer_id, studio_id):
             "studio_id": studio_id,
             "performer_ids": [performer_id],
             "cover_image": cover_image,
-            "stash_ids": [
-                {"endpoint": "https://stashdb.org/graphql", "stash_id": stash_id}
-            ],
+            "stash_ids": [{"endpoint": config.STASHDB_ENDPOINT, "stash_id": stash_id}],
         }
     )
 
