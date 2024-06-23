@@ -210,6 +210,42 @@ def get_missing_performer_details(performer_id):
     return None
 
 
+def query_stashdb_performer_image(performer_stash_id):
+    query = """
+        query FindPerformer($id: ID!) {
+            findPerformer(id: $id) {
+                id
+                images {
+                    id
+                    url
+                }
+            }
+        }
+    """
+    result = gql_query(
+        config.STASHDB_ENDPOINT,
+        query,
+        {"id": performer_stash_id},
+        config.STASHDB_API_KEY,
+    )
+    if result:
+        performer_data = result["data"]["findPerformer"]
+        if (
+            performer_data
+            and performer_data["images"]
+            and len(performer_data["images"]) > 0
+        ):
+            return performer_data["images"][0]["url"]
+        else:
+            logger.error(
+                f"No image found for performer with Stash ID {performer_stash_id}."
+            )
+            return None
+
+    logger.error(f"Failed to query performer with Stash ID {performer_stash_id}.")
+    return None
+
+
 def query_stashdb_scenes(performer_stash_ids):
     query = """
         query QueryScenes($stash_ids: [ID!]!, $page: Int!) {
@@ -452,32 +488,21 @@ def get_or_create_missing_performer(performer_name, performer_stash_id):
         )
         return performer_id
 
-    mutation = """
-        mutation PerformerCreate($input: PerformerCreateInput!) {
-            performerCreate(input: $input) {
-                id
-                name
-                stash_ids {
-                    stash_id
-                    endpoint
-                }
-            }
-        }
-    """
-    variables = {
-        "input": {
+    image_url = query_stashdb_performer_image(performer_stash_id)
+    logger.debug(f"Performer image URL: {image_url}")
+
+    performer = missing_stash.create_performer(
+        {
             "name": performer_name,
             "stash_ids": [
                 {"stash_id": performer_stash_id, "endpoint": config.STASHDB_ENDPOINT}
             ],
+            "image": image_url,
         }
-    }
-    result = missing_graphql_request(mutation, variables)
-
-    if result and "performerCreate" in result:
-        performer_id = result["performerCreate"]["id"]
+    )
+    if performer:
         logger.info(f"Performer created: {performer_name}")
-        return performer_id
+        return performer["id"]
     logger.error(f"Failed to create performer '{performer_name}'")
     return None
 
