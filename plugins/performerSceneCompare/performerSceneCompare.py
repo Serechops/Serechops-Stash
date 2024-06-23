@@ -122,33 +122,6 @@ def get_studio_by_name(studio_name):
     return None
 
 
-def get_local_performer_details(performer_id):
-    query = """
-        query FindPerformer($id: ID!) {
-            findPerformer(id: $id) {
-                id
-                name
-                stash_ids {
-                    stash_id
-                    endpoint
-                }
-                scenes {
-                    title
-                    stash_ids {
-                        stash_id
-                        endpoint
-                    }
-                }
-            }
-        }
-    """
-    result = local_graphql_request(query, {"id": performer_id})
-    if result:
-        return result["findPerformer"]
-    logger.error(f"No details found for performer ID {performer_id}.")
-    return None
-
-
 def get_missing_performer_details(performer_id):
     query = """
         query FindPerformer($id: ID!) {
@@ -465,7 +438,7 @@ def get_or_create_studio_by_stash_id(studio):
         studio_id = studio["id"]
         logger.info(f"Studio created: {studio_name}")
         return studio_id
-    
+
     logger.error(f"Failed to create studio '{studio_name}'")
     return None
 
@@ -562,10 +535,31 @@ def update_scene_with_studio(scene_id, studio_id):
 
 
 def process_performer(performer_id: int):
-    performer_details = get_local_performer_details(performer_id)
+    performer_details = local_stash.find_performer(
+        performer_id,
+        False,
+        """
+        id
+        name
+        stash_ids {
+            stash_id
+            endpoint
+        }
+        scenes {
+            id
+            title
+            stash_ids {
+                stash_id
+                endpoint
+            }
+        }
+        """,
+    )
     if not performer_details:
         logger.error("Failed to retrieve details for performer.")
         return
+
+    logger.info(performer_details)
 
     logger.info(f"Processing performer: {performer_details['name']}")
 
