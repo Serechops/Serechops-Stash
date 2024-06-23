@@ -150,6 +150,10 @@ def query_stashdb_scenes(performer_stash_ids):
                     studio {
                         id
                         name
+                        parent {
+                            id
+                            name
+                        }
                     }
                     images {
                         id
@@ -264,7 +268,7 @@ def create_scene(scene, performer_id, studio_id):
     return None
 
 
-def get_or_create_studio_by_stash_id(studio):
+def get_or_create_studio_by_stash_id(studio, parent_studio_id: int | None = None):
     stash_id = studio["id"]
     studio_name = studio["name"]
 
@@ -291,16 +295,20 @@ def get_or_create_studio_by_stash_id(studio):
         logger.debug(f"Studio found with stash ID {stash_id} with ID: {studio_id}")
         return studio_id
 
+    studio_create_input = {
+        "name": studio_name,
+        "stash_ids": [{"stash_id": stash_id, "endpoint": config.STASHDB_ENDPOINT}],
+    }
+
+    if parent_studio_id:
+        studio_create_input["parent_id"] = parent_studio_id
+
     studio_image = query_stashdb_studio_image(stash_id)
+    if studio_image:
+        studio_create_input["image"] = studio_image
 
     logger.debug(f"Creating studio: {studio_name}")
-    studio = missing_stash.create_studio(
-        {
-            "name": studio_name,
-            "stash_ids": [{"stash_id": stash_id, "endpoint": config.STASHDB_ENDPOINT}],
-            "image": studio_image,
-        }
-    )
+    studio = missing_stash.create_studio(studio_create_input)
     if studio:
         studio_id = studio["id"]
         logger.info(f"Studio created: {studio_name}")
@@ -488,7 +496,15 @@ def process_performer(performer_id: int):
     total_scenes = len(missing_scenes)
     created_scenes_stash_ids = []
     for scene in missing_scenes:
-        scene_studio_id = get_or_create_studio_by_stash_id(scene["studio"])
+        parent_studio_id = None
+        if scene["studio"] and "parent" in scene["studio"]:
+            parent_studio_id = get_or_create_studio_by_stash_id(
+                scene["studio"]["parent"]
+            )
+
+        scene_studio_id = get_or_create_studio_by_stash_id(
+            scene["studio"], parent_studio_id
+        )
 
         # Create scene and link it to the new studio
         created_scene_id = create_scene(scene, missing_performer_id, scene_studio_id)
