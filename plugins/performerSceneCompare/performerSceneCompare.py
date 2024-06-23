@@ -513,9 +513,6 @@ def process_performer(performer_id: int):
 
 
 def compare_performer_scenes():
-    logger.info(f"Local Stash version: {local_stash.version}")
-    logger.info(f"Missing Stash version: {missing_stash.version}")
-
     # json_input = json.loads(sys.stdin.read())
     # logger.debug(f"Input: {json_input}")
 
