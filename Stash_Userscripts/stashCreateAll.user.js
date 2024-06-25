@@ -36,7 +36,7 @@ const userConfig = {
         if (!running) return;
 
         const createButtons = document.querySelectorAll('.btn-group');
-        const tagButtons = document.querySelectorAll('button.minimal.ml-2.btn.btn-primary');
+        const tagButtons = document.querySelectorAll('.search-item button.minimal.ml-2.btn.btn-primary');
         maxCreateCount = createButtons.length;
         maxTagCount = tagButtons.length;
 
