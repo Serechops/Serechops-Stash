@@ -517,16 +517,51 @@ def process_performer(performer_id: int):
             scene["studio"], parent_studio_id
         )
 
-        # Create scene and link it to the new studio
-        created_scene_id = create_scene(scene, missing_performer_id, scene_studio_id)
-        if created_scene_id:
-            logger.info(f"Scene {scene['title']} (ID: {created_scene_id}) created")
+        existing_scenes_for_other_performers = missing_stash.find_scenes(
+            {
+                "stash_id_endpoint": {
+                    "stash_id": scene["id"],
+                    "endpoint": config.STASHDB_ENDPOINT,
+                    "modifier": "EQUALS",
+                }
+            }
+        )
+        if (
+            existing_scenes_for_other_performers
+            and len(existing_scenes_for_other_performers) > 0
+        ):
+            if len(existing_scenes_for_other_performers) > 1:
+                logger.warning(
+                    f"Multiple scenes found with stash ID {scene['id']}. Using the first one."
+                )
 
-            # Update progress
-            created_scene_stash_id = scene["id"]
-            created_scenes_stash_ids.append(created_scene_stash_id)
-            progress = len(created_scenes_stash_ids) / total_scenes
-            logger.progress(progress)
+            existing_scene_for_other_performer = existing_scenes_for_other_performers[0]
+
+            updated_performers = existing_scene_for_other_performer["performers"]
+            updated_performers.append({"id": missing_performer_id})
+
+            missing_stash.update_scene(
+                {
+                    "id": existing_scene_for_other_performer["id"],
+                    "performers": updated_performers,
+                }
+            )
+            logger.info(
+                f"Scene {scene['title']} (ID: {existing_scene_for_other_performer['id']}) linked to performer {performer_name}"
+            )
+        else:
+            # Create scene and link it to the new studio
+            created_scene_id = create_scene(
+                scene, missing_performer_id, scene_studio_id
+            )
+            if created_scene_id:
+                logger.info(f"Scene {scene['title']} (ID: {created_scene_id}) created")
+
+                # Update progress
+                created_scene_stash_id = scene["id"]
+                created_scenes_stash_ids.append(created_scene_stash_id)
+                progress = len(created_scenes_stash_ids) / total_scenes
+                logger.progress(progress)
 
     if len(created_scenes_stash_ids) == 0 and len(destroyed_scenes_stash_ids) == 0:
         logger.info(
