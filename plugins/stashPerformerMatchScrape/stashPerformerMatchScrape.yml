@@ -1,0 +1,17 @@
+name: Stash Matched Performer Scrape
+description: Scrapes performers in bulk from ThePornDB and StashDB on exact name matches only.
+version: 0.1
+exec:
+  - python
+  - "{pluginDir}/stashPerformerMatchScrape.py"
+interface: raw
+tasks:
+  - name: Scrape All Performers
+    description: Scrape your entire performer collection via ThePornDB and StashDB.
+    defaultArgs:
+      mode: main
+hooks:
+  - name: Scrape Matched Performer
+    description: Scrapes matched name performer against TPDB and StashDB.
+    triggeredBy:
+      - Performer.Create.Post
