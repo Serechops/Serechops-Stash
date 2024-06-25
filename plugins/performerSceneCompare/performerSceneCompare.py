@@ -504,7 +504,11 @@ def process_performer(performer_id: int):
     created_scenes_stash_ids = []
     for scene in missing_scenes:
         parent_studio_id = None
-        if scene["studio"] and "parent" in scene["studio"]:
+        if (
+            "studio" in scene
+            and "parent" in scene["studio"]
+            and scene["studio"]["parent"]
+        ):
             parent_studio_id = get_or_create_studio_by_stash_id(
                 scene["studio"]["parent"]
             )
