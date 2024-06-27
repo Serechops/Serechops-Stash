@@ -252,7 +252,9 @@ def create_scene(scene, performer_id, studio_id):
             datetime.strptime(date, "%Y-%m-%d").date().isoformat() if date else None
         )
     except ValueError:
-        logger.error(f"Invalid date format for scene '{title}': {date}")
+        logger.error(
+            f"Invalid date format for scene '{title}': {date} (StashDB ID: {stash_id})"
+        )
         return None
 
     result = missing_stash.create_scene(
