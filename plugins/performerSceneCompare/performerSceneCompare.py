@@ -139,6 +139,7 @@ def query_stashdb_scenes(performer_stash_ids):
                 scenes {
                     id
                     title
+                    details
                     release_date
                     urls {
                         url
@@ -258,6 +259,7 @@ def create_scene(scene, performer_id, studio_id):
         {
             "title": title,
             "code": code,
+            "details": scene["details"],
             "url": studio_url,
             "date": formatted_date,
             "studio_id": studio_id,
