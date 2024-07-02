@@ -13,4 +13,9 @@ MISSING_API_KEY = ""  # Leave blank if you don't have credentials on your Stash.
 STASHDB_ENDPOINT = "https://stashdb.org/graphql"
 STASHDB_API_KEY = ""
 
+PERFORMER_TAGS = []  # Performers with these tags will be selected.
+
+EXCLUDE_TAGS = []  # Scenes containing any of these tags will be excluded.
+
+
 EXCLUDE_TAGS = []  # Scenes containing any of these tags will be excluded.
