@@ -590,7 +590,21 @@ def process_updated_scene(stash_id: str):
         logger.debug(f"Scene {scene['title']} (ID: {scene['id']}) destroyed.")
 
 
+def check_stash_instances_are_unique():
+    if (
+        config.LOCAL_GQL_SCHEME == config.MISSING_GQL_SCHEME
+        and config.LOCAL_GQL_HOST == config.MISSING_GQL_HOST
+        and config.LOCAL_GQL_PORT == config.MISSING_GQL_PORT
+    ):
+        logger.error(
+            "Local and missing Stash instances are the same. Please create a different instance for missing Stash."
+        )
+        sys.exit(1)
+
+
 def compare_performer_scenes():
+    check_stash_instances_are_unique()
+
     raw_input = sys.stdin.read()
     json_input = json.loads(raw_input)
     logger.debug(f"Input: {json_input}")
