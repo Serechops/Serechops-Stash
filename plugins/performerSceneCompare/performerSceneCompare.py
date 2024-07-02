@@ -232,7 +232,7 @@ def compare_scenes(local_scenes, existing_missing_scenes, stashdb_scenes):
     return new_missing_scenes
 
 
-def create_scene(scene, performer_id, studio_id):
+def create_scene(scene, performer_ids, studio_id):
     code = scene["code"]
     title = scene["title"]
     studio_url = scene["urls"][0]["url"] if scene["urls"] else None
@@ -265,7 +265,7 @@ def create_scene(scene, performer_id, studio_id):
             "url": studio_url,
             "date": formatted_date,
             "studio_id": studio_id,
-            "performer_ids": [performer_id],
+            "performer_ids": performer_ids,
             "tag_ids": tag_ids,
             "cover_image": cover_image,
             "stash_ids": [{"endpoint": config.STASHDB_ENDPOINT, "stash_id": stash_id}],
@@ -329,7 +329,9 @@ def get_or_create_studio_by_stash_id(studio, parent_studio_id: int | None = None
     return None
 
 
-def get_or_create_missing_performer(performer_name, performer_stash_id):
+def get_or_create_missing_performer(
+    performer_name: str, performer_stash_id: str
+) -> int:
     existing_performers = missing_stash.find_performers(
         {
             "name": {
@@ -374,7 +376,7 @@ def get_or_create_missing_performer(performer_name, performer_stash_id):
     return None
 
 
-def find_local_favorite_performers():
+def find_selected_local_performers():
     selected_performer_tags = config.PERFORMER_TAGS
     selected_performer_tag_ids = []
     for tag in selected_performer_tags:
@@ -399,11 +401,35 @@ def find_local_favorite_performers():
     return performers
 
 
+def process_performers():
+    selected_local_performers = find_selected_local_performers()
+    missing_performers_by_stash_id = {}
+
+    for local_performer in selected_local_performers:
+        local_performer_name = local_performer["name"]
+        performer_stash_id: str = next(
+            (
+                sid["stash_id"]
+                for sid in local_performer["stash_ids"]
+                if sid.get("endpoint") == config.STASHDB_ENDPOINT
+            ),
+            None,
+        )
+        missing_performer_id = get_or_create_missing_performer(
+            local_performer_name, performer_stash_id
+        )
+
+        missing_performers_by_stash_id[performer_stash_id] = missing_performer_id
+
+    for local_performer in selected_local_performers:
+        process_performer(local_performer["id"], missing_performers_by_stash_id)
 
 
-def process_performer(performer_id: int):
+def process_performer(
+    local_performer_id: int, missing_performers_by_stash_id: dict[str, int]
+):
     local_performer_details = local_stash.find_performer(
-        performer_id,
+        local_performer_id,
         False,
         """
         id
@@ -428,7 +454,6 @@ def process_performer(performer_id: int):
 
     logger.info(f"Performer {local_performer_details['name']}: Processing...")
 
-    performer_name = local_performer_details["name"]
     performer_stash_id = next(
         (
             sid["stash_id"]
@@ -437,9 +462,8 @@ def process_performer(performer_id: int):
         ),
         None,
     )
-    missing_performer_id = get_or_create_missing_performer(
-        performer_name, performer_stash_id
-    )
+
+    missing_performer_id = missing_performers_by_stash_id.get(performer_stash_id)
     missing_performer_details = missing_stash.find_performer(
         missing_performer_id,
         False,
@@ -464,19 +488,11 @@ def process_performer(performer_id: int):
     local_scenes = local_performer_details["scenes"]
     existing_missing_scenes = missing_performer_details["scenes"]
 
-    performer_stash_id = next(
-        (
-            sid["stash_id"]
-            for sid in local_performer_details["stash_ids"]
-            if sid.get("endpoint") == config.STASHDB_ENDPOINT
-        ),
-        None,
-    )
     stashdb_scenes = query_stashdb_scenes(performer_stash_id)
 
     destroyed_scenes_stash_ids = []
     for local_scene in local_scenes:
-        local_scene_stash_id = next(
+        scene_stash_id = next(
             (
                 sid["stash_id"]
                 for sid in local_scene["stash_ids"]
@@ -521,51 +537,26 @@ def process_performer(performer_id: int):
             scene["studio"], parent_studio_id
         )
 
-        existing_scenes_for_other_performers = missing_stash.find_scenes(
-            {
-                "stash_id_endpoint": {
-                    "stash_id": scene["id"],
-                    "endpoint": config.STASHDB_ENDPOINT,
-                    "modifier": "EQUALS",
-                }
-            }
-        )
-        if (
-            existing_scenes_for_other_performers
-            and len(existing_scenes_for_other_performers) > 0
-        ):
-            if len(existing_scenes_for_other_performers) > 1:
-                logger.warning(
-                    f"Multiple scenes found with stash ID {scene['id']}. Using the first one."
-                )
+        scene_performer_stash_ids = [
+            scene_performer["performer"]["id"]
+            for scene_performer in scene["performers"]
+        ]
+        missing_performer_ids = [
+            missing_performers_by_stash_id.get(sid)
+            for sid in scene_performer_stash_ids
+            if missing_performers_by_stash_id.get(sid) is not None
+        ]
 
-            existing_scene_for_other_performer = existing_scenes_for_other_performers[0]
+        # Create scene and link it to the new studio
+        created_scene_id = create_scene(scene, missing_performer_ids, scene_studio_id)
+        if created_scene_id:
+            logger.info(f"Scene {scene['title']} (ID: {created_scene_id}) created")
 
-            updated_performers = existing_scene_for_other_performer["performers"]
-            updated_performers.append({"id": missing_performer_id})
-
-            missing_stash.update_scene(
-                {
-                    "id": existing_scene_for_other_performer["id"],
-                    "performers": updated_performers,
-                }
-            )
-            logger.info(
-                f"Scene {scene['title']} (ID: {existing_scene_for_other_performer['id']}) linked to performer {performer_name}"
-            )
-        else:
-            # Create scene and link it to the new studio
-            created_scene_id = create_scene(
-                scene, missing_performer_id, scene_studio_id
-            )
-            if created_scene_id:
-                logger.info(f"Scene {scene['title']} (ID: {created_scene_id}) created")
-
-                # Update progress
-                created_scene_stash_id = scene["id"]
-                created_scenes_stash_ids.append(created_scene_stash_id)
-                progress = len(created_scenes_stash_ids) / total_scenes
-                logger.progress(progress)
+            # Update progress
+            created_scene_stash_id = scene["id"]
+            created_scenes_stash_ids.append(created_scene_stash_id)
+            progress = len(created_scenes_stash_ids) / total_scenes
+            logger.progress(progress)
 
     if len(created_scenes_stash_ids) == 0 and len(destroyed_scenes_stash_ids) == 0:
         logger.info(
@@ -610,11 +601,7 @@ def compare_performer_scenes():
         and "mode" in json_input["args"]
         and json_input["args"]["mode"] == "process_performers"
     ):
-        favorite_performers = find_local_favorite_performers()
-
-        for performer in favorite_performers:
-            performer_id = performer["id"]
-            process_performer(performer_id)
+        process_performers()
     elif (
         json_input
         and "args" in json_input
