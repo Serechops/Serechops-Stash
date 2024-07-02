@@ -509,7 +509,7 @@ def process_performer(
                 ),
                 None,
             )
-            if local_scene_stash_id == existing_missing_scene_stash_id:
+            if scene_stash_id == existing_missing_scene_stash_id:
                 missing_stash.destroy_scene(existing_missing_scene["id"])
                 destroyed_scenes_stash_ids.append(existing_missing_scene_stash_id)
                 logger.debug(
