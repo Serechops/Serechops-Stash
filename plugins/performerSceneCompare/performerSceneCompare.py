@@ -375,11 +375,20 @@ def get_or_create_missing_performer(performer_name, performer_stash_id):
 
 
 def find_local_favorite_performers():
+    selected_performer_tags = config.PERFORMER_TAGS
+    selected_performer_tag_ids = []
+    for tag in selected_performer_tags:
+        tag_id = local_stash.find_tag({"name": tag})
+        if tag_id:
+            selected_performer_tag_ids.append(tag_id["id"])
+
     performers = []
     page = 1
     logger.debug(f"Searching for local favorite performers...")
     while True:
-        performer_filter = {"filter_favorites": True}
+        performer_filter = {
+            "tags": {"value": selected_performer_tag_ids, "modifier": "INCLUDES"}
+        }
         filter = {"page": page, "per_page": 25}
         result = local_stash.find_performers(performer_filter, filter)
         performers.extend(result)
@@ -387,18 +396,9 @@ def find_local_favorite_performers():
             break
         page += 1
 
-    # TEMP: Only use Kelly Collins
-    filtered_performers = []
-    for performer in performers:
-        stash_ids = performer["stash_ids"]
-        if any(
-            sid["endpoint"] == config.STASHDB_ENDPOINT
-            and sid["stash_id"] == "bfbf1de8-0208-4282-a3cd-7abe2d0588c0"
-            for sid in stash_ids
-        ):
-            filtered_performers.append(performer)
+    return performers
 
-    return filtered_performers
+
 
 
 def process_performer(performer_id: int):
