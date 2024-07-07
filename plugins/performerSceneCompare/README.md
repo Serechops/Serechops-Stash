@@ -44,9 +44,3 @@ The script is designed to be executed as a plugin within Stash. It is triggered 
 - Local scene being updated. If a previously missing scene is now found in local Stash, it is deleted from missing Stash.
 
 The separate task for longer running processing is critical for good user experience. For example if performer processing was triggered when a performer is tagged with Completionist, local Stash UI would look like being stuck until all, possibly thousands of scenes for that performer would have been processed.
-
-## Development
-
-`pip install pytest`
-
-Required for running the automated tests.
