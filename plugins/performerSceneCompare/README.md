@@ -1,12 +1,15 @@
 # Performer Scene Compare
 
-This script is designed to compare local performer scenes with those available on StashDB. Any missing scenes will be created in a separate Stash instance.
+This script is designed to compare local performer scenes with those available on StashDB. Any missing scenes will be created in a separate, missing Stash instance.
+
+This plugin will not add, modify or delete anything in your main Stash instance. This plugin will read which performers you have tagged to be included in the comparison, get a list of all scenes of those performers from StashDB and create these missing scenes in the separate, missing Stash instance. Now you can easily see from that separate instance which scenes you are missing and you can filter those by site or by tags.
 
 ## Features
 
 - Compare local performer scenes with StashDB.
-- Automatically create missing scenes with studios, tags and descriptions in a separate Stash instance for performers tagged with your configured tag (by default Completionist).
+- Automatically create missing scenes with studios, tags and descriptions in a separate, missing Stash instance for performers tagged with your configured tag (by default Completionist).
 - Missing scenes can be excluded by tags e.g. for avoiding compilations.
+- Missing scenes are automatically deleted from the missing Stash instance when you add those to your main Stash.
 
 ## Requirements
 
