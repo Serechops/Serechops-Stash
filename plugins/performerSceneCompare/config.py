@@ -16,6 +16,3 @@ STASHDB_API_KEY = ""
 PERFORMER_TAGS = []  # Performers with these tags will be selected.
 
 EXCLUDE_TAGS = []  # Scenes containing any of these tags will be excluded.
-
-
-EXCLUDE_TAGS = []  # Scenes containing any of these tags will be excluded.
