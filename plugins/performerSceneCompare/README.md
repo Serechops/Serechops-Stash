@@ -5,7 +5,8 @@ This script is designed to compare local performer scenes with those available o
 ## Features
 
 - Compare local performer scenes with StashDB.
-- Automatically create missing scenes in a separate Stash instance.
+- Automatically create missing scenes with studios, tags and descriptions in a separate Stash instance for performers tagged with your configured tag (by default Completionist).
+- Missing scenes can be excluded by tags e.g. for avoiding compilations.
 
 ## Requirements
 
