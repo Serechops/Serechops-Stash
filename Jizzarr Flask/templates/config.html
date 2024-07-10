@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Configuration</title>
+    <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastify-js/1.6.1/toastify.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Montserrat', Arial, sans-serif;
+            background-color: #121212;
+            color: #ffffff;
+            margin: 0;
+            padding: 0;
+        }
+        .custom-navbar {
+            width: 100%;
+            position: fixed;
+            top: 0;
+            z-index: 1000;
+            background-color: rgba(0, 0, 0, 0.5);
+            padding: 10px 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .custom-navbar a {
+            color: #ffffff;
+            text-decoration: none;
+            margin: 0 10px;
+            padding: 5px 10px;
+        }
+        .custom-navbar a:hover {
+            background-color: #495057;
+            border-radius: 4px;
+        }
+        .container {
+            margin-top: 120px;
+            max-width: 100%; /* Full width */
+            padding: 20px;
+            margin: 0 auto;
+        }
+        .config-wrapper {
+            display: flex;
+            justify-content: center;
+        }
+        .config-container {
+            padding: 20px;
+            background-color: #1e1e1e;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+            width: 100%; /* Use full width */
+            max-width: 1600px; /* Maximum width of the config container */
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+            margin-top: 100px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+            width: 100%; /* Full width */
+        }
+        .form-label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+        .form-control-dark {
+            background-color: #333;
+            border: 1px solid #444;
+            color: #ffffff;
+            padding: 10px;
+            border-radius: 4px;
+            width: 100%; /* Full width */
+            box-sizing: border-box;
+        }
+        .btn-primary-dark {
+            background-color: #1a73e8;
+            border: none;
+            color: #ffffff;
+            padding: 10px 20px;
+            border-radius: 4px;
+            width: 100%;
+            cursor: pointer;
+            font-weight: 500;
+            margin-top: 20px;
+        }
+        .btn-primary-dark:hover {
+            background-color: #155ab6;
+        }
+        /* Media Queries */
+        @media (max-width: 1200px) {
+            .container {
+                max-width: 100%;
+                margin-top: 10px;
+            }
+        }
+        @media (max-width: 992px) {
+            .container {
+                max-width: 100%;
+                margin-top: 10px;
+            }
+        }
+        @media (max-width: 768px) {
+            .container {
+                max-width: 100%;
+                margin-top: 10px;
+            }
+        }
+        @media (max-width: 576px) {
+            .container {
+                max-width: 100%;
+                padding: 0 10px;
+                margin-top: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="custom-navbar">
+        <a href="{{ url_for('index') }}">Jizzarr Home</a>
+        <a href="{{ url_for('collection') }}">My Collection</a>
+        <a href="{{ url_for('config_page') }}">Settings</a>
+    </nav>
+    <div class="container">
+        <h1>Configuration</h1>
+        <div class="config-wrapper">
+            <div class="config-container">
+                <form id="config-form">
+                    <div class="form-group">
+                        <label for="stashEndpoint" class="form-label">Stash Server Endpoint</label>
+                        <input type="text" class="form-control-dark" id="stashEndpoint" name="stashEndpoint" placeholder="http://localhost:9999/graphql" value="{{ stash_endpoint }}">
+                    </div>
+                    <div class="form-group">
+                        <label for="stashApiKey" class="form-label">Stash API Key</label>
+                        <input type="text" class="form-control-dark" id="stashApiKey" name="stashApiKey" placeholder="Enter your Stash API Key" value="{{ stash_api_key }}">
+                    </div>
+                    <div class="form-group">
+                        <label for="tpdbApiKey" class="form-label">TPDB API Key</label>
+                        <input type="text" class="form-control-dark" id="tpdbApiKey" name="tpdbApiKey" placeholder="Enter your TPDB API Key" value="{{ tpdb_api_key }}">
+                    </div>
+                    <button type="submit" class="btn-primary-dark">Save Configuration</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastify-js/1.6.1/toastify.min.js"></script>
+    <script>
+        document.getElementById('config-form').addEventListener('submit', async function(event) {
+            event.preventDefault();
+
+            const stashEndpoint = document.getElementById('stashEndpoint').value;
+            const stashApiKey = document.getElementById('stashApiKey').value;
+            const tpdbApiKey = document.getElementById('tpdbApiKey').value;
+
+            const configData = {
+                stashEndpoint,
+                stashApiKey,
+                tpdbApiKey
+            };
+
+            try {
+                const response = await fetch('/save_config', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(configData)
+                });
+
+                if (response.ok) {
+                    Toastify({
+                        text: 'Configuration saved successfully',
+                        duration: 3000,
+                        close: true,
+                        gravity: "top",
+                        position: "right",
+                        backgroundColor: "linear-gradient(to right, #00b09b, #96c93d)"
+                    }).showToast();
+                } else {
+                    const result = await response.json();
+                    Toastify({
+                        text: `Failed to save configuration: ${result.error || 'Unknown error'}`,
+                        duration: 3000,
+                        close: true,
+                        gravity: "top",
+                        position: "right",
+                        backgroundColor: "linear-gradient(to right, #ff5f6d, #ffc371)"
+                    }).showToast();
+                }
+            } catch (error) {
+                Toastify({
+                    text: `Failed to save configuration: ${error.message}`,
+                    duration: 3000,
+                    close: true,
+                    gravity: "top",
+                    position: "right",
+                    backgroundColor: "linear-gradient(to right, #ff5f6d, #ffc371)"
+                }).showToast();
+            }
+        });
+    </script>
+</body>
+</html>

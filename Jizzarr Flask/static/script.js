@@ -15,13 +15,35 @@ document.addEventListener('DOMContentLoaded', function() {
     let currentPage = 1;
     const scenesPerPage = 16;
 
+    async function getApiKey() {
+    try {
+        const response = await fetch('/get_tpdb_api_key');
+        if (response.ok) {
+            const data = await response.json();
+            return data.tpdbApiKey;
+        } else {
+            console.error('Failed to fetch API key:', response.status);
+            return null;
+        }
+    } catch (error) {
+        console.error('Error fetching API key:', error);
+        return null;
+    }
+}
+
     // Fetch data from API
     async function fetchData(endpoint) {
+        const apiKey = await getApiKey();
+        if (!apiKey) {
+            console.error('API key is missing');
+            return null;
+        }
+    
         const url = `https://api.theporndb.net/jizzarr/${endpoint}`;
         const headers = {
-            'Authorization': 'Bearer API-KEY-HERE'
+            'Authorization': `Bearer ${apiKey}`
         };
-
+    
         try {
             const response = await fetch(url, { headers });
             if (response.ok) {
@@ -37,6 +59,7 @@ document.addEventListener('DOMContentLoaded', function() {
             return null;
         }
     }
+
 
     // Search for site by name
     async function searchSiteByName(siteName) {

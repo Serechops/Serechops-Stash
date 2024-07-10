@@ -3,6 +3,11 @@ from sqlalchemy.dialects.sqlite import JSON
 
 db = SQLAlchemy()
 
+class Config(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    key = db.Column(db.String, unique=True, nullable=False)
+    value = db.Column(db.String, nullable=False)
+
 class Site(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     uuid = db.Column(db.String, unique=True, nullable=False)

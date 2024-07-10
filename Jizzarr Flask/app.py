@@ -7,7 +7,7 @@ from mutagen.mp4 import MP4
 from pathlib import Path
 from flask import Flask, request, jsonify, render_template
 from flask_cors import CORS
-from models import db, Site, Scene
+from models import db, Site, Scene, Config
 from PIL import Image
 import imagehash
 import requests
@@ -16,6 +16,12 @@ app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///jizzarr.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db.init_app(app)
+
+config = {
+    'stashEndpoint': '',
+    'stashApiKey': '',
+    'tpdbApiKey': ''
+}
 
 # Enable CORS for the app
 CORS(app)
@@ -27,6 +33,39 @@ with app.app_context():
 @app.route('/')
 def index():
     return render_template('index.html')
+ 
+@app.route('/config_page')
+def config_page():
+    stash_endpoint = Config.query.filter_by(key='stashEndpoint').first()
+    stash_api_key = Config.query.filter_by(key='stashApiKey').first()
+    tpdb_api_key = Config.query.filter_by(key='tpdbApiKey').first()
+
+    return render_template('config.html', 
+                           stash_endpoint=stash_endpoint.value if stash_endpoint else '',
+                           stash_api_key=stash_api_key.value if stash_api_key else '',
+                           tpdb_api_key=tpdb_api_key.value if tpdb_api_key else '')  
+ 
+@app.route('/save_config', methods=['POST'])
+def save_config():
+    config_data = request.json
+    for key, value in config_data.items():
+        config = Config.query.filter_by(key=key).first()
+        if config:
+            config.value = value
+        else:
+            config = Config(key=key, value=value)
+            db.session.add(config)
+    db.session.commit()
+    return jsonify({"message": "Configuration saved successfully"})
+
+@app.route('/get_tpdb_api_key', methods=['GET'])
+def get_tpdb_api_key():
+    tpdb_api_key = Config.query.filter_by(key='tpdbApiKey').first()
+    if tpdb_api_key:
+        return jsonify({'tpdbApiKey': tpdb_api_key.value})
+    else:
+        return jsonify({'error': 'TPDB API Key not found'}), 404
+
 
 @app.route('/collection')
 def collection():
@@ -341,11 +380,19 @@ def search_stash_for_matches_endpoint():
     scenes = Scene.query.filter_by(site_id=site.id).all()
     stash_matches = []
 
-    local_endpoint = "http://localhost:9999/graphql"
+    # Retrieve Stash endpoint and API key from the database
+    stash_endpoint = Config.query.filter_by(key='stashEndpoint').first()
+    stash_api_key = Config.query.filter_by(key='stashApiKey').first()
+
+    if not stash_endpoint or not stash_api_key:
+        return jsonify({'error': 'Stash endpoint or API key not configured'}), 500
+
+    local_endpoint = stash_endpoint.value
     local_headers = {
         "Accept-Encoding": "gzip, deflate, br",
         "Content-Type": "application/json",
-        "Accept": "application/json"
+        "Accept": "application/json",
+        "Authorization": f"Apikey {stash_api_key.value}"
     }
 
     for scene in scenes:
@@ -426,4 +473,7 @@ def collection_stats():
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    with app.app_context():
+        db.create_all()
+    app.run(debug=True, host='0.0.0.0', port=6900)
+
