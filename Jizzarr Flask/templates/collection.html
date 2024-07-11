@@ -36,14 +36,14 @@
             background-color: #333333;
         }
         .site-title {
-        text-align: center;
+            text-align: center;
         }
         .site-card img {
-        max-width: 100%;
-        max-height: 100px;
-        object-fit: contain;
-        margin-right: 10px;
-        border-radius: 4px;
+            max-width: 100%;
+            max-height: 100px;
+            object-fit: contain;
+            margin-right: 10px;
+            border-radius: 4px;
         }
         .site-card h2 {
             margin: 0;
@@ -58,7 +58,7 @@
             border: none;
             border-radius: 4px;
             cursor: pointer;
-            display: block; 
+            display: block;
             margin-top: 20px;
         }
         .site-card button.remove {
@@ -105,7 +105,7 @@
             text-align: center;
         }
         #back-button-container {
-        margin-top: 25px;
+            margin-top: 25px;
         }
         .btn-dark-mode {
             background-color: #333;
@@ -119,19 +119,19 @@
             color: white;
         }
         #site-logo {
-        text-align: center;
-        max-width: 100%;
-        max-height: 100%;
+            text-align: center;
+            max-width: 100%;
+            max-height: 100%;
         }
         .action-buttons {
-        display: flex;
-        align-items: center;
-        justify-content: flex-start;
-        gap: 5px; /* Adjust this value as needed */
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            gap: 5px; /* Adjust this value as needed */
         }
         .highlight-found {
-        background-color: green;
-        color: white;
+            background-color: green;
+            color: white;
         }
         .custom-navbar {
             width: 100%;
@@ -153,6 +153,43 @@
         .custom-navbar a:hover {
             background-color: #495057;
             border-radius: 4px;
+        }
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            .site-card {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .site-card img {
+                max-width: 100%;
+                margin: 0 0 10px 0;
+            }
+            .match-controls {
+                flex-direction: column;
+                gap: 10px;
+            }
+            .table-dark-mode th, .table-dark-mode td {
+                padding: 5px;
+                font-size: 0.8em;
+            }
+            .action-buttons {
+                flex-direction: column;
+                gap: 5px;
+            }
+        }
+        @media (max-width: 576px) {
+            .site-card {
+                padding: 10px 5px;
+            }
+            .match-controls {
+                gap: 5px;
+            }
+            .btn {
+                width: 100%;
+                margin-bottom: 5px;
+            }
         }
     </style>
 </head>
@@ -511,10 +548,10 @@
 
         async function displayCollection() {
             siteCollectionContainer.innerHTML = '';
-
+        
             const response = await fetch('/collection_data');
             const siteCollection = await response.json();
-
+        
             siteCollection.forEach(item => {
                 const siteCard = document.createElement('div');
                 siteCard.classList.add('col-md-4');
@@ -534,7 +571,7 @@
                     </div>
                 `;
                 siteCard.addEventListener('click', () => {
-                    currentSiteUuid = item.site.uuid;
+                    currentSiteUuid = item.site.uuid;  // Update currentSiteUuid here
                     homeDirectory = item.site.home_directory || '';
                     homeDirectoryDisplay.textContent = homeDirectory;
                     siteLogoContainer.innerHTML = item.site.logo ? `<img src="${item.site.logo}" alt="${item.site.name}">` : '';
@@ -545,7 +582,7 @@
                 });
                 siteCollectionContainer.appendChild(siteCard);
             });
-
+        
             document.querySelectorAll('.remove-site-button').forEach(button => {
                 button.addEventListener('click', async (e) => {
                     e.stopPropagation();
@@ -554,6 +591,7 @@
                 });
             });
         }
+
 
         async function removeSiteFromCollection(siteUuid) {
             const response = await fetch(`/remove_site/${siteUuid}`, { method: 'DELETE' });
@@ -918,46 +956,24 @@
         searchStashButton.addEventListener('click', async function() {
             try {
                 console.log('Search Stash button clicked');
-
-                const siteTitleElement = document.querySelector('.site-title');
-                if (!siteTitleElement) {
-                    throw new Error('Site title not found. Please select a site to search for matches.');
+        
+                if (!currentSiteUuid) {
+                    throw new Error('No site selected. Please select a site to search for matches.');
                 }
-
-                const siteTitle = siteTitleElement.innerText.trim();
-                console.log('Site title:', siteTitle);
-                if (!siteTitle) {
-                    throw new Error('Site title is empty. Please select a valid site.');
-                }
-
-                const response = await fetch('/get_site_uuid', {
+        
+                const response = await fetch('/search_stash_for_matches', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({ site_title: siteTitle })
+                    body: JSON.stringify({ site_uuid: currentSiteUuid })
                 });
-
+        
                 if (!response.ok) {
                     throw new Error(`Error ${response.status}: ${await response.text()}`);
                 }
-
-                const { site_uuid } = await response.json();
-                console.log('Site UUID:', site_uuid);
-
-                const stashResponse = await fetch('/search_stash_for_matches', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ site_uuid })
-                });
-
-                if (!stashResponse.ok) {
-                    throw new Error(`Error ${stashResponse.status}: ${await stashResponse.text()}`);
-                }
-
-                const stashMatches = await stashResponse.json();
+        
+                const stashMatches = await response.json();
                 console.log('Stash matches:', stashMatches);
                 updateTableWithStashMatches(stashMatches);
                 enableBulkUpdateButton(); // Enable bulk update button
