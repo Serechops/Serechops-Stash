@@ -5,14 +5,15 @@ import mimetypes
 from fuzzywuzzy import fuzz
 from mutagen.mp4 import MP4
 from pathlib import Path
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, request, jsonify, render_template, send_file
 from flask_cors import CORS
-from models import db, Site, Scene, Config
+from models import db, Site, Scene, Config, Log
 from PIL import Image
 import imagehash
 import requests
 import uuid
 from sqlalchemy import func
+import datetime
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///jizzarr.db'
@@ -58,6 +59,7 @@ def save_config():
             config = Config(key=key, value=value)
             db.session.add(config)
     db.session.commit()
+    log_entry('INFO', 'Configuration saved successfully')
     return jsonify({"message": "Configuration saved successfully"})
 
 @app.route('/get_tpdb_api_key', methods=['GET'])
@@ -66,6 +68,7 @@ def get_tpdb_api_key():
     if (tpdb_api_key):
         return jsonify({'tpdbApiKey': tpdb_api_key.value})
     else:
+        log_entry('ERROR', 'TPDB API Key not found')
         return jsonify({'error': 'TPDB API Key not found'}), 404
 
 @app.route('/collection')
@@ -116,6 +119,7 @@ def collection_data():
             },
             'scenes': scene_list
         })
+    log_entry('INFO', 'Collection data retrieved successfully')
     return jsonify(collection)
 
 from contextlib import contextmanager
@@ -130,7 +134,7 @@ def session_scope():
         session.commit()
     except SQLAlchemyError as e:
         session.rollback()
-        logging.error(f"Session rollback because of exception: {e}")
+        log_entry('ERROR', f"Session rollback because of exception: {e}")
         raise
     finally:
         session.close()
@@ -194,6 +198,7 @@ def add_site():
                     )
                     scenes.append(scene)
             session.bulk_save_objects(scenes)
+            log_entry('INFO', f'Site and scenes updated successfully for site UUID: {site_uuid}')
             return jsonify({'message': 'Site and scenes updated successfully!'}), 200
         else:
             site = Site(
@@ -241,6 +246,7 @@ def add_site():
                     )
                     scenes.append(scene)
             session.bulk_save_objects(scenes)
+            log_entry('INFO', f'Site and scenes added successfully for site UUID: {site_uuid}')
             return jsonify({'message': 'Site and scenes added successfully!'}), 201
 
 from sqlalchemy.sql import text
@@ -249,6 +255,7 @@ from sqlalchemy.sql import text
 def remove_site(site_uuid):
     site = Site.query.filter_by(uuid=site_uuid).first()
     if not site:
+        log_entry('ERROR', f'Site not found for UUID: {site_uuid}')
         return jsonify({'error': 'Site not found'}), 404
 
     # Fetch all scenes associated with the site
@@ -271,23 +278,23 @@ def remove_site(site_uuid):
     total_size_after = db.session.execute(text("PRAGMA page_count")).fetchone()[0] * db.session.execute(text("PRAGMA page_size")).fetchone()[0]
     space_saved = total_size_before - total_size_after
 
-    logging.info(f'Removed site: {site.name} with UUID: {site_uuid}')
-    logging.info(f'Removed {scene_count} scenes associated with the site')
-    logging.info(f'Space saved: {space_saved} bytes')
+    log_entry('INFO', f'Removed site: {site.name} with UUID: {site_uuid}')
+    log_entry('INFO', f'Removed {scene_count} scenes associated with the site')
+    log_entry('INFO', f'Space saved: {space_saved} bytes')
 
     return jsonify({'message': 'Site and scenes removed successfully!', 'space_saved': space_saved}), 200
-
-
 
 @app.route('/remove_scene/<int:scene_id>', methods=['DELETE'])
 def remove_scene(scene_id):
     scene = db.session.get(Scene, scene_id)
     if not scene:
+        log_entry('ERROR', f'Scene not found for ID: {scene_id}')
         return jsonify({'error': 'Scene not found'}), 404
 
     db.session.delete(scene)
     db.session.commit()
 
+    log_entry('INFO', f'Scene removed successfully for ID: {scene_id}')
     return jsonify({'message': 'Scene removed successfully!'})
 
 @app.route('/match_scene', methods=['POST'])
@@ -298,12 +305,15 @@ def match_scene():
 
     scene = db.session.get(Scene, scene_id)
     if not scene:
+        log_entry('ERROR', f'Scene not found for ID: {scene_id}')
         return jsonify({'error': 'Scene not found'}), 404
 
     # Update scene with new file path
     scene.local_path = file_path
     scene.status = 'Found'
     db.session.commit()
+
+    log_entry('INFO', f'Scene matched successfully for ID: {scene_id} with file path: {file_path}')
     return jsonify({'message': 'Scene matched successfully!', 'new_file_path': file_path})
 
 @app.route('/set_home_directory', methods=['POST'])
@@ -314,11 +324,13 @@ def set_home_directory():
 
     site = Site.query.filter_by(uuid=site_uuid).first()
     if not site:
+        log_entry('ERROR', f'Site not found for UUID: {site_uuid}')
         return jsonify({'error': 'Site not found'}), 404
 
     site.home_directory = directory
     db.session.commit()
 
+    log_entry('INFO', f'Home directory set successfully for site UUID: {site_uuid}')
     return jsonify({'message': 'Home directory set successfully!'})
 
 def get_file_duration(file_path):
@@ -391,6 +403,7 @@ def suggest_matches():
 
     site = Site.query.filter_by(uuid=site_uuid).first()
     if not site or not site.home_directory:
+        log_entry('ERROR', f'Site or home directory not found for UUID: {site_uuid}')
         return jsonify({'error': 'Site or home directory not found'}), 404
 
     scenes = Scene.query.filter_by(site_id=site.id).all()
@@ -400,6 +413,7 @@ def suggest_matches():
     filenames = [f for f in home_directory.glob('**/*') if f.is_file() and mimetypes.guess_type(f)[0] and mimetypes.guess_type(f)[0].startswith('video/')]
 
     potential_matches = get_potential_matches(scene_data, filenames, tolerance)
+    log_entry('INFO', f'Potential matches suggested for site UUID: {site_uuid}')
     return jsonify(potential_matches)
 
 @app.route('/search_stash_for_matches', methods=['POST'])
@@ -408,10 +422,12 @@ def search_stash_for_matches():
     site_uuid = data.get('site_uuid')
 
     if not site_uuid:
+        log_entry('ERROR', 'Site UUID is required for search_stash_for_matches')
         return jsonify({'error': 'Site UUID is required'}), 400
 
     site = Site.query.filter_by(uuid=site_uuid).first()
     if not site:
+        log_entry('ERROR', f'Site not found for UUID: {site_uuid}')
         return jsonify({'error': 'Site not found'}), 404
 
     scenes = Scene.query.filter_by(site_id=site.id).all()
@@ -421,6 +437,7 @@ def search_stash_for_matches():
     stash_api_key = Config.query.filter_by(key='stashApiKey').first()
 
     if not stash_endpoint or not stash_api_key:
+        log_entry('ERROR', 'Stash endpoint or API key not configured')
         return jsonify({'error': 'Stash endpoint or API key not configured'}), 500
 
     local_endpoint = stash_endpoint.value
@@ -462,9 +479,11 @@ def search_stash_for_matches():
         try:
             response = requests.post(local_endpoint, json=query, headers=local_headers)
         except requests.exceptions.RequestException as e:
+            log_entry('ERROR', f'Error fetching data from Stash: {e}')
             continue
 
         if response.status_code != 200:
+            log_entry('ERROR', f'Failed to fetch data from Stash for scene ID: {scene.id}')
             continue
 
         result = response.json()
@@ -486,6 +505,7 @@ def search_stash_for_matches():
                 'scene_local_path': scene.local_path
             })
 
+    log_entry('INFO', f'Stash matches searched successfully for site UUID: {site_uuid}')
     return jsonify(stash_matches)
 
 
@@ -495,12 +515,15 @@ def get_site_uuid():
     site_title = data.get('site_title')
 
     if not site_title:
+        log_entry('ERROR', 'Site title is required for get_site_uuid')
         return jsonify({'error': 'Site title is required'}), 400
 
     site = Site.query.filter_by(name=site_title).first()
     if not site:
+        log_entry('ERROR', f'Site not found for title: {site_title}')
         return jsonify({'error': 'Site not found'}), 404
 
+    log_entry('INFO', f'Site UUID retrieved successfully for title: {site_title}')
     return jsonify({'site_uuid': site.uuid})
 
 @app.route('/collection_stats', methods=['GET'])
@@ -512,6 +535,7 @@ def collection_stats():
         'total': total_scenes,
         'collected': collected_scenes
     }
+    log_entry('INFO', 'Collection stats retrieved successfully')
     return jsonify(stats)
 
 import logging
@@ -547,10 +571,10 @@ def populate_from_stash():
     tpdb_api_key = Config.query.filter_by(key='tpdbApiKey').first()
 
     if not stash_endpoint or not stash_api_key or not tpdb_api_key:
-        logging.error('Stash endpoint, Stash API key, or TPDB API key not configured')
+        log_entry('ERROR', 'Stash endpoint, Stash API key, or TPDB API key not configured')
         return jsonify({'error': 'Stash endpoint, Stash API key, or TPDB API key not configured'}), 500
 
-    logging.info('Fetching scenes from Stash')
+    log_entry('INFO', 'Fetching scenes from Stash')
     query = """
     query FindScenes {
         findScenes(
@@ -577,18 +601,18 @@ def populate_from_stash():
             "Content-Type": "application/json"
         })
     except requests.RequestException as e:
-        logging.error(f'Error fetching data from Stash: {e}')
+        log_entry('ERROR', f'Error fetching data from Stash: {e}')
         return jsonify({'error': 'Failed to fetch data from Stash'}), 500
 
     if response.status_code != 200:
-        logging.error('Failed to fetch data from Stash')
+        log_entry('ERROR', 'Failed to fetch data from Stash')
         return jsonify({'error': 'Failed to fetch data from Stash'}), response.status_code
 
     data = response.json()
     scenes = data.get('data', {}).get('findScenes', {}).get('scenes', [])
 
     if not scenes:
-        logging.info('No scenes found')
+        log_entry('INFO', 'No scenes found from Stash')
         return jsonify({'message': 'No scenes found'}), 404
 
     studio_names = {scene['studio']['name'] for scene in scenes if scene.get('studio')}
@@ -598,16 +622,16 @@ def populate_from_stash():
     headers = {'Authorization': f'Bearer {tpdb_api_key.value}'}
 
     for studio_name in studio_names:
-        logging.info(f'Searching for studio: {studio_name}')
+        log_entry('INFO', f'Searching for studio: {studio_name}')
         search_url = f"https://api.theporndb.net/jizzarr/site/search?q={studio_name}"
         try:
             search_response = requests.get(search_url, headers=headers)
         except requests.RequestException as e:
-            logging.warning(f'Error fetching data for studio {studio_name}: {e}')
+            log_entry('WARNING', f'Error fetching data for studio {studio_name}: {e}')
             continue
 
         if search_response.status_code != 200:
-            logging.warning(f'Failed to fetch data for studio: {studio_name}')
+            log_entry('WARNING', f'Failed to fetch data for studio: {studio_name}')
             continue
 
         search_results = search_response.json()
@@ -615,14 +639,14 @@ def populate_from_stash():
             with db.session.no_autoflush:
                 site = Site.query.filter_by(uuid=site_data['ForeignGuid']).first()
                 if site:
-                    logging.info(f'Updating existing site: {site_data["Title"]}')
+                    log_entry('INFO', f'Updating existing site: {site_data["Title"]}')
                     site.name = site_data['Title']
                     site.url = site_data['Homepage']
                     site.description = site_data['Overview']
                     site.network = site_data['Network']
                     site.logo = next((img['Url'] for img in site_data['Images'] if img['CoverType'] == 'Logo'), '')
                 else:
-                    logging.info(f'Creating new site: {site_data["Title"]}')
+                    log_entry('INFO', f'Creating new site: {site_data["Title"]}')
                     site = Site(
                         uuid=site_data['ForeignGuid'],
                         name=site_data['Title'],
@@ -643,7 +667,7 @@ def populate_from_stash():
                     with db.session.no_autoflush:
                         existing_scene = Scene.query.filter_by(foreign_guid=scene_data['ForeignGuid']).first()
                         if existing_scene:
-                            logging.info(f'Scene with ForeignGuid {scene_data["ForeignGuid"]} already exists. Skipping.')
+                            log_entry('INFO', f'Scene with ForeignGuid {scene_data["ForeignGuid"]} already exists. Skipping.')
                             continue  # Skip adding this scene as it already exists
 
                         performers = ', '.join([performer['Name'] for performer in scene_data['Credits']])
@@ -671,15 +695,15 @@ def populate_from_stash():
                         db.session.add(scene)
                         scenes_added += 1
                 db.session.commit()
-                logging.info(f'Added {scenes_added} scenes for site: {site_data["Title"]}')
+                log_entry('INFO', f'Added {scenes_added} scenes for site: {site_data["Title"]}')
         
         # Update progress
         progress['completed'] += 1
-        logging.info(f'Progress: {progress["completed"]}/{progress["total"]}')
+        log_entry('INFO', f'Progress: {progress["completed"]}/{progress["total"]}')
 
     delete_duplicate_scenes()  # Call the function here to delete duplicates and log space saved
 
-    logging.info('Sites and scenes populated from Stash')
+    log_entry('INFO', 'Sites and scenes populated from Stash')
     return jsonify({'message': 'Sites and scenes populated from Stash'}), 200
 
 def fetch_scenes_data(foreign_id, headers):
@@ -689,7 +713,6 @@ def fetch_scenes_data(foreign_id, headers):
         site_data = response.json()
         return site_data.get('Episodes', [])
     return []
-
 
 def fetch_scenes_data(foreign_id, headers):
     url = f"https://api.theporndb.net/jizzarr/site/{foreign_id}"
@@ -729,18 +752,52 @@ def delete_duplicate_scenes():
                 })
                 db.session.delete(duplicate)
             except Exception as e:
-                logging.error(f"Error deleting scene {duplicate.id}: {e}")
+                log_entry('ERROR', f"Error deleting scene {duplicate.id}: {e}")
         else:
             seen_guids.add(duplicate.foreign_guid)
 
     db.session.commit()
 
-    logging.info(f"Deleted {len(deleted_scenes)} duplicate scenes")
+    log_entry('INFO', f"Deleted {len(deleted_scenes)} duplicate scenes")
     for scene in deleted_scenes:
-        logging.info(f"Deleted scene ID: {scene['id']}, Title: {scene['title']}, Site ID: {scene['site_id']}, Foreign GUID: {scene['foreign_guid']}, Local Path: {scene['local_path']}, Size: {scene['size']} bytes")
+        log_entry('INFO', f"Deleted scene ID: {scene['id']}, Title: {scene['title']}, Site ID: {scene['site_id']}, Foreign GUID: {scene['foreign_guid']}, Local Path: {scene['local_path']}, Size: {scene['size']} bytes")
 
     total_size_mb = total_size_saved / (1024 * 1024)
-    logging.info(f"Total space saved: {total_size_mb:.2f} MB")
+    log_entry('INFO', f"Total space saved: {total_size_mb:.2f} MB")
+
+# Add log entries
+def log_entry(level, message):
+    log = Log(level=level, message=message)
+    db.session.add(log)
+    db.session.commit()
+
+@app.route('/logs')
+def logs():
+    logs = Log.query.order_by(Log.timestamp.desc()).all()
+    log_entries = []
+    for log in logs:
+        log_entries.append({
+            'level': log.level,
+            'message': log.message,
+            'timestamp': log.timestamp
+        })
+    return render_template('logs.html', logs=log_entries)
+
+@app.route('/download_logs')
+def download_logs():
+    logs = Log.query.order_by(Log.timestamp.desc()).all()
+    log_entries = []
+    for log in logs:
+        log_entries.append({
+            'level': log.level,
+            'message': log.message,
+            'timestamp': log.timestamp.strftime("%Y-%m-%d %H:%M:%S")
+        })
+    logs_json = json.dumps(log_entries, indent=4)
+    logs_file = 'logs.json'
+    with open(logs_file, 'w') as f:
+        f.write(logs_json)
+    return send_file(logs_file, as_attachment=True)
 
 if __name__ == '__main__':
     with app.app_context():

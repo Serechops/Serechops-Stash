@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Logs</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.0.1/css/bootstrap.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/js-logger/src/logger.min.js"></script>
+    <style>
+        body {
+            font-family: 'Montserrat', Arial, sans-serif;
+            background-color: #121212;
+            color: #ffffff;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            margin-top: 75px;
+            max-width: 80%;
+        }
+        .custom-navbar {
+            width: 100%;
+            position: fixed;
+            top: 0;
+            z-index: 1000;
+            background-color: rgba(0, 0, 0, 0.5);
+            padding: 10px 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+			backdrop-filter: blur(6px);
+        }
+        .custom-navbar a {
+            color: #ffffff;
+            text-decoration: none;
+            margin: 0 10px;
+            padding: 5px 10px;
+        }
+        .custom-navbar a:hover {
+            background-color: #495057;
+            border-radius: 4px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid #333;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #1e1e1e;
+            color: #ffffff;
+        }
+        .log-level {
+            font-weight: bold;
+        }
+        .log-message {
+            white-space: pre-wrap;
+        }
+        .btn-primary-dark {
+            background-color: #1a73e8;
+            border-color: #1a73e8;
+            color: #ffffff;
+        }
+        .highlight {
+            background-color: yellow;
+            color: black;
+        }
+    </style>
+</head>
+<body>
+    <nav class="custom-navbar">
+        <a href="{{ url_for('index') }}">Jizzarr Home</a>
+        <a href="{{ url_for('collection') }}">My Collection</a>
+        <a href="{{ url_for('config_page') }}">Settings</a>
+        <a href="{{ url_for('logs') }}">Logs</a>
+    </nav>
+    <div class="container">
+        <h1 class="text-center">Logs</h1>
+        <div class="d-flex mb-4">
+            <button class="btn btn-primary-dark me-2" onclick="downloadLogs()">Download Logs</button>
+            <input type="text" class="form-control" id="search-input" placeholder="Search logs...">
+        </div>
+        <table class="table table-dark table-striped">
+            <thead>
+                <tr>
+                    <th>Timestamp</th>
+                    <th>Level</th>
+                    <th>Message</th>
+                </tr>
+            </thead>
+            <tbody id="log-entries">
+                {% for log in logs %}
+                <tr>
+                    <td>{{ log.timestamp }}</td>
+                    <td class="log-level">{{ log.level }}</td>
+                    <td class="log-message">{{ log.message }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <script>
+        function downloadLogs() {
+            window.location.href = '/download_logs';
+        }
+
+        function highlight(text, search) {
+            const pattern = new RegExp(`(${search})`, 'gi');
+            return text.replace(pattern, '<span class="highlight">$1</span>');
+        }
+
+        document.getElementById('search-input').addEventListener('input', function() {
+            const searchValue = this.value.toLowerCase();
+            const logEntries = document.querySelectorAll('#log-entries tr');
+
+            logEntries.forEach(entry => {
+                const level = entry.querySelector('.log-level').textContent.toLowerCase();
+                const message = entry.querySelector('.log-message').textContent.toLowerCase();
+                
+                if (level.includes(searchValue) || message.includes(searchValue)) {
+                    entry.style.display = '';
+                    entry.querySelector('.log-message').innerHTML = highlight(entry.querySelector('.log-message').textContent, this.value);
+                } else {
+                    entry.style.display = 'none';
+                }
+            });
+        });
+    </script>
+</body>
+</html>

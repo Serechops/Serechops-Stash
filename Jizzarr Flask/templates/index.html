@@ -32,6 +32,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
+            backdrop-filter: blur(6px);
         }
         .custom-navbar a {
             color: #ffffff;
@@ -202,6 +203,7 @@
         <a href="{{ url_for('index') }}">Jizzarr Home</a>
         <a href="{{ url_for('collection') }}">My Collection</a>
         <a href="{{ url_for('config_page') }}">Settings</a>
+        <a href="{{ url_for('logs') }}">Logs</a>
     </nav>
     <div class="container">
         <h1 class="text-center">Search Sites via <img src="{{ url_for('static', filename='tpdblogo.png') }}" alt="TPDB" class="tpdb-logo"></h1>

@@ -25,6 +25,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
+            backdrop-filter: blur(6px);
         }
         .custom-navbar a {
             color: #ffffff;
@@ -62,6 +63,7 @@
         .form-group {
             margin-bottom: 20px;
             width: 100%; /* Full width */
+            position: relative;
         }
         .form-label {
             display: block;
@@ -89,6 +91,22 @@
             margin-top: 20px;
         }
         .btn-primary-dark:hover {
+            background-color: #155ab6;
+        }
+        .btn-show {
+            position: absolute;
+            top: 40%;
+            right: 10px;
+            transform: translateX(15%);
+            background-color: #1a73e8;
+            border: none;
+            color: #ffffff;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+        .btn-show:hover {
             background-color: #155ab6;
         }
         /* Media Queries */
@@ -124,6 +142,7 @@
         <a href="{{ url_for('index') }}">Jizzarr Home</a>
         <a href="{{ url_for('collection') }}">My Collection</a>
         <a href="{{ url_for('config_page') }}">Settings</a>
+        <a href="{{ url_for('logs') }}">Logs</a>
     </nav>
     <div class="container">
         <h1>Configuration</h1>
@@ -136,11 +155,13 @@
                     </div>
                     <div class="form-group">
                         <label for="stashApiKey" class="form-label">Stash API Key</label>
-                        <input type="text" class="form-control-dark" id="stashApiKey" name="stashApiKey" placeholder="Enter your Stash API Key" value="{{ stash_api_key }}">
+                        <input type="password" class="form-control-dark" id="stashApiKey" name="stashApiKey" placeholder="Enter your Stash API Key" value="{{ stash_api_key }}">
+                        <button type="button" class="btn-show" onclick="toggleVisibility('stashApiKey')">Show</button>
                     </div>
                     <div class="form-group">
                         <label for="tpdbApiKey" class="form-label">TPDB API Key</label>
-                        <input type="text" class="form-control-dark" id="tpdbApiKey" name="tpdbApiKey" placeholder="Enter your TPDB API Key" value="{{ tpdb_api_key }}">
+                        <input type="password" class="form-control-dark" id="tpdbApiKey" name="tpdbApiKey" placeholder="Enter your TPDB API Key" value="{{ tpdb_api_key }}">
+                        <button type="button" class="btn-show" onclick="toggleVisibility('tpdbApiKey')">Show</button>
                     </div>
                     <button type="submit" class="btn-primary-dark">Save Configuration</button>
                 </form>
@@ -202,6 +223,15 @@
                 }).showToast();
             }
         });
+
+        function toggleVisibility(id) {
+            const input = document.getElementById(id);
+            if (input.type === 'password') {
+                input.type = 'text';
+            } else {
+                input.type = 'password';
+            }
+        }
     </script>
 </body>
 </html>

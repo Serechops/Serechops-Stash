@@ -1,5 +1,6 @@
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.dialects.sqlite import JSON
+import datetime
 
 db = SQLAlchemy()
 
@@ -62,3 +63,9 @@ class Scene(db.Model):
         self.genres = genres
         self.foreign_guid = foreign_guid
         self.foreign_id = foreign_id
+
+class Log(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    level = db.Column(db.String, nullable=False)
+    message = db.Column(db.Text, nullable=False)
+    timestamp = db.Column(db.DateTime, default=datetime.datetime.utcnow, nullable=False)
