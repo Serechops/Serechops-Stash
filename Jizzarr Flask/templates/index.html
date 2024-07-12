@@ -116,6 +116,40 @@
             height: 200px;
         }
 
+        #progress-bar-container {
+            display: none;
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            width: 300px;
+            background-color: #333;
+            border-radius: 8px;
+            overflow: hidden;
+            align-items: center;
+            padding: 5px;
+            z-index: 1000;            
+        }
+        #stash-logo {
+            width: 30px;
+            height: 30px;
+            margin-right: 10px; /* Space between logo and progress bar */
+        }
+        #progress-bar {
+            width: 100%;
+            height: 25px;
+            background-color: #444;
+            flex-grow: 1; /* Ensure the progress bar fills the remaining space */
+        }
+        #progress-bar-inner {
+            height: 100%;
+            width: 0;
+            background-color: #1a73e8;
+            text-align: center;
+            color: white;
+            line-height: 25px; /* Center the text vertically */
+            font-weight: bold;
+        }
+
         /* Media Queries */
         @media (max-width: 1200px) {
             .container {
@@ -174,6 +208,7 @@
         <div class="input-group-centered search-container">
             <input type="text" class="form-control form-control-dark" id="search-input" placeholder="Enter site name">
             <button class="btn btn-primary-dark mt-2 w-100" id="search-button">Search</button>
+            <button class="btn btn-primary-dark mt-2 w-100" id="search-stash">Populate Sites from Stash</button>
         </div>
         <div id="search-results" class="row row-cols-1 row-cols-md-3 g-4"></div>
         <div id="site-details" class="mt-4"></div>
@@ -193,6 +228,12 @@
                 </div>
             </div>
             <div id="collectionChart"></div>
+        </div>
+    </div>
+    <div id="progress-bar-container">
+        <img id="stash-logo" src="{{ url_for('static', filename='stash.png') }}" alt="Stash Logo">
+        <div id="progress-bar">
+            <div id="progress-bar-inner">0%</div>
         </div>
     </div>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.0.1/js/bootstrap.bundle.min.js"></script>
@@ -245,6 +286,90 @@
                 }).showToast();
             }
         }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const searchStashButton = document.getElementById('search-stash');
+            const progressBarContainer = document.getElementById('progress-bar-container');
+            const progressBarInner = document.getElementById('progress-bar-inner');
+
+            function updateProgressBar(percentage) {
+                progressBarInner.style.width = percentage + '%';
+                progressBarInner.innerText = percentage + '%';
+            }
+
+            function setProgressBarVisibility(visible) {
+                progressBarContainer.style.display = visible ? 'flex' : 'none';
+            }
+
+            // Initialize progress bar visibility based on localStorage
+            const storedProgress = localStorage.getItem('stashProgress');
+            if (storedProgress) {
+                updateProgressBar(parseInt(storedProgress, 10));
+                setProgressBarVisibility(true);
+            } else {
+                setProgressBarVisibility(false);
+            }
+
+            searchStashButton.addEventListener('click', async function() {
+                setProgressBarVisibility(true);
+
+                try {
+                    const response = await fetch('/populate_from_stash', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`Error ${response.status}: ${await response.text()}`);
+                    }
+
+                    const result = await response.json();
+                    console.log('Sites and scenes fetched from Stash:', result);
+                    Toastify({
+                        text: 'Sites and scenes successfully populated from Stash.',
+                        duration: 3000,
+                        close: true,
+                        gravity: "top",
+                        position: "right",
+                        backgroundColor: "linear-gradient(to right, #00b09b, #96c93d)"
+                    }).showToast();
+                    displayCollection(); // Refresh the collection display
+
+                    // Reset progress bar
+                    updateProgressBar(0);
+                    setProgressBarVisibility(false);
+                    localStorage.removeItem('stashProgress');
+                } catch (error) {
+                    console.error('Error fetching from Stash:', error);
+                    Toastify({
+                        text: `Error fetching from Stash: ${error.message}`,
+                        duration: 3000,
+                        close: true,
+                        gravity: "top",
+                        position: "right",
+                        backgroundColor: "linear-gradient(to right, #ff5f6d, #ffc371)"
+                    }).showToast();
+                }
+            });
+
+            // Function to handle progress updates from the server
+            async function handleProgressUpdates() {
+                const eventSource = new EventSource('/progress');
+                eventSource.onmessage = function(event) {
+                    const data = JSON.parse(event.data);
+                    const progress = Math.round((data.completed / data.total) * 100);
+                    updateProgressBar(progress);
+                    localStorage.setItem('stashProgress', progress);
+                };
+                eventSource.onerror = function() {
+                    eventSource.close();
+                };
+            }
+
+            handleProgressUpdates();
+        });
     </script>
 </body>
 </html>

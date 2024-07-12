@@ -256,125 +256,78 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/js/fontawesome.min.js"></script>
     <script>
     document.addEventListener('DOMContentLoaded', function() {
-        const siteCollectionContainer = document.getElementById('site-collection');
-        const sceneCollectionContainer = document.getElementById('scene-collection');
-        const backButton = document.getElementById('back-button');
-        const sceneTableBody = document.getElementById('scene-table-body');
-        const firstPageButton = document.getElementById('first-page');
-        const prevPageButton = document.getElementById('prev-page');
-        const nextPageButton = document.getElementById('next-page');
-        const lastPageButton = document.getElementById('last-page');
-        const setHomeDirectoryButton = document.getElementById('set-home-directory-button');
-        const suggestMatchesButton = document.getElementById('suggest-matches-button');
-        const bulkUpdateButton = document.getElementById('bulk-update-button');
-        const pageSizeSelect = document.getElementById('page-size');
-        const homeDirectoryDisplay = document.getElementById('home-directory-display');
-        const toggleMatchesButton = document.getElementById('toggle-matches');
-        const siteLogoContainer = document.getElementById('site-logo');
-        const siteTitleContainer = document.getElementById('site-title');
-        const sceneCountDisplay = document.getElementById('scene-count');
-        const compareContainer = document.getElementById('compare-container');
+    const siteCollectionContainer = document.getElementById('site-collection');
+    const sceneCollectionContainer = document.getElementById('scene-collection');
+    const backButton = document.getElementById('back-button');
+    const sceneTableBody = document.getElementById('scene-table-body');
+    const firstPageButton = document.getElementById('first-page');
+    const prevPageButton = document.getElementById('prev-page');
+    const nextPageButton = document.getElementById('next-page');
+    const lastPageButton = document.getElementById('last-page');
+    const setHomeDirectoryButton = document.getElementById('set-home-directory-button');
+    const suggestMatchesButton = document.getElementById('suggest-matches-button');
+    const bulkUpdateButton = document.getElementById('bulk-update-button');
+    const pageSizeSelect = document.getElementById('page-size');
+    const homeDirectoryDisplay = document.getElementById('home-directory-display');
+    const toggleMatchesButton = document.getElementById('toggle-matches');
+    const siteLogoContainer = document.getElementById('site-logo');
+    const siteTitleContainer = document.getElementById('site-title');
+    const sceneCountDisplay = document.getElementById('scene-count');
+    const compareContainer = document.getElementById('compare-container');
 
-        let selectedDirectoryPath = '';
-        let currentSiteUuid = '';
-        let homeDirectory = '';
-        let currentPage = 1;
-        let scenesPerPage = parseInt(pageSizeSelect.value, 10);
-        let currentScenes = [];
-        let sortColumn = '';
-        let sortDirection = 'asc';
-        let showOnlyMatches = false;
-        let suggestedMatches = [];
-        let excludedMatches = new Set();  // Set to store excluded matches
-        let enableBulkUpdate = true;
+    let selectedDirectoryPath = '';
+    let currentSiteUuid = '';
+    let homeDirectory = '';
+    let currentPage = 1;
+    let scenesPerPage = parseInt(pageSizeSelect.value, 10);
+    let currentScenes = [];
+    let sortColumn = '';
+    let sortDirection = 'asc';
+    let showOnlyMatches = false;
+    let suggestedMatches = [];
+    let excludedMatches = new Set();  // Set to store excluded matches
+    let enableBulkUpdate = true;
 
-        setHomeDirectoryButton.addEventListener('click', function() {
-            const input = document.createElement('input');
-            input.type = 'text';
-            input.placeholder = 'Enter home directory path';
-            input.classList.add('form-control', 'mt-2');
-            const saveButton = document.createElement('button');
-            saveButton.textContent = 'Save';
-            saveButton.classList.add('btn', 'btn-primary', 'mt-2');
-            saveButton.addEventListener('click', async () => {
-                selectedDirectoryPath = input.value.replace(/\\/g, '/');
-                console.log('Selected directory:', selectedDirectoryPath);
+    setHomeDirectoryButton.addEventListener('click', function() {
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.placeholder = 'Enter home directory path';
+        input.classList.add('form-control', 'mt-2');
+        const saveButton = document.createElement('button');
+        saveButton.textContent = 'Save';
+        saveButton.classList.add('btn', 'btn-primary', 'mt-2');
+        saveButton.addEventListener('click', async () => {
+            selectedDirectoryPath = input.value.replace(/\\/g, '/');
+            console.log('Selected directory:', selectedDirectoryPath);
 
-                try {
-                    const response = await fetch('/set_home_directory', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({ site_uuid: currentSiteUuid, directory: selectedDirectoryPath })
-                    });
-
-                    const result = await response.json();
-                    if (response.ok) {
-                        homeDirectory = selectedDirectoryPath;
-                        homeDirectoryDisplay.textContent = homeDirectory;
-                        Toastify({
-                            text: result.message,
-                            duration: 3000,
-                            close: true,
-                            gravity: "top",
-                            position: "right",
-                            backgroundColor: "linear-gradient(to right, #00b09b, #96c93d)"
-                        }).showToast();
-                    } else {
-                        throw new Error(result.error);
-                    }
-                } catch (error) {
-                    console.error('Error setting home directory:', error);
-                    Toastify({
-                        text: 'Error setting home directory: ' + error.message,
-                        duration: 3000,
-                        close: true,
-                        gravity: "top",
-                        position: "right",
-                        backgroundColor: "linear-gradient(to right, #ff5f6d, #ffc371)"
-                    }).showToast();
-                }
-            });
-            compareContainer.innerHTML = ''; // Clear previous inputs
-            compareContainer.appendChild(input);
-            compareContainer.appendChild(saveButton);
-        });
-
-        suggestMatchesButton.addEventListener('click', async function() {
             try {
-                const response = await fetch('/suggest_matches', {
+                const response = await fetch('/set_home_directory', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({ site_uuid: currentSiteUuid, tolerance: 95 })
+                    body: JSON.stringify({ site_uuid: currentSiteUuid, directory: selectedDirectoryPath })
                 });
 
-                if (!response.ok) {
-                    const errorText = await response.text();
-                    throw new Error(`Error ${response.status}: ${errorText}`);
+                const result = await response.json();
+                if (response.ok) {
+                    homeDirectory = selectedDirectoryPath;
+                    homeDirectoryDisplay.textContent = homeDirectory;
+                    Toastify({
+                        text: result.message,
+                        duration: 3000,
+                        close: true,
+                        gravity: "top",
+                        position: "right",
+                        backgroundColor: "linear-gradient(to right, #00b09b, #96c93d)"
+                    }).showToast();
+                } else {
+                    throw new Error(result.error);
                 }
-
-                suggestedMatches = await response.json();
-                const matchedScenes = [];
-
-                suggestedMatches.forEach(match => {
-                    const scene = currentScenes.find(scene => scene.id === match.scene_id);
-                    if (scene && !matchedScenes.find(s => s.id === scene.id)) {
-                        matchedScenes.push(scene);
-                        scene.suggested_file = match.suggested_file; // Store suggested file in scene object
-                    }
-                });
-
-                currentScenes = matchedScenes;
-                displayScenesWithActions();
-                enableBulkUpdate = false; // Disable bulk update button
-                bulkUpdateButton.disabled = true;
             } catch (error) {
-                console.error('Error suggesting matches:', error);
+                console.error('Error setting home directory:', error);
                 Toastify({
-                    text: 'Error suggesting matches: ' + error.message,
+                    text: 'Error setting home directory: ' + error.message,
                     duration: 3000,
                     close: true,
                     gravity: "top",
@@ -383,141 +336,109 @@
                 }).showToast();
             }
         });
+        compareContainer.innerHTML = ''; // Clear previous inputs
+        compareContainer.appendChild(input);
+        compareContainer.appendChild(saveButton);
+    });
 
-        function displayScenesWithActions() {
-            sceneTableBody.innerHTML = '';
-            const sortedScenes = sortScenes(currentScenes);
-        
-            sortedScenes.forEach(scene => {
-                const row = document.createElement('tr');
-                row.setAttribute('data-scene-id', scene.id);
-                const cleanFilePath = scene.suggested_file ? scene.suggested_file.replace(homeDirectory, '') : '';
-                row.innerHTML = `
-                    <td>${scene.title}</td>
-                    <td>${scene.date}</td>
-                    <td>${formatDuration(scene.duration)}</td>
-                    <td>${formatPerformers(scene.performers)}</td>
-                    <td>${scene.status === null ? '<i class="fa-solid fa-triangle-exclamation" style="color: red;"></i> Missing' : scene.status}</td>
-                    <td data-column="file_path">${scene.local_path ? `<i class="fa-regular fa-square-check file-path-icon"></i>${scene.local_path}` : cleanFilePath}</td>
-                    <td data-column="action" class="action-buttons">
-                        <button class="btn btn-success me-2 confirm-match">Confirm</button>
-                        <button class="btn btn-danger cancel-match">Cancel</button>
-                    </td>
-                `;
-        
-                row.querySelector('.confirm-match').addEventListener('click', async () => {
-                    try {
-                        const fullFilePath = `${cleanFilePath}`;
-                        const response = await fetch('/match_scene', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json'
-                            },
-                            body: JSON.stringify({ scene_id: scene.id, file_path: fullFilePath })
-                        });
-        
-                        if (!response.ok) {
-                            const errorText = await response.text();
-                            throw new Error(`Error ${response.status}: ${errorText}`);
-                        }
-        
-                        const result = await response.json();
-                        Toastify({
-                            text: result.message,
-                            duration: 3000,
-                            close: true,
-                            gravity: "top",
-                            position: "right",
-                            backgroundColor: "linear-gradient(to right, #00b09b, #96c93d)"
-                        }).showToast();
-        
-                        // Update the local status and file path of the scene
-                        scene.status = 'Found';
-                        scene.local_path = fullFilePath;
-        
-                        // Update the specific row in the table
-                        row.querySelector('td[data-column="file_path"]').innerHTML = `<i class="fa-regular fa-square-check file-path-icon"></i>${fullFilePath}`;
-                        row.querySelector('td[data-column="file_path"]').classList.add('highlight-found');
-                        row.querySelector('td[data-column="action"]').innerHTML = ''; // Remove the action buttons after confirmation
-                    } catch (error) {
-                        console.error('Error confirming match:', error);
-                        Toastify({
-                            text: 'Error confirming match: ' + error.message,
-                            duration: 3000,
-                            close: true,
-                            gravity: "top",
-                            position: "right",
-                            backgroundColor: "linear-gradient(to right, #ff5f6d, #ffc371)"
-                        }).showToast();
-                    }
-                });
-        
-                row.querySelector('.cancel-match').addEventListener('click', () => {
-                    const filePathCell = row.querySelector('td[data-column="file_path"]');
-                    filePathCell.innerHTML = '';
-                    excludedMatches.add(scene.id);
-                    const actionCell = row.querySelector('td[data-column="action"]');
-                    actionCell.innerHTML = '';
-                });
-        
-                sceneTableBody.appendChild(row);
+    suggestMatchesButton.addEventListener('click', async function() {
+        try {
+            const response = await fetch('/suggest_matches', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ site_uuid: currentSiteUuid, tolerance: 95 })
             });
-        }
 
-
-        bulkUpdateButton.addEventListener('click', async function() {
-            if (!enableBulkUpdate) {
-                Toastify({
-                    text: 'Bulk update is disabled for suggested matches.',
-                    duration: 3000,
-                    close: true,
-                    gravity: "top",
-                    position: "right",
-                    backgroundColor: "linear-gradient(to right, #ff5f6d, #ffc371)"
-                }).showToast();
-                return;
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(`Error ${response.status}: ${errorText}`);
             }
-        
-            let matchesToProcess = [...suggestedMatches];
-        
-            document.querySelectorAll('tr').forEach(row => {
-                const foreignGuidCell = row.querySelector('td[data-column="foreign_guid"]');
-                const filePathCell = row.querySelector('td[data-column="file_path"]');
-                if (foreignGuidCell && filePathCell && filePathCell.textContent.trim() !== '') {
-                    matchesToProcess.push({
-                        foreign_guid: foreignGuidCell.textContent.trim(),
-                        matched_file_path: filePathCell.textContent.trim().replace(/.*\((.*)\)/, '$1'),
-                        scene_id: row.getAttribute('data-scene-id')
-                    });
+
+            suggestedMatches = await response.json();
+            const matchedScenes = [];
+
+            suggestedMatches.forEach(match => {
+                const scene = currentScenes.find(scene => scene.id === match.scene_id);
+                if (scene && !matchedScenes.find(s => s.id === scene.id)) {
+                    matchedScenes.push(scene);
+                    scene.suggested_file = match.suggested_file; // Store suggested file in scene object
                 }
             });
-        
-            for (const match of matchesToProcess) {
-                if (excludedMatches.has(match.scene_id)) {
-                    continue;  // Skip if the match was excluded
-                }
+
+            currentScenes = matchedScenes;
+            displayScenesWithActions();
+            enableBulkUpdate = false; // Disable bulk update button
+            bulkUpdateButton.disabled = true;
+        } catch (error) {
+            console.error('Error suggesting matches:', error);
+            Toastify({
+                text: 'Error suggesting matches: ' + error.message,
+                duration: 3000,
+                close: true,
+                gravity: "top",
+                position: "right",
+                backgroundColor: "linear-gradient(to right, #ff5f6d, #ffc371)"
+            }).showToast();
+        }
+    });
+
+    function displayScenesWithActions() {
+        sceneTableBody.innerHTML = '';
+        const sortedScenes = sortScenes(currentScenes);
+    
+        sortedScenes.forEach(scene => {
+            const row = document.createElement('tr');
+            row.setAttribute('data-scene-id', scene.id);
+            const cleanFilePath = scene.suggested_file ? scene.suggested_file.replace(homeDirectory, '') : '';
+            row.innerHTML = `
+                <td>${scene.title}</td>
+                <td>${scene.date}</td>
+                <td>${formatDuration(scene.duration)}</td>
+                <td>${formatPerformers(scene.performers)}</td>
+                <td>${scene.status === null ? '<i class="fa-solid fa-triangle-exclamation" style="color: red;"></i> Missing' : scene.status}</td>
+                <td data-column="file_path">${scene.local_path ? `<i class="fa-regular fa-square-check file-path-icon"></i>${scene.local_path}` : cleanFilePath}</td>
+                <td data-column="action" class="action-buttons">
+                    <button class="btn btn-success me-2 confirm-match">Confirm</button>
+                    <button class="btn btn-danger cancel-match">Cancel</button>
+                </td>
+            `;
+    
+            row.querySelector('.confirm-match').addEventListener('click', async () => {
                 try {
+                    const fullFilePath = `${cleanFilePath}`;
                     const response = await fetch('/match_scene', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json'
                         },
-                        body: JSON.stringify({ scene_id: match.scene_id, file_path: match.matched_file_path })
+                        body: JSON.stringify({ scene_id: scene.id, file_path: fullFilePath })
                     });
-        
+    
                     if (!response.ok) {
                         const errorText = await response.text();
                         throw new Error(`Error ${response.status}: ${errorText}`);
                     }
-        
+    
                     const result = await response.json();
-        
-                    // Update the local status of the scene to 'Found'
-                    const scene = currentScenes.find(s => s.id == match.scene_id);
-                    if (scene) {
-                        scene.status = 'Found';
-                        scene.local_path = match.matched_file_path; // No need to prepend home directory
-                    }
+                    Toastify({
+                        text: result.message,
+                        duration: 3000,
+                        close: true,
+                        gravity: "top",
+                        position: "right",
+                        backgroundColor: "linear-gradient(to right, #00b09b, #96c93d)"
+                    }).showToast();
+    
+                    // Update the local status and file path of the scene
+                    scene.status = 'Found';
+                    scene.local_path = fullFilePath;
+    
+                    // Update the specific row in the table
+                    row.querySelector('td[data-column="file_path"]').innerHTML = `<i class="fa-regular fa-square-check file-path-icon"></i>${fullFilePath}`;
+                    row.querySelector('td[data-column="file_path"]').classList.add('highlight-found');
+                    row.querySelector('td[data-column="action"]').innerHTML = ''; // Remove the action buttons after confirmation
                 } catch (error) {
                     console.error('Error confirming match:', error);
                     Toastify({
@@ -529,321 +450,77 @@
                         backgroundColor: "linear-gradient(to right, #ff5f6d, #ffc371)"
                     }).showToast();
                 }
-            }
-            displayScenes();
-            Toastify({
-                text: 'All matches confirmed!',
-                duration: 3000,
-                close: true,
-                gravity: "top",
-                position: "right",
-                backgroundColor: "linear-gradient(to right, #00b09b, #96c93d)"
-            }).showToast();
+            });
+    
+            row.querySelector('.cancel-match').addEventListener('click', () => {
+                const filePathCell = row.querySelector('td[data-column="file_path"]');
+                filePathCell.innerHTML = '';
+                excludedMatches.add(scene.id);
+                const actionCell = row.querySelector('td[data-column="action"]');
+                actionCell.innerHTML = '';
+            });
+    
+            sceneTableBody.appendChild(row);
         });
+    }
 
-        function enableBulkUpdateButton() {
-            enableBulkUpdate = true;
-            bulkUpdateButton.disabled = false;
-        }
-
-        async function displayCollection() {
-            siteCollectionContainer.innerHTML = '';
-        
-            const response = await fetch('/collection_data');
-            const siteCollection = await response.json();
-        
-            siteCollection.forEach(item => {
-                const siteCard = document.createElement('div');
-                siteCard.classList.add('col-md-4');
-                siteCard.innerHTML = `
-                    <div class="card h-100 site-card ${item.site.logo ? '' : 'no-logo'}">
-                        <div class="card-body">
-                            <div class="d-flex align-items-center">
-                                ${item.site.logo ? 
-                                    `<div class="ms-auto">
-                                        <img src="${item.site.logo}" class="max-h-24 object-contain" alt="${item.site.name}">
-                                    </div>` : 
-                                    `<h2 class="card-title">${item.site.name}</h2>`}
-                            </div>
-                            <p class="site-title">${item.site.name}</p>
-                            <button class="btn btn-danger remove-site-button" data-site-uuid="${item.site.uuid}">Remove</button>
-                        </div>
-                    </div>
-                `;
-                siteCard.addEventListener('click', () => {
-                    currentSiteUuid = item.site.uuid;  // Update currentSiteUuid here
-                    homeDirectory = item.site.home_directory || '';
-                    homeDirectoryDisplay.textContent = homeDirectory;
-                    siteLogoContainer.innerHTML = item.site.logo ? `<img src="${item.site.logo}" alt="${item.site.name}">` : '';
-                    siteTitleContainer.innerText = item.site.name;
-                    siteCollectionContainer.classList.add('d-none');
-                    sceneCollectionContainer.classList.remove('d-none');
-                    showScenesForSite(item.scenes);
-                });
-                siteCollectionContainer.appendChild(siteCard);
-            });
-        
-            document.querySelectorAll('.remove-site-button').forEach(button => {
-                button.addEventListener('click', async (e) => {
-                    e.stopPropagation();
-                    const siteUuid = e.target.getAttribute('data-site-uuid');
-                    await removeSiteFromCollection(siteUuid);
-                });
-            });
-        }
-
-
-        async function removeSiteFromCollection(siteUuid) {
-            const response = await fetch(`/remove_site/${siteUuid}`, { method: 'DELETE' });
-            const data = await response.json();
-            console.log('Site removed:', data);
+    bulkUpdateButton.addEventListener('click', async function() {
+        if (!enableBulkUpdate) {
             Toastify({
-                text: 'Site has been removed from your collection.',
+                text: 'Bulk update is disabled for suggested matches.',
                 duration: 3000,
                 close: true,
                 gravity: "top",
                 position: "right",
                 backgroundColor: "linear-gradient(to right, #ff5f6d, #ffc371)"
             }).showToast();
-            displayCollection();
+            return;
         }
-
-        function showScenesForSite(scenes) {
-            currentScenes = scenes;
-            currentScenes = sortScenes(currentScenes, 'title', 'asc');
-            currentPage = 1;
-            updateSceneCount();
-            displayScenes();
-            updatePaginationButtons();
-        }
-
-        function displayScenes() {
-            sceneTableBody.innerHTML = '';
-            const filteredScenes = showOnlyMatches ? currentScenes.filter(scene => scene.status === 'Found') : currentScenes;
-            const sortedScenes = sortScenes(filteredScenes);
-            const scenesToDisplay = sortedScenes.slice((currentPage - 1) * scenesPerPage, currentPage * scenesPerPage);
-        
-            scenesToDisplay.forEach(scene => {
-                const row = document.createElement('tr');
-                row.setAttribute('data-scene-id', scene.id);
-                row.setAttribute('data-foreign-guid', scene.foreign_guid);
-                row.innerHTML = `
-                    <td>${scene.title}</td>
-                    <td>${scene.date}</td>
-                    <td>${formatDuration(scene.duration)}</td>
-                    <td>${formatPerformers(scene.performers)}</td>
-                    <td>${scene.status === null ? '<i class="fa-solid fa-triangle-exclamation" style="color: red;"></i> Missing' : scene.status}</td>
-                    <td data-column="file_path">${scene.local_path ? `<i class="fa-regular fa-square-check file-path-icon"></i>${scene.local_path}` : ''}</td>
-                    <td data-column="foreign_guid">${scene.foreign_guid}</td>
-                    <td><button class="btn btn-primary match-button">Match</button></td>
-                `;
-                row.querySelector('.match-button').addEventListener('click', () => handleMatchButtonClick(scene));
-                sceneTableBody.appendChild(row);
-            });
-        }
-
-        toggleMatchesButton.addEventListener('click', () => {
-            showOnlyMatches = !showOnlyMatches;
-            displayScenes();
-        });
-
-        function sortScenes(scenes) {
-            if (sortColumn) {
-                return scenes.sort((a, b) => {
-                    let valA = a[sortColumn];
-                    let valB = b[sortColumn];
-
-                    if (typeof valA === 'string') {
-                        valA = valA.toLowerCase();
-                    }
-                    if (typeof valB === 'string') {
-                        valB = valB.toLowerCase();
-                    }
-
-                    if (valA < valB) {
-                        return sortDirection === 'asc' ? -1 : 1;
-                    }
-                    if (valA > valB) {
-                        return sortDirection === 'asc' ? 1 : -1;
-                    }
-                    return 0;
+    
+        let matchesToProcess = [...suggestedMatches];
+    
+        document.querySelectorAll('tr').forEach(row => {
+            const foreignGuidCell = row.querySelector('td[data-column="foreign_guid"]');
+            const filePathCell = row.querySelector('td[data-column="file_path"]');
+            if (foreignGuidCell && filePathCell && filePathCell.textContent.trim() !== '') {
+                matchesToProcess.push({
+                    foreign_guid: foreignGuidCell.textContent.trim(),
+                    matched_file_path: filePathCell.textContent.trim().replace(/.*\((.*)\)/, '$1'),
+                    scene_id: row.getAttribute('data-scene-id')
                 });
             }
-            return scenes;
-        }
-
-        function updateSceneCount() {
-            const totalScenes = currentScenes.length;
-            const matchedScenes = currentScenes.filter(scene => scene.status === 'Found').length;
-            sceneCountDisplay.textContent = `${matchedScenes}/${totalScenes} scenes in collection`;
-        }
-
-        document.querySelectorAll('th').forEach(th => {
-            th.addEventListener('click', () => {
-                const column = th.getAttribute('data-column');
-                if (column) {
-                    if (sortColumn === column) {
-                        sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
-                    } else {
-                        sortColumn = column;
-                        sortDirection = 'asc';
-                    }
-                    displayScenes();
-                }
-            });
         });
-
-        pageSizeSelect.addEventListener('change', () => {
-            scenesPerPage = parseInt(pageSizeSelect.value, 10);
-            displayScenes();
-            updatePaginationButtons();
-        });
-
-        function formatDuration(minutes) {
-            const hrs = Math.floor(minutes / 60);
-            const mins = minutes % 60;
-            return `${hrs > 0 ? hrs + 'h ' : ''}${mins}m`;
-        }
-
-        function formatPerformers(performers) {
-            return Array.isArray(performers) ? performers.join(', ') : performers;
-        }
-
-        async function handleMatchButtonClick(scene) {
-            const input = document.createElement('input');
-            input.type = 'file';
-            input.accept = '.mp4';
-            input.onchange = async (event) => {
-                const file = event.target.files[0];
-                if (file) {
-                    try {
-                        const filePath = homeDirectory ? `${homeDirectory}/${file.webkitRelativePath || file.name}` : file.webkitRelativePath || file.name;
-                        const response = await fetch('/match_scene', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json'
-                            },
-                            body: JSON.stringify({ scene_id: scene.id, file_path: filePath })
-                        });
-
-                        if (!response.ok) {
-                            const errorText = await response.text();
-                            throw new Error(`Error ${response.status}: ${errorText}`);
-                        }
-
-                        const result = await response.json();
-
-                        // Update the local status and file path of the scene
-                        scene.status = 'Found';
-                        scene.local_path = filePath;
-
-                        Toastify({
-                            text: result.message,
-                            duration: 3000,
-                            close: true,
-                            gravity: "top",
-                            position: "right",
-                            backgroundColor: "linear-gradient(to right, #00b09b, #96c93d)"
-                        }).showToast();
-                        displayScenes();
-                        enableBulkUpdateButton(); // Re-enable bulk update button
-                    } catch (error) {
-                        console.error('Error matching scene:', error);
-                        Toastify({
-                            text: 'Error matching scene: ' + error.message,
-                            duration: 3000,
-                            close: true,
-                            gravity: "top",
-                            position: "right",
-                            backgroundColor: "linear-gradient(to right, #ff5f6d, #ffc371)"
-                        }).showToast();
-                    }
-                }
-            };
-            input.click();
-        }
-
-        function updatePaginationButtons() {
-            const totalPages = Math.ceil(currentScenes.length / scenesPerPage);
-            firstPageButton.disabled = currentPage === 1;
-            prevPageButton.disabled = currentPage === 1;
-            nextPageButton.disabled = currentPage === totalPages;
-            lastPageButton.disabled = currentPage === totalPages;
-
-            firstPageButton.classList.toggle('disabled', currentPage === 1);
-            prevPageButton.classList.toggle('disabled', currentPage === 1);
-            nextPageButton.classList.toggle('disabled', currentPage === totalPages);
-            lastPageButton.classList.toggle('disabled', currentPage === totalPages);
-        }
-
-        firstPageButton.addEventListener('click', () => {
-            currentPage = 1;
-            displayScenes();
-            updatePaginationButtons();
-        });
-
-        prevPageButton.addEventListener('click', () => {
-            if (currentPage > 1) {
-                currentPage--;
-                displayScenes();
-                updatePaginationButtons();
+    
+        for (const match of matchesToProcess) {
+            if (excludedMatches.has(match.scene_id)) {
+                continue;  // Skip if the match was excluded
             }
-        });
-
-        nextPageButton.addEventListener('click', () => {
-            const totalPages = Math.ceil(currentScenes.length / scenesPerPage);
-            if (currentPage < totalPages) {
-                currentPage++;
-                displayScenes();
-                updatePaginationButtons();
-            }
-        });
-
-        lastPageButton.addEventListener('click', () => {
-            currentPage = Math.ceil(currentScenes.length / scenesPerPage);
-            displayScenes();
-            updatePaginationButtons();
-        });
-
-        backButton.addEventListener('click', () => {
-            siteCollectionContainer.classList.remove('d-none');
-            sceneCollectionContainer.classList.add('d-none');
-        });
-
-        // Adding active class to site-card on click
-        document.querySelectorAll('.site-card').forEach(card => {
-            card.addEventListener('click', () => {
-                document.querySelectorAll('.site-card').forEach(c => c.classList.remove('active'));
-                card.classList.add('active');
-            });
-        });
-
-        // Function to handle searching Stash for matches
-        async function searchStashForMatches() {
             try {
-                const activeSiteCard = document.querySelector('.site-card.active');
-                if (!activeSiteCard) {
-                    throw new Error('No site selected. Please select a site to search for matches.');
-                }
-                const siteUuid = activeSiteCard.getAttribute('data-site-uuid');
-                const response = await fetch('/search_stash_for_matches', {
+                const response = await fetch('/match_scene', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({ site_uuid: siteUuid })
+                    body: JSON.stringify({ scene_id: match.scene_id, file_path: match.matched_file_path })
                 });
-
+    
                 if (!response.ok) {
-                    throw new Error(`Error ${response.status}: ${await response.text()}`);
+                    const errorText = await response.text();
+                    throw new Error(`Error ${response.status}: ${errorText}`);
                 }
-
-                const stashMatches = await response.json();
-                updateTableWithStashMatches(stashMatches);
+    
+                const result = await response.json();
+    
+                // Update the local status of the scene to 'Found'
+                const scene = currentScenes.find(s => s.id == match.scene_id);
+                if (scene) {
+                    scene.status = 'Found';
+                    scene.local_path = match.matched_file_path; // No need to prepend home directory
+                }
             } catch (error) {
-                console.error('Error searching Stash:', error);
+                console.error('Error confirming match:', error);
                 Toastify({
-                    text: 'Error searching Stash: ' + error.message,
+                    text: 'Error confirming match: ' + error.message,
                     duration: 3000,
                     close: true,
                     gravity: "top",
@@ -852,146 +529,472 @@
                 }).showToast();
             }
         }
+        displayScenes();
+        Toastify({
+            text: 'All matches confirmed!',
+            duration: 3000,
+            close: true,
+            gravity: "top",
+            position: "right",
+            backgroundColor: "linear-gradient(to right, #00b09b, #96c93d)"
+        }).showToast();
+    });
 
-        // Update the table with stash matches
-        function updateTableWithStashMatches(stashMatches) {
-            console.log('Updating table with stash matches');
-            stashMatches.forEach(match => {
-                console.log('Processing match:', match);
+    function enableBulkUpdateButton() {
+        enableBulkUpdate = true;
+        bulkUpdateButton.disabled = false;
+    }
 
-                // Find the row that contains the matching foreign_guid
-                const rows = document.querySelectorAll('tr');
-                let targetRow = null;
-                rows.forEach(row => {
-                    const foreignGuidCell = row.querySelector('td[data-column="foreign_guid"]');
-                    if (foreignGuidCell && foreignGuidCell.textContent.trim() === match.foreign_guid) {
-                        targetRow = row;
-                    }
-                });
+    async function displayCollection() {
+        siteCollectionContainer.innerHTML = '';
+    
+        const response = await fetch('/collection_data');
+        const siteCollection = await response.json();
+    
+        siteCollection.forEach(item => {
+            const siteCard = document.createElement('div');
+            siteCard.classList.add('col-md-4');
+            siteCard.innerHTML = `
+                <div class="card h-100 site-card ${item.site.logo ? '' : 'no-logo'}">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            ${item.site.logo ? 
+                                `<div class="ms-auto">
+                                    <img src="${item.site.logo}" class="max-h-24 object-contain" alt="${item.site.name}">
+                                </div>` : 
+                                `<h2 class="card-title">${item.site.name}</h2>`}
+                        </div>
+                        <p class="site-title">${item.site.name}</p>
+                        <button class="btn btn-danger remove-site-button" data-site-uuid="${item.site.uuid}">Remove</button>
+                    </div>
+                </div>
+            `;
+            siteCard.addEventListener('click', () => {
+                currentSiteUuid = item.site.uuid;  // Update currentSiteUuid here
+                homeDirectory = item.site.home_directory || '';
+                homeDirectoryDisplay.textContent = homeDirectory;
+                siteLogoContainer.innerHTML = item.site.logo ? `<img src="${item.site.logo}" alt="${item.site.name}">` : '';
+                siteTitleContainer.innerText = item.site.name;
+                siteCollectionContainer.classList.add('d-none');
+                sceneCollectionContainer.classList.remove('d-none');
+                showScenesForSite(item.scenes);
+            });
+            siteCollectionContainer.appendChild(siteCard);
+        });
+    
+        document.querySelectorAll('.remove-site-button').forEach(button => {
+            button.addEventListener('click', async (e) => {
+                e.stopPropagation();
+                const siteUuid = e.target.getAttribute('data-site-uuid');
+                await removeSiteFromCollection(siteUuid);
+            });
+        });
+    }
 
-                if (targetRow) {
-                    console.log('Row found for foreign_guid:', match.foreign_guid);
-                    const filePathCell = targetRow.querySelector('td[data-column="file_path"]');
-                    const actionCell = targetRow.querySelector('td:last-child');
-                    const foreignGuidCell = targetRow.querySelector('td[data-column="foreign_guid"]');
+    async function removeSiteFromCollection(siteUuid) {
+        const response = await fetch(`/remove_site/${siteUuid}`, { method: 'DELETE' });
+        const data = await response.json();
+        console.log('Site removed:', data);
+        Toastify({
+            text: 'Site has been removed from your collection.',
+            duration: 3000,
+            close: true,
+            gravity: "top",
+            position: "right",
+            backgroundColor: "linear-gradient(to right, #ff5f6d, #ffc371)"
+        }).showToast();
+        displayCollection();
+    }
 
-                    if (filePathCell && actionCell && foreignGuidCell) {
-                        console.log('filePathCell, actionCell, and foreignGuidCell found');
-                        filePathCell.innerHTML = `<i class="fa-regular fa-square-check file-path-icon"></i>${match.matched_title} (${match.matched_file_path})`;
-                        actionCell.innerHTML = `
-                            <button class="btn btn-success me-2 confirm-match">Confirm</button>
-                            <button class="btn btn-danger cancel-match">Cancel</button>
-                        `;
-                        foreignGuidCell.classList.add('highlight-found'); // Highlight the matched UUID
+    function showScenesForSite(scenes) {
+        currentScenes = scenes.map(scene => {
+            return {
+                ...scene,
+                status: scene.status || 'Missing'  // Set default status to 'Missing'
+            };
+        });
+        currentScenes = sortScenes(currentScenes, 'title', 'asc');
+        currentPage = 1;
+        updateSceneCount();
+        displayScenes();
+        updatePaginationButtons();
+    }
 
-                        targetRow.querySelector('.confirm-match').addEventListener('click', async () => {
-                            try {
-                                const response = await fetch('/match_scene', {
-                                    method: 'POST',
-                                    headers: {
-                                        'Content-Type': 'application/json'
-                                    },
-                                    body: JSON.stringify({ scene_id: targetRow.getAttribute('data-scene-id'), file_path: match.matched_file_path })
-                                });
+    function displayScenes() {
+        sceneTableBody.innerHTML = '';
+        const filteredScenes = showOnlyMatches ? currentScenes.filter(scene => scene.status === 'Found') : currentScenes;
+        const sortedScenes = sortScenes(filteredScenes);
+        const scenesToDisplay = sortedScenes.slice((currentPage - 1) * scenesPerPage, currentPage * scenesPerPage);
+    
+        scenesToDisplay.forEach(scene => {
+            const row = document.createElement('tr');
+            row.setAttribute('data-scene-id', scene.id);
+            row.setAttribute('data-foreign-guid', scene.foreign_guid);
+            row.innerHTML = `
+                <td>${scene.title}</td>
+                <td>${scene.date}</td>
+                <td>${formatDuration(scene.duration)}</td>
+                <td>${formatPerformers(scene.performers)}</td>
+                <td>${scene.status === 'Found' ? 'Found' : '<i class="fa-solid fa-triangle-exclamation" style="color: red;"></i> Missing'}</td>
+                <td data-column="file_path">${scene.local_path ? `<i class="fa-regular fa-square-check file-path-icon"></i>${scene.local_path}` : ''}</td>
+                <td data-column="foreign_guid">${scene.foreign_guid}</td>
+                <td><button class="btn btn-primary match-button">Match</button></td>
+            `;
+            row.querySelector('.match-button').addEventListener('click', () => handleMatchButtonClick(scene));
+            sceneTableBody.appendChild(row);
+        });
+    }
 
-                                if (!response.ok) {
-                                    const errorText = await response.text();
-                                    throw new Error(`Error ${response.status}: ${errorText}`);
-                                }
+    toggleMatchesButton.addEventListener('click', () => {
+        showOnlyMatches = !showOnlyMatches;
+        displayScenes();
+    });
 
-                                const result = await response.json();
-                                Toastify({
-                                    text: result.message,
-                                    duration: 3000,
-                                    close: true,
-                                    gravity: "top",
-                                    position: "right",
-                                    backgroundColor: "linear-gradient(to right, #00b09b, #96c93d)"
-                                }).showToast();
-                                displayScenes();
-                            } catch (error) {
-                                console.error('Error confirming match:', error);
-                                Toastify({
-                                    text: 'Error confirming match: ' + error.message,
-                                    duration: 3000,
-                                    close: true,
-                                    gravity: "top",
-                                    position: "right",
-                                    backgroundColor: "linear-gradient(to right, #ff5f6d, #ffc371)"
-                                }).showToast();
-                            }
-                        });
+    function sortScenes(scenes) {
+        if (sortColumn) {
+            return scenes.sort((a, b) => {
+                let valA = a[sortColumn];
+                let valB = b[sortColumn];
 
-                        targetRow.querySelector('.cancel-match').addEventListener('click', () => {
-                            filePathCell.innerHTML = '';
-                            actionCell.innerHTML = '';
-                            foreignGuidCell.classList.remove('highlight-found'); // Remove highlight if canceled
-                        });
-                    } else {
-                        if (!filePathCell) {
-                            console.error('filePathCell not found');
-                        }
-                        if (!actionCell) {
-                            console.error('actionCell not found');
-                        }
-                        if (!foreignGuidCell) {
-                            console.error('foreignGuidCell not found');
-                        }
-                    }
+                if (typeof valA === 'string') {
+                    valA = valA.toLowerCase();
+                }
+                if (typeof valB === 'string') {
+                    valB = valB.toLowerCase();
+                }
+
+                if (valA < valB) {
+                    return sortDirection === 'asc' ? -1 : 1;
+                }
+                if (valA > valB) {
+                    return sortDirection === 'asc' ? 1 : -1;
+                }
+                return 0;
+            });
+        }
+        return scenes;
+    }
+
+    function updateSceneCount() {
+        const totalScenes = currentScenes.length;
+        const matchedScenes = currentScenes.filter(scene => scene.status === 'Found').length;
+        sceneCountDisplay.textContent = `${matchedScenes}/${totalScenes} scenes in collection`;
+    }
+
+    document.querySelectorAll('th').forEach(th => {
+        th.addEventListener('click', () => {
+            const column = th.getAttribute('data-column');
+            if (column) {
+                if (sortColumn === column) {
+                    sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
                 } else {
-                    console.log(`No row found for foreign_guid: ${match.foreign_guid}`);
-                    // Adding more details for debugging
-                    rows.forEach(row => {
-                        const foreignGuidCell = row.querySelector('td[data-column="foreign_guid"]');
-                        if (foreignGuidCell) {
-                            console.log(`Row data-foreign-guid: ${foreignGuidCell.textContent.trim()}`);
+                    sortColumn = column;
+                    sortDirection = 'asc';
+                }
+                displayScenes();
+            }
+        });
+    });
+
+    pageSizeSelect.addEventListener('change', () => {
+        scenesPerPage = parseInt(pageSizeSelect.value, 10);
+        displayScenes();
+        updatePaginationButtons();
+    });
+
+    function formatDuration(minutes) {
+        const hrs = Math.floor(minutes / 60);
+        const mins = minutes % 60;
+        return `${hrs > 0 ? hrs + 'h ' : ''}${mins}m`;
+    }
+
+    function formatPerformers(performers) {
+        return Array.isArray(performers) ? performers.join(', ') : performers;
+    }
+
+    async function handleMatchButtonClick(scene) {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = '.mp4';
+        input.onchange = async (event) => {
+            const file = event.target.files[0];
+            if (file) {
+                try {
+                    const filePath = homeDirectory ? `${homeDirectory}/${file.webkitRelativePath || file.name}` : file.webkitRelativePath || file.name;
+                    const response = await fetch('/match_scene', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ scene_id: scene.id, file_path: filePath })
+                    });
+
+                    if (!response.ok) {
+                        const errorText = await response.text();
+                        throw new Error(`Error ${response.status}: ${errorText}`);
+                    }
+
+                    const result = await response.json();
+
+                    // Update the local status and file path of the scene
+                    scene.status = 'Found';
+                    scene.local_path = filePath;
+
+                    Toastify({
+                        text: result.message,
+                        duration: 3000,
+                        close: true,
+                        gravity: "top",
+                        position: "right",
+                        backgroundColor: "linear-gradient(to right, #00b09b, #96c93d)"
+                    }).showToast();
+                    displayScenes();
+                    enableBulkUpdateButton(); // Re-enable bulk update button
+                } catch (error) {
+                    console.error('Error matching scene:', error);
+                    Toastify({
+                        text: 'Error matching scene: ' + error.message,
+                        duration: 3000,
+                        close: true,
+                        gravity: "top",
+                        position: "right",
+                        backgroundColor: "linear-gradient(to right, #ff5f6d, #ffc371)"
+                    }).showToast();
+                }
+            }
+        };
+        input.click();
+    }
+
+    function updatePaginationButtons() {
+        const totalPages = Math.ceil(currentScenes.length / scenesPerPage);
+        firstPageButton.disabled = currentPage === 1;
+        prevPageButton.disabled = currentPage === 1;
+        nextPageButton.disabled = currentPage === totalPages;
+        lastPageButton.disabled = currentPage === totalPages;
+
+        firstPageButton.classList.toggle('disabled', currentPage === 1);
+        prevPageButton.classList.toggle('disabled', currentPage === 1);
+        nextPageButton.classList.toggle('disabled', currentPage === totalPages);
+        lastPageButton.classList.toggle('disabled', currentPage === totalPages);
+    }
+
+    firstPageButton.addEventListener('click', () => {
+        currentPage = 1;
+        displayScenes();
+        updatePaginationButtons();
+    });
+
+    prevPageButton.addEventListener('click', () => {
+        if (currentPage > 1) {
+            currentPage--;
+            displayScenes();
+            updatePaginationButtons();
+        }
+    });
+
+    nextPageButton.addEventListener('click', () => {
+        const totalPages = Math.ceil(currentScenes.length / scenesPerPage);
+        if (currentPage < totalPages) {
+            currentPage++;
+            displayScenes();
+            updatePaginationButtons();
+        }
+    });
+
+    lastPageButton.addEventListener('click', () => {
+        currentPage = Math.ceil(currentScenes.length / scenesPerPage);
+        displayScenes();
+        updatePaginationButtons();
+    });
+
+    backButton.addEventListener('click', () => {
+        siteCollectionContainer.classList.remove('d-none');
+        sceneCollectionContainer.classList.add('d-none');
+    });
+
+    // Adding active class to site-card on click
+    document.querySelectorAll('.site-card').forEach(card => {
+        card.addEventListener('click', () => {
+            document.querySelectorAll('.site-card').forEach(c => c.classList.remove('active'));
+            card.classList.add('active');
+        });
+    });
+
+    // Function to handle searching Stash for matches
+    async function searchStashForMatches() {
+        try {
+            const activeSiteCard = document.querySelector('.site-card.active');
+            if (!activeSiteCard) {
+                throw new Error('No site selected. Please select a site to search for matches.');
+            }
+            const siteUuid = activeSiteCard.getAttribute('data-site-uuid');
+            const response = await fetch('/search_stash_for_matches', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ site_uuid: siteUuid })
+            });
+
+            if (!response.ok) {
+                throw new Error(`Error ${response.status}: ${await response.text()}`);
+            }
+
+            const stashMatches = await response.json();
+            updateTableWithStashMatches(stashMatches);
+        } catch (error) {
+            console.error('Error searching Stash:', error);
+            Toastify({
+                text: 'Error searching Stash: ' + error.message,
+                duration: 3000,
+                close: true,
+                gravity: "top",
+                position: "right",
+                backgroundColor: "linear-gradient(to right, #ff5f6d, #ffc371)"
+            }).showToast();
+        }
+    }
+
+    // Update the table with stash matches
+    function updateTableWithStashMatches(stashMatches) {
+        console.log('Updating table with stash matches');
+        stashMatches.forEach(match => {
+            console.log('Processing match:', match);
+
+            // Find the row that contains the matching foreign_guid
+            const rows = document.querySelectorAll('tr');
+            let targetRow = null;
+            rows.forEach(row => {
+                const foreignGuidCell = row.querySelector('td[data-column="foreign_guid"]');
+                if (foreignGuidCell && foreignGuidCell.textContent.trim() === match.foreign_guid) {
+                    targetRow = row;
+                }
+            });
+
+            if (targetRow) {
+                console.log('Row found for foreign_guid:', match.foreign_guid);
+                const filePathCell = targetRow.querySelector('td[data-column="file_path"]');
+                const actionCell = targetRow.querySelector('td:last-child');
+                const foreignGuidCell = targetRow.querySelector('td[data-column="foreign_guid"]');
+
+                if (filePathCell && actionCell && foreignGuidCell) {
+                    console.log('filePathCell, actionCell, and foreignGuidCell found');
+                    filePathCell.innerHTML = `<i class="fa-regular fa-square-check file-path-icon"></i>${match.matched_title} (${match.matched_file_path})`;
+                    actionCell.innerHTML = `
+                        <button class="btn btn-success me-2 confirm-match">Confirm</button>
+                        <button class="btn btn-danger cancel-match">Cancel</button>
+                    `;
+                    foreignGuidCell.classList.add('highlight-found'); // Highlight the matched UUID
+
+                    targetRow.querySelector('.confirm-match').addEventListener('click', async () => {
+                        try {
+                            const response = await fetch('/match_scene', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json'
+                                },
+                                body: JSON.stringify({ scene_id: targetRow.getAttribute('data-scene-id'), file_path: match.matched_file_path })
+                            });
+
+                            if (!response.ok) {
+                                const errorText = await response.text();
+                                throw new Error(`Error ${response.status}: ${errorText}`);
+                            }
+
+                            const result = await response.json();
+                            Toastify({
+                                text: result.message,
+                                duration: 3000,
+                                close: true,
+                                gravity: "top",
+                                position: "right",
+                                backgroundColor: "linear-gradient(to right, #00b09b, #96c93d)"
+                            }).showToast();
+                            displayScenes();
+                        } catch (error) {
+                            console.error('Error confirming match:', error);
+                            Toastify({
+                                text: 'Error confirming match: ' + error.message,
+                                duration: 3000,
+                                close: true,
+                                gravity: "top",
+                                position: "right",
+                                backgroundColor: "linear-gradient(to right, #ff5f6d, #ffc371)"
+                            }).showToast();
                         }
                     });
-                }
-            });
-        }
 
-        // Attach event listener to the search button
-        const searchStashButton = document.getElementById('search-stash-button');
-        searchStashButton.addEventListener('click', async function() {
-            try {
-                console.log('Search Stash button clicked');
-        
-                if (!currentSiteUuid) {
-                    throw new Error('No site selected. Please select a site to search for matches.');
+                    targetRow.querySelector('.cancel-match').addEventListener('click', () => {
+                        filePathCell.innerHTML = '';
+                        actionCell.innerHTML = '';
+                        foreignGuidCell.classList.remove('highlight-found'); // Remove highlight if canceled
+                    });
+                } else {
+                    if (!filePathCell) {
+                        console.error('filePathCell not found');
+                    }
+                    if (!actionCell) {
+                        console.error('actionCell not found');
+                    }
+                    if (!foreignGuidCell) {
+                        console.error('foreignGuidCell not found');
+                    }
                 }
-        
-                const response = await fetch('/search_stash_for_matches', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ site_uuid: currentSiteUuid })
+            } else {
+                console.log(`No row found for foreign_guid: ${match.foreign_guid}`);
+                // Adding more details for debugging
+                rows.forEach(row => {
+                    const foreignGuidCell = row.querySelector('td[data-column="foreign_guid"]');
+                    if (foreignGuidCell) {
+                        console.log(`Row data-foreign-guid: ${foreignGuidCell.textContent.trim()}`);
+                    }
                 });
-        
-                if (!response.ok) {
-                    throw new Error(`Error ${response.status}: ${await response.text()}`);
-                }
-        
-                const stashMatches = await response.json();
-                console.log('Stash matches:', stashMatches);
-                updateTableWithStashMatches(stashMatches);
-                enableBulkUpdateButton(); // Enable bulk update button
-            } catch (error) {
-                console.error('Error searching Stash:', error);
-                Toastify({
-                    text: 'Error searching Stash: ' + error.message,
-                    duration: 3000,
-                    close: true,
-                    gravity: "top",
-                    position: "right",
-                    backgroundColor: "linear-gradient(to right, #ff5f6d, #ffc371)"
-                }).showToast();
             }
         });
+    }
 
-        displayCollection();
+    // Attach event listener to the search button
+    const searchStashButton = document.getElementById('search-stash-button');
+    searchStashButton.addEventListener('click', async function() {
+        try {
+            console.log('Search Stash button clicked');
+    
+            if (!currentSiteUuid) {
+                throw new Error('No site selected. Please select a site to search for matches.');
+            }
+    
+            const response = await fetch('/search_stash_for_matches', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ site_uuid: currentSiteUuid })
+            });
+    
+            if (!response.ok) {
+                throw new Error(`Error ${response.status}: ${await response.text()}`);
+            }
+    
+            const stashMatches = await response.json();
+            console.log('Stash matches:', stashMatches);
+            updateTableWithStashMatches(stashMatches);
+            enableBulkUpdateButton(); // Enable bulk update button
+        } catch (error) {
+            console.error('Error searching Stash:', error);
+            Toastify({
+                text: 'Error searching Stash: ' + error.message,
+                duration: 3000,
+                close: true,
+                gravity: "top",
+                position: "right",
+                backgroundColor: "linear-gradient(to right, #ff5f6d, #ffc371)"
+            }).showToast();
+        }
     });
+
+    displayCollection();
+});
 </script>
 </body>
 </html>

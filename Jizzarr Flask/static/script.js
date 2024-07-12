@@ -10,26 +10,95 @@ document.addEventListener('DOMContentLoaded', function() {
     const sceneCollectionContainer = document.getElementById('scene-collection');
     const compareButton = document.getElementById('compare-button');
     const directoryInput = document.getElementById('directory-input');
+    const searchStashButton = document.getElementById('search-stash');
+    const progressBarContainer = document.getElementById('progress-bar-container');
+    const progressBarInner = document.getElementById('progress-bar-inner');
+
+    let progressInterval;
+
+    searchStashButton.addEventListener('click', async function() {
+        // Show loading indicator when search-stash button is pressed
+        loadingIndicator.classList.remove('hidden');
+        progressBarContainer.style.display = 'block';
+        updateProgressBar(0);
+        startProgressUpdate();
+
+        try {
+            const response = await fetch('/populate_from_stash', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error(`Error ${response.status}: ${await response.text()}`);
+            }
+
+            const result = await response.json();
+            console.log('Sites and scenes fetched from Stash:', result);
+            Toastify({
+                text: 'Sites and scenes successfully populated from Stash.',
+                duration: 3000,
+                close: true,
+                gravity: "top",
+                position: "right",
+                backgroundColor: "linear-gradient(to right, #00b09b, #96c93d)"
+            }).showToast();
+            displayCollection(); // Refresh the collection display
+        } catch (error) {
+            console.error('Error fetching from Stash:', error);
+            Toastify({
+                text: `Error fetching from Stash: ${error.message}`,
+                duration: 3000,
+                close: true,
+                gravity: "top",
+                position: "right",
+                backgroundColor: "linear-gradient(to right, #ff5f6d, #ffc371)"
+            }).showToast();
+        }
+
+        // Hide loading indicator once fetching is complete
+        loadingIndicator.classList.add('hidden');
+        progressBarContainer.style.display = 'none';
+        clearInterval(progressInterval);
+    });
+
+    function startProgressUpdate() {
+        progressInterval = setInterval(async () => {
+            const response = await fetch('/progress');
+            if (response.ok) {
+                const progress = await response.json();
+                const percentage = Math.round((progress.completed / progress.total) * 100);
+                updateProgressBar(percentage);
+            }
+        }, 10000); // Update progress every second
+    }
+
+    function updateProgressBar(percentage) {
+        progressBarInner.style.width = percentage + '%';
+        progressBarInner.innerText = percentage + '%';
+    }
 
     let currentScenes = [];
     let currentPage = 1;
     const scenesPerPage = 16;
 
     async function getApiKey() {
-    try {
-        const response = await fetch('/get_tpdb_api_key');
-        if (response.ok) {
-            const data = await response.json();
-            return data.tpdbApiKey;
-        } else {
-            console.error('Failed to fetch API key:', response.status);
+        try {
+            const response = await fetch('/get_tpdb_api_key');
+            if (response.ok) {
+                const data = await response.json();
+                return data.tpdbApiKey;
+            } else {
+                console.error('Failed to fetch API key:', response.status);
+                return null;
+            }
+        } catch (error) {
+            console.error('Error fetching API key:', error);
             return null;
         }
-    } catch (error) {
-        console.error('Error fetching API key:', error);
-        return null;
     }
-}
 
     // Fetch data from API
     async function fetchData(endpoint) {
@@ -59,7 +128,6 @@ document.addEventListener('DOMContentLoaded', function() {
             return null;
         }
     }
-
 
     // Search for site by name
     async function searchSiteByName(siteName) {
