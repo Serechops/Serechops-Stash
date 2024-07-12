@@ -403,7 +403,7 @@ def suggest_matches():
     return jsonify(potential_matches)
 
 @app.route('/search_stash_for_matches', methods=['POST'])
-def search_stash_for_matches_endpoint():
+def search_stash_for_matches():
     data = request.json
     site_uuid = data.get('site_uuid')
 
@@ -417,7 +417,6 @@ def search_stash_for_matches_endpoint():
     scenes = Scene.query.filter_by(site_id=site.id).all()
     stash_matches = []
 
-    # Retrieve Stash endpoint and API key from the database
     stash_endpoint = Config.query.filter_by(key='stashEndpoint').first()
     stash_api_key = Config.query.filter_by(key='stashApiKey').first()
 
@@ -478,10 +477,17 @@ def search_stash_for_matches_endpoint():
                 'matched_scene_id': matched_scene['id'],
                 'matched_title': matched_scene['title'],
                 'matched_file_path': matched_scene['files'][0]['path'],
-                'foreign_guid': foreign_guid
+                'foreign_guid': foreign_guid,
+                'scene_title': scene.title,
+                'scene_date': scene.date,
+                'scene_duration': scene.duration,
+                'scene_performers': scene.performers,
+                'scene_status': scene.status,
+                'scene_local_path': scene.local_path
             })
 
     return jsonify(stash_matches)
+
 
 @app.route('/get_site_uuid', methods=['POST'])
 def get_site_uuid():

@@ -821,20 +821,18 @@
         });
     });
 
-    // Function to handle searching Stash for matches
     async function searchStashForMatches() {
         try {
-            const activeSiteCard = document.querySelector('.site-card.active');
-            if (!activeSiteCard) {
+            if (!currentSiteUuid) {
                 throw new Error('No site selected. Please select a site to search for matches.');
             }
-            const siteUuid = activeSiteCard.getAttribute('data-site-uuid');
+
             const response = await fetch('/search_stash_for_matches', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ site_uuid: siteUuid })
+                body: JSON.stringify({ site_uuid: currentSiteUuid })
             });
 
             if (!response.ok) {
@@ -856,103 +854,74 @@
         }
     }
 
-    // Update the table with stash matches
     function updateTableWithStashMatches(stashMatches) {
-        console.log('Updating table with stash matches');
-        stashMatches.forEach(match => {
-            console.log('Processing match:', match);
+        sceneTableBody.innerHTML = ''; // Clear the current table body
 
-            // Find the row that contains the matching foreign_guid
-            const rows = document.querySelectorAll('tr');
-            let targetRow = null;
-            rows.forEach(row => {
-                const foreignGuidCell = row.querySelector('td[data-column="foreign_guid"]');
-                if (foreignGuidCell && foreignGuidCell.textContent.trim() === match.foreign_guid) {
-                    targetRow = row;
+        stashMatches.forEach(match => {
+            const row = document.createElement('tr');
+            row.setAttribute('data-scene-id', match.scene_id);
+            row.innerHTML = `
+                <td>${match.scene_title}</td>
+                <td>${match.scene_date}</td>
+                <td>${formatDuration(match.scene_duration)}</td>
+                <td>${formatPerformers(match.scene_performers)}</td>
+                <td>${match.scene_status === 'Found' ? 'Found' : '<i class="fa-solid fa-triangle-exclamation" style="color: red;"></i> Missing'}</td>
+                <td data-column="file_path"><i class="fa-regular fa-square-check file-path-icon"></i>${match.matched_title} (${match.matched_file_path})</td>
+                <td data-column="foreign_guid">${match.foreign_guid}</td>
+                <td data-column="action" class="action-buttons">
+                    <button class="btn btn-success me-2 confirm-match">Confirm</button>
+                    <button class="btn btn-danger cancel-match">Cancel</button>
+                </td>
+            `;
+
+            row.querySelector('.confirm-match').addEventListener('click', async () => {
+                try {
+                    const response = await fetch('/match_scene', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ scene_id: match.scene_id, file_path: match.matched_file_path })
+                    });
+
+                    if (!response.ok) {
+                        const errorText = await response.text();
+                        throw new Error(`Error ${response.status}: ${errorText}`);
+                    }
+
+                    const result = await response.json();
+                    Toastify({
+                        text: result.message,
+                        duration: 3000,
+                        close: true,
+                        gravity: "top",
+                        position: "right",
+                        backgroundColor: "linear-gradient(to right, #00b09b, #96c93d)"
+                    }).showToast();
+                    displayScenes();
+                } catch (error) {
+                    console.error('Error confirming match:', error);
+                    Toastify({
+                        text: 'Error confirming match: ' + error.message,
+                        duration: 3000,
+                        close: true,
+                        gravity: "top",
+                        position: "right",
+                        backgroundColor: "linear-gradient(to right, #ff5f6d, #ffc371)"
+                    }).showToast();
                 }
             });
 
-            if (targetRow) {
-                console.log('Row found for foreign_guid:', match.foreign_guid);
-                const filePathCell = targetRow.querySelector('td[data-column="file_path"]');
-                const actionCell = targetRow.querySelector('td:last-child');
-                const foreignGuidCell = targetRow.querySelector('td[data-column="foreign_guid"]');
+            row.querySelector('.cancel-match').addEventListener('click', () => {
+                filePathCell.innerHTML = '';
+                actionCell.innerHTML = '';
+            });
 
-                if (filePathCell && actionCell && foreignGuidCell) {
-                    console.log('filePathCell, actionCell, and foreignGuidCell found');
-                    filePathCell.innerHTML = `<i class="fa-regular fa-square-check file-path-icon"></i>${match.matched_title} (${match.matched_file_path})`;
-                    actionCell.innerHTML = `
-                        <button class="btn btn-success me-2 confirm-match">Confirm</button>
-                        <button class="btn btn-danger cancel-match">Cancel</button>
-                    `;
-                    foreignGuidCell.classList.add('highlight-found'); // Highlight the matched UUID
-
-                    targetRow.querySelector('.confirm-match').addEventListener('click', async () => {
-                        try {
-                            const response = await fetch('/match_scene', {
-                                method: 'POST',
-                                headers: {
-                                    'Content-Type': 'application/json'
-                                },
-                                body: JSON.stringify({ scene_id: targetRow.getAttribute('data-scene-id'), file_path: match.matched_file_path })
-                            });
-
-                            if (!response.ok) {
-                                const errorText = await response.text();
-                                throw new Error(`Error ${response.status}: ${errorText}`);
-                            }
-
-                            const result = await response.json();
-                            Toastify({
-                                text: result.message,
-                                duration: 3000,
-                                close: true,
-                                gravity: "top",
-                                position: "right",
-                                backgroundColor: "linear-gradient(to right, #00b09b, #96c93d)"
-                            }).showToast();
-                            displayScenes();
-                        } catch (error) {
-                            console.error('Error confirming match:', error);
-                            Toastify({
-                                text: 'Error confirming match: ' + error.message,
-                                duration: 3000,
-                                close: true,
-                                gravity: "top",
-                                position: "right",
-                                backgroundColor: "linear-gradient(to right, #ff5f6d, #ffc371)"
-                            }).showToast();
-                        }
-                    });
-
-                    targetRow.querySelector('.cancel-match').addEventListener('click', () => {
-                        filePathCell.innerHTML = '';
-                        actionCell.innerHTML = '';
-                        foreignGuidCell.classList.remove('highlight-found'); // Remove highlight if canceled
-                    });
-                } else {
-                    if (!filePathCell) {
-                        console.error('filePathCell not found');
-                    }
-                    if (!actionCell) {
-                        console.error('actionCell not found');
-                    }
-                    if (!foreignGuidCell) {
-                        console.error('foreignGuidCell not found');
-                    }
-                }
-            } else {
-                console.log(`No row found for foreign_guid: ${match.foreign_guid}`);
-                // Adding more details for debugging
-                rows.forEach(row => {
-                    const foreignGuidCell = row.querySelector('td[data-column="foreign_guid"]');
-                    if (foreignGuidCell) {
-                        console.log(`Row data-foreign-guid: ${foreignGuidCell.textContent.trim()}`);
-                    }
-                });
-            }
+            sceneTableBody.appendChild(row);
         });
     }
+
+    document.getElementById('search-stash-button').addEventListener('click', searchStashForMatches);
 
     // Attach event listener to the search button
     const searchStashButton = document.getElementById('search-stash-button');
