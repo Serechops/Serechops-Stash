@@ -14,6 +14,10 @@ import requests
 import uuid
 from sqlalchemy import func
 import datetime
+from models import Scene
+import traceback
+from contextlib import contextmanager
+from sqlalchemy.exc import SQLAlchemyError
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///jizzarr.db'
@@ -77,53 +81,46 @@ def collection():
 
 @app.route('/collection_data', methods=['GET'])
 def collection_data():
-    sites = Site.query.all()
-    collection = []
-    delete_duplicate_scenes()  # Call to delete duplicates before fetching data
-    for site in sites:
-        scenes = Scene.query.filter_by(site_id=site.id).all()
-        scene_list = []
-        for scene in scenes:
-            scene_list.append({
-                'id': scene.id,
-                'title': scene.title,
-                'date': scene.date,
-                'duration': scene.duration,
-                'image': scene.image,
-                'performers': scene.performers,
-                'status': scene.status or 'Missing',
-                'local_path': scene.local_path,
-                'year': scene.year,
-                'episode_number': scene.episode_number,
-                'slug': scene.slug,
-                'overview': scene.overview,
-                'credits': scene.credits,
-                'release_date_utc': scene.release_date_utc,
-                'images': scene.images,
-                'trailer': scene.trailer,
-                'genres': scene.genres,
-                'foreign_guid': scene.foreign_guid,
-                'foreign_id': scene.foreign_id
-            })
-        collection.append({
-            'site': {
-                'uuid': site.uuid,
-                'name': site.name,
-                'url': site.url,
-                'description': site.description,
-                'rating': site.rating,
-                'network': site.network,
-                'parent': site.parent,
-                'logo': site.logo,
-                'home_directory': site.home_directory
-            },
-            'scenes': scene_list
-        })
-    log_entry('INFO', 'Collection data retrieved successfully')
-    return jsonify(collection)
+    try:
+        sites = Site.query.all()
+        app.logger.info(f"Fetched sites: {sites}")
+        
+        collection_data = []
+        for site in sites:
+            scenes = Scene.query.filter_by(site_id=site.id).all()
+            app.logger.info(f"Fetched scenes for site {site.id}: {scenes}")
 
-from contextlib import contextmanager
-from sqlalchemy.exc import SQLAlchemyError
+            total_scenes = len(scenes)
+            collected_scenes = len([scene for scene in scenes if scene.status == 'Found'])
+            collection_data.append({
+                'site': {
+                    'uuid': site.uuid,
+                    'name': site.name,
+                    'logo': site.logo,
+                    'home_directory': site.home_directory
+                },
+                'total_scenes': total_scenes,
+                'collected_scenes': collected_scenes,
+                'scenes': [
+                    {
+                        'id': scene.id,
+                        'title': scene.title,
+                        'date': scene.date if isinstance(scene.date, str) else scene.date.strftime('%Y-%m-%d') if scene.date else '',
+                        'duration': scene.duration,
+                        'performers': scene.performers,
+                        'status': scene.status,
+                        'local_path': scene.local_path,
+                        'foreign_guid': scene.foreign_guid
+                    } for scene in scenes
+                ]
+            })
+        app.logger.info(f"Collection data prepared: {collection_data}")
+        return jsonify(collection_data)
+    except Exception as e:
+        app.logger.error(f"Error in collection_data: {str(e)}")
+        app.logger.error(traceback.format_exc())
+        return jsonify({'error': 'An error occurred while fetching collection data'}), 500
+
 
 @contextmanager
 def session_scope():
@@ -299,23 +296,26 @@ def remove_scene(scene_id):
 
 @app.route('/match_scene', methods=['POST'])
 def match_scene():
-    data = request.json
-    scene_id = data.get('scene_id')
-    file_path = data.get('file_path')
+    try:
+        data = request.json
+        scene_id = data['scene_id']
+        file_path = data['file_path']
+        
+        # Replace db.session.get with a query
+        scene = db.session.query(Scene).filter_by(id=scene_id).first()
 
-    scene = db.session.get(Scene, scene_id)
-    if not scene:
-        log_entry('ERROR', f'Scene not found for ID: {scene_id}')
-        return jsonify({'error': 'Scene not found'}), 404
+        if scene is None:
+            return jsonify({'error': 'Scene not found'}), 404
+        
+        scene.local_path = file_path
+        scene.status = 'Found'
+        db.session.commit()
 
-    # Update scene with new file path
-    scene.local_path = file_path
-    scene.status = 'Found'
-    db.session.commit()
-
-    log_entry('INFO', f'Scene matched successfully for ID: {scene_id} with file path: {file_path}')
-    return jsonify({'message': 'Scene matched successfully!', 'new_file_path': file_path})
-
+        return jsonify({'message': 'Scene matched successfully'})
+    except Exception as e:
+        db.session.rollback()
+        app.logger.error(f'Error in match_scene: {e}')
+        return jsonify({'error': 'An error occurred'}), 500
 @app.route('/set_home_directory', methods=['POST'])
 def set_home_directory():
     data = request.json
