@@ -42,6 +42,7 @@ class Scene(db.Model):
     genres = db.Column(JSON)
     foreign_guid = db.Column(db.String)
     foreign_id = db.Column(db.Integer)
+    url = db.Column(db.String(255))
 
     def __init__(self, site_id, title, date, duration, image, performers, status, local_path, year, episode_number, slug, overview, credits, release_date_utc, images, trailer, genres, foreign_guid, foreign_id):
         self.site_id = site_id
