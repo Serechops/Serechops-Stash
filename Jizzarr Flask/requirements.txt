@@ -1,2 +1,9 @@
-Flask==2.0.3
-Flask-SQLAlchemy==2.5.1
+Flask==2.2.3
+Flask-Cors==3.0.10
+SQLAlchemy==1.4.39
+fuzzywuzzy==0.18.0
+mutagen==1.45.1
+Pillow==9.1.1
+requests==2.27.1
+imagehash==4.2.1
+moviepy==1.0.3
