@@ -180,7 +180,6 @@ def session_scope():
         session.close()
 
 
-
 @app.route('/add_site', methods=['POST'])
 def add_site():
     data = request.json
