@@ -14,6 +14,9 @@ import requests
 import uuid
 from sqlalchemy import func
 import datetime
+import logging
+from contextlib import contextmanager
+from sqlalchemy.exc import SQLAlchemyError
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///jizzarr.db'
@@ -75,55 +78,67 @@ def get_tpdb_api_key():
 def collection():
     return render_template('collection.html')
 
+
+
+
+
+
+# Configure logging
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
+
 @app.route('/collection_data', methods=['GET'])
 def collection_data():
-    sites = Site.query.all()
-    collection = []
-    delete_duplicate_scenes()  # Call to delete duplicates before fetching data
-    for site in sites:
-        scenes = Scene.query.filter_by(site_id=site.id).all()
-        scene_list = []
-        for scene in scenes:
-            scene_list.append({
-                'id': scene.id,
-                'title': scene.title,
-                'date': scene.date,
-                'duration': scene.duration,
-                'image': scene.image,
-                'performers': scene.performers,
-                'status': scene.status or 'Missing',
-                'local_path': scene.local_path,
-                'year': scene.year,
-                'episode_number': scene.episode_number,
-                'slug': scene.slug,
-                'overview': scene.overview,
-                'credits': scene.credits,
-                'release_date_utc': scene.release_date_utc,
-                'images': scene.images,
-                'trailer': scene.trailer,
-                'genres': scene.genres,
-                'foreign_guid': scene.foreign_guid,
-                'foreign_id': scene.foreign_id
-            })
-        collection.append({
-            'site': {
-                'uuid': site.uuid,
-                'name': site.name,
-                'url': site.url,
-                'description': site.description,
-                'rating': site.rating,
-                'network': site.network,
-                'parent': site.parent,
-                'logo': site.logo,
-                'home_directory': site.home_directory
-            },
-            'scenes': scene_list
-        })
-    log_entry('INFO', 'Collection data retrieved successfully')
-    return jsonify(collection)
+    try:
+        page = int(request.args.get('page', 1))
+        per_page = int(request.args.get('per_page', 12))
+        logger.debug(f"Fetching sites for page {page} with {per_page} items per page")
 
-from contextlib import contextmanager
-from sqlalchemy.exc import SQLAlchemyError
+        # Correct usage of paginate
+        sites = Site.query.paginate(page=page, per_page=per_page, error_out=False)
+        collection_data = []
+        delete_duplicate_scenes()
+
+        for site in sites.items:
+            logger.debug(f"Processing site: {site.name}")
+            scenes = Scene.query.filter_by(site_id=site.id).all()
+            total_scenes = len(scenes)
+            collected_scenes = len([scene for scene in scenes if scene.status == 'Found'])
+
+            site_data = {
+                'site': {
+                    'uuid': site.uuid,
+                    'name': site.name,
+                    'logo': site.logo,
+                    'home_directory': site.home_directory,
+                },
+                'total_scenes': total_scenes,
+                'collected_scenes': collected_scenes,
+                'scenes': [{
+                    'id': scene.id,
+                    'title': scene.title,
+                    'date': scene.date,
+                    'duration': scene.duration if scene.duration is not None else 'N/A',
+                    'performers': scene.performers,
+                    'status': scene.status,
+                    'local_path': scene.local_path,
+                    'foreign_guid': scene.foreign_guid
+                } for scene in scenes]
+            }
+
+            collection_data.append(site_data)
+
+        response = {
+            'collection_data': collection_data,
+            'total_pages': sites.pages,
+            'current_page': sites.page
+        }
+        logger.debug(f"Returning response: {response}")
+        return jsonify(response)
+
+    except Exception as e:
+        logger.error(f"Error in collection_data: {str(e)}")
+        return jsonify({'error': 'An error occurred while fetching collection data'}), 500
 
 @contextmanager
 def session_scope():
@@ -333,13 +348,17 @@ def set_home_directory():
     log_entry('INFO', f'Home directory set successfully for site UUID: {site_uuid}')
     return jsonify({'message': 'Home directory set successfully!'})
 
+from moviepy.editor import VideoFileClip
+import os
+
 def get_file_duration(file_path):
     try:
         file_extension = os.path.splitext(file_path)[1].lower()
-        if file_extension == '.mp4':
-            audio = MP4(file_path)
-            return audio.info.length / 60  # convert seconds to minutes
-        # Add more formats if necessary
+        if file_extension in ['.mp4', '.avi', '.mov', '.mkv', '.flv', '.wmv', '.webm']:
+            video = VideoFileClip(file_path)
+            return video.duration / 60  # convert seconds to minutes
+        else:
+            print(f"Unsupported file format for file {file_path}")
     except Exception as e:
         print(f"Error getting duration for file {file_path}: {e}")
     return None

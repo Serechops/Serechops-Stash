@@ -49,7 +49,7 @@ def get_scenes_for_site(site_uuid):
         return scene_list
 
 def search_stash_for_matches(scenes):
-    stash_endpoint = "http://localhost:9999/graphql"
+    stash_endpoint = "http://192.168.1.54:9999/graphql"
     stash_headers = {
         "Accept-Encoding": "gzip, deflate, br",
         "Content-Type": "application/json",

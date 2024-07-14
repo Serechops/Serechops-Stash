@@ -1,0 +1,227 @@
+body {
+            font-family: 'Montserrat', Arial, sans-serif;
+            background-color: #121212;
+            color: #ffffff;
+        }
+        .container {
+            max-width: 1920px;
+            margin: 0 auto;
+            padding: 20px;
+            position: relative;
+        }
+        .site-card {
+            background-color: #1e1e1e;
+            color: #ffffff;
+            border-radius: 8px;
+            padding: 10px;
+            margin-bottom: 10px;
+            margin-top: 50px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            transition: background-color 0.3s;
+            cursor: pointer;
+            position: relative;
+        }
+        .site-card:hover {
+            background-color: #333333;
+        }
+        .site-title {
+            text-align: center;
+        }
+        .site-card img {
+            max-width: 100%;
+            max-height: 100px;
+            object-fit: contain;
+            margin-right: 10px;
+            border-radius: 4px;
+            justify-content: center;
+        }
+        .site-card h2 {
+            margin: 0;
+            display: none;
+        }
+        .site-card .no-logo h2 {
+            display: block;
+        }
+        .site-card button {
+            background-color: #ff5f6d;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            display: block;
+            margin-top: 20px;
+        }
+        button.btn.btn-danger.remove-site-button {
+            position: absolute;
+            bottom: 1px;
+            left: 1px;
+        }
+        .site-card button.remove {
+            background-color: red;
+        }
+        .highlight-missing {
+            background-color: red !important;
+        }
+        .highlight-found {
+            background-color: green !important;
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #444;
+        }
+        th {
+            background-color: #333;
+            color: white;
+        }
+        .file-path-icon {
+            color: green;
+            margin-right: 5px;
+            font-size: 1em;
+        }
+        .match-controls {
+            display: flex;
+            justify-content: center;
+            gap: 5px;
+            margin-top: 10px;
+        }
+        .scene-count {
+            text-align: center;
+            margin-bottom: 10px;
+            margin-top: 10px;
+            font-size: 1.2em;
+        }
+        .site-logo img {
+            max-height: 200px;
+            object-fit: cover;
+            border-radius: 8px;
+        }
+        #compare-container.compare-container {
+            text-align: center;
+        }
+        #back-button-container {
+            margin-top: 25px;
+        }
+        .btn-dark-mode {
+            background-color: #333;
+            color: white;
+        }
+        .btn-dark-mode:hover {
+            background-color: #444;
+        }
+        .table-dark-mode {
+            background-color: #1e1e1e;
+            color: white;
+        }
+        #site-logo {
+            text-align: center;
+            max-width: 100%;
+            max-height: 100%;
+        }
+        .action-buttons {
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            gap: 5px; /* Adjust this value as needed */
+        }
+        .highlight-found {
+            background-color: green;
+            color: white;
+        }
+        .custom-navbar {
+            width: 100%;
+            position: fixed;
+            top: 0;
+            z-index: 1000;
+            background-color: rgba(0, 0, 0, 0.5);
+            padding: 10px 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(6px);
+        }
+        .custom-navbar a {
+            color: #ffffff;
+            text-decoration: none;
+            margin: 0 10px;
+            padding: 5px 10px;
+        }
+        .custom-navbar a:hover {
+            background-color: #495057;
+            border-radius: 4px;
+        }
+        .status.found {
+            color: green;
+        }
+        .progress-bar {
+            position: absolute;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-40%);
+            width: 75%; 
+            background-color: rgba(0, 0, 0, 0.5);
+            border-radius: 5px;
+            height: 20px;
+        }
+        
+        .progress-bar-inner {
+            height: 100%;
+            background-color: #007bff;
+            border-radius: 5px;
+            transition: width 0.3s;
+        }
+        
+        .progress-bar-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #fff;
+            font-weight: bold;
+        }
+        .pagnination-controls {
+        top: 1px;
+        position: absolute;
+        }
+        .mb-3 {
+        margin-top: 25px;
+        }
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            .site-card {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .site-card img {
+                max-width: 100%;
+                margin: 0 0 10px 0;
+            }
+            .match-controls {
+                flex-direction: column;
+                gap: 10px;
+            }
+            .table-dark-mode th, .table-dark-mode td {
+                padding: 5px;
+                font-size: 0.8em;
+            }
+            .action-buttons {
+                flex-direction: column;
+                gap: 5px;
+            }
+        }
+        @media (max-width: 576px) {
+            .site-card {
+                padding: 10px 5px;
+            }
+            .match-controls {
+                gap: 5px;
+            }
+            .btn {
+                width: 100%;
+                margin-bottom: 5px;
+            }
+        }
