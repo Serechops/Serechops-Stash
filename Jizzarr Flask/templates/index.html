@@ -187,5 +187,94 @@
             handleProgressUpdates();
         });
     </script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const searchStashButton = document.getElementById('search-stash');
+        const progressBarContainer = document.getElementById('progress-bar-container');
+        const progressBarInner = document.getElementById('progress-bar-inner');
+
+        function updateProgressBar(percentage) {
+            progressBarInner.style.width = percentage + '%';
+            progressBarInner.innerText = percentage + '%';
+        }
+
+        function setProgressBarVisibility(visible) {
+            progressBarContainer.style.display = visible ? 'flex' : 'none';
+        }
+
+        // Initialize progress bar visibility based on localStorage
+        const storedProgress = localStorage.getItem('stashProgress');
+        if (storedProgress) {
+            updateProgressBar(parseInt(storedProgress, 10));
+            setProgressBarVisibility(true);
+        } else {
+            setProgressBarVisibility(false);
+        }
+
+        searchStashButton.addEventListener('click', async function() {
+            setProgressBarVisibility(true);
+
+            try {
+                const response = await fetch('/populate_from_stash', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Error ${response.status}: ${await response.text()}`);
+                }
+
+                const result = await response.json();
+                console.log('Sites and scenes fetched from Stash:', result);
+                Toastify({
+                    text: 'Sites and scenes successfully populated from Stash.',
+                    duration: 3000,
+                    close: true,
+                    gravity: "top",
+                    position: "right",
+                    backgroundColor: "linear-gradient(to right, #00b09b, #96c93d)"
+                }).showToast();
+
+                // Reset progress bar
+                updateProgressBar(0);
+                setProgressBarVisibility(false);
+                localStorage.removeItem('stashProgress');
+            } catch (error) {
+                console.error('Error fetching from Stash:', error);
+                Toastify({
+                    text: `Error fetching from Stash: ${error.message}`,
+                    duration: 3000,
+                    close: true,
+                    gravity: "top",
+                    position: "right",
+                    backgroundColor: "linear-gradient(to right, #ff5f6d, #ffc371)"
+                }).showToast();
+            }
+        });
+
+        // Function to handle progress updates from the server
+        async function handleProgressUpdates() {
+            const eventSource = new EventSource('/progress');
+            eventSource.onmessage = function(event) {
+                const data = JSON.parse(event.data);
+                const progress = Math.round((data.completed / data.total) * 100);
+                updateProgressBar(progress);
+                localStorage.setItem('stashProgress', progress);
+                if (progress >= 100) {
+                    eventSource.close();
+                    setProgressBarVisibility(false); // Hide the progress bar
+                    localStorage.removeItem('stashProgress');
+                }
+            };
+            eventSource.onerror = function() {
+                eventSource.close();
+            };
+        }
+
+        handleProgressUpdates();
+    });
+</script>
 </body>
 </html>

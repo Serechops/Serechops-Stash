@@ -20,7 +20,10 @@
     <div class="container mt-4">
         <div class="mb-3">
             <input type="text" id="search-input" class="form-control" placeholder="Search by site name...">
-            <button id="search-button" class="btn btn-primary mt-2">Search</button>
+        </div>
+        <div class="d-flex justify-content-between mb-3">
+            <button id="sort-asc" class="btn btn-secondary">Sort A-Z</button>
+            <button id="sort-desc" class="btn btn-secondary">Sort Z-A</button>
         </div>
         <div class="pagination-controls d-flex justify-content-center mt-4">
             <button id="site-first-page" class="btn btn-outline-secondary me-2">First</button>
@@ -108,19 +111,22 @@
             const sceneCountDisplay = document.getElementById('scene-count');
             const compareContainer = document.getElementById('compare-container');
             const searchInput = document.getElementById('search-input');
-            const searchButton = document.getElementById('search-button');
+            const sortAscButton = document.getElementById('sort-asc');
+            const sortDescButton = document.getElementById('sort-desc');
 
             let selectedDirectoryPath = '';
             let currentSiteUuid = '';
             let homeDirectory = '';
             let currentPage = 1;
+            let sitesPerPage = 12;
             let scenesPerPage = parseInt(pageSizeSelect.value, 10);
             let currentScenes = [];
+            let allSites = [];
             let sortColumn = '';
             let sortDirection = 'asc';
             let showOnlyMatches = false;
             let suggestedMatches = [];
-            let excludedMatches = new Set();  // Set to store excluded matches
+            let excludedMatches = new Set();
             let enableBulkUpdate = true;
             let totalPages = 1;
 
@@ -172,7 +178,7 @@
                         }).showToast();
                     }
                 });
-                compareContainer.innerHTML = ''; // Clear previous inputs
+                compareContainer.innerHTML = '';
                 compareContainer.appendChild(input);
                 compareContainer.appendChild(saveButton);
             });
@@ -199,13 +205,13 @@
                         const scene = currentScenes.find(scene => scene.id === match.scene_id);
                         if (scene && !matchedScenes.find(s => s.id === scene.id)) {
                             matchedScenes.push(scene);
-                            scene.suggested_file = match.suggested_file; // Store suggested file in scene object
+                            scene.suggested_file = match.suggested_file;
                         }
                     });
 
                     currentScenes = matchedScenes;
                     displayScenesWithActions();
-                    enableBulkUpdate = false; // Disable bulk update button
+                    enableBulkUpdate = false;
                     bulkUpdateButton.disabled = true;
                 } catch (error) {
                     console.error('Error suggesting matches:', error);
@@ -267,14 +273,12 @@
                                 backgroundColor: "linear-gradient(to right, #00b09b, #96c93d)"
                             }).showToast();
             
-                            // Update the local status and file path of the scene
                             scene.status = 'Found';
                             scene.local_path = fullFilePath;
             
-                            // Update the specific row in the table
                             row.querySelector('td[data-column="file_path"]').innerHTML = `<i class="fa-regular fa-square-check file-path-icon"></i>${fullFilePath}`;
                             row.querySelector('td[data-column="file_path"]').classList.add('highlight-found');
-                            row.querySelector('td[data-column="action"]').innerHTML = ''; // Remove the action buttons after confirmation
+                            row.querySelector('td[data-column="action"]').innerHTML = '';
                         } catch (error) {
                             console.error('Error confirming match:', error);
                             Toastify({
@@ -329,7 +333,7 @@
             
                 for (const match of matchesToProcess) {
                     if (excludedMatches.has(match.scene_id)) {
-                        continue;  // Skip if the match was excluded
+                        continue;
                     }
                     try {
                         const response = await fetch('/match_scene', {
@@ -347,11 +351,10 @@
             
                         const result = await response.json();
             
-                        // Update the local status of the scene to 'Found'
                         const scene = currentScenes.find(s => s.id == match.scene_id);
                         if (scene) {
                             scene.status = 'Found';
-                            scene.local_path = match.matched_file_path; // No need to prepend home directory
+                            scene.local_path = match.matched_file_path;
                         }
                     } catch (error) {
                         console.error('Error confirming match:', error);
@@ -381,30 +384,45 @@
                 bulkUpdateButton.disabled = false;
             }
 
-            async function displayCollection(page = 1, filteredCollection = null) {
+            async function fetchCollection() {
+                try {
+                    const response = await fetch('/collection_data?per_page=1000'); // Fetch all data at once
+                    if (!response.ok) {
+                        throw new Error(`Error ${response.status}: ${await response.text()}`);
+                    }
+                    const siteCollection = await response.json();
+                    console.log('Collection fetched:', siteCollection);
+
+                    allSites = siteCollection.collection_data;
+                    totalPages = Math.ceil(allSites.length / sitesPerPage);
+                    displayCollection();
+                } catch (error) {
+                    console.error('Error fetching collection:', error);
+                    Toastify({
+                        text: 'Error fetching collection: ' + error.message,
+                        duration: 3000,
+                        close: true,
+                        gravity: "top",
+                        position: "right",
+                        backgroundColor: "linear-gradient(to right, #ff5f6d, #ffc371)"
+                    }).showToast();
+                }
+            }
+
+            function displayCollection(page = 1, filteredCollection = null) {
                 siteCollectionContainer.innerHTML = '';
 
-                const response = await fetch(`/collection_data?page=${page}&per_page=12`);
-                const data = await response.json();
-                const siteCollection = data.collection_data;
-                totalPages = data.total_pages;
-                currentPage = data.current_page;
+                const collectionData = filteredCollection || allSites;
+                totalPages = Math.ceil(collectionData.length / sitesPerPage);
+                currentPage = page;
 
-                if (!Array.isArray(siteCollection)) {
-                    console.error('Expected an array but got:', siteCollection);
-                    return;
-                }
+                const paginatedSites = collectionData.slice((page - 1) * sitesPerPage, page * sitesPerPage);
 
-                const collectionData = filteredCollection || siteCollection;
-
-                collectionData.forEach(item => {
+                paginatedSites.forEach(item => {
                     const totalScenes = item.total_scenes;
                     const collectedScenes = item.collected_scenes;
                     const progressPercentage = totalScenes > 0 ? (collectedScenes / totalScenes) * 100 : 0;
                     const logoUrl = item.site.logo;
-
-                    console.log('Total Scenes:', totalScenes); // Debugging line
-                    console.log('Collected Scenes:', collectedScenes); // Debugging line
 
                     const siteCard = document.createElement('div');
                     siteCard.classList.add('col-md-4');
@@ -428,7 +446,7 @@
                     `;
 
                     siteCard.addEventListener('click', () => {
-                        currentSiteUuid = item.site.uuid;  // Update currentSiteUuid here
+                        currentSiteUuid = item.site.uuid;
                         homeDirectory = item.site.home_directory || '';
                         homeDirectoryDisplay.textContent = homeDirectory;
                         siteLogoContainer.innerHTML = logoUrl ? `<img src="${logoUrl}" alt="${item.site.name}">` : '';
@@ -464,14 +482,14 @@
                     position: "right",
                     backgroundColor: "linear-gradient(to right, #ff5f6d, #ffc371)"
                 }).showToast();
-                displayCollection(currentPage);
+                fetchCollection();
             }
 
             function showScenesForSite(scenes) {
                 currentScenes = scenes.map(scene => {
                     return {
                         ...scene,
-                        status: scene.status || 'Missing'  // Set default status to 'Missing'
+                        status: scene.status || 'Missing'
                     };
                 });
                 currentScenes = sortScenes(currentScenes, 'title', 'asc');
@@ -481,10 +499,10 @@
                 updatePaginationButtons();
             }
 
-             function displayScenes() {
+            function displayScenes() {
                 sceneTableBody.innerHTML = '';
                 const filteredScenes = showOnlyMatches ? currentScenes.filter(scene => scene.status === 'Found') : currentScenes;
-                const sortedScenes = sortScenes(filteredScenes); // Ensure scenes are sorted
+                const sortedScenes = sortScenes(filteredScenes);
                 const scenesToDisplay = sortedScenes.slice((currentPage - 1) * scenesPerPage, currentPage * scenesPerPage);
             
                 scenesToDisplay.forEach(scene => {
@@ -504,7 +522,7 @@
                     row.querySelector('.match-button').addEventListener('click', () => handleMatchButtonClick(scene));
                     sceneTableBody.appendChild(row);
                 });
-                updateScenePaginationButtons(); // Ensure pagination buttons are updated
+                updateScenePaginationButtons();
             }
 
             toggleMatchesButton.addEventListener('click', () => {
@@ -553,7 +571,7 @@
                             sortColumn = column;
                             sortDirection = 'asc';
                         }
-                        displayScenes(); // Ensure scenes are displayed after sorting
+                        displayScenes();
                     }
                 });
             });
@@ -601,7 +619,6 @@
 
                             const result = await response.json();
 
-                            // Update the local status and file path of the scene
                             scene.status = 'Found';
                             scene.local_path = filePath;
 
@@ -614,7 +631,7 @@
                                 backgroundColor: "linear-gradient(to right, #00b09b, #96c93d)"
                             }).showToast();
                             displayScenes();
-                            enableBulkUpdateButton(); // Re-enable bulk update button
+                            enableBulkUpdateButton();
                         } catch (error) {
                             console.error('Error matching scene:', error);
                             Toastify({
@@ -708,155 +725,34 @@
                 sceneCollectionContainer.classList.add('d-none');
             });
 
-            // Adding active class to site-card on click
-            document.querySelectorAll('.site-card').forEach(card => {
-                card.addEventListener('click', () => {
-                    document.querySelectorAll('.site-card').forEach(c => c.classList.remove('active'));
-                    card.classList.add('active');
-                });
+            searchInput.addEventListener('input', debounce(() => {
+                const searchTerm = searchInput.value.toLowerCase();
+                const filteredCollection = allSites.filter(item => item.site.name.toLowerCase().includes(searchTerm));
+                displayCollection(1, filteredCollection);
+            }, 300));
+
+            sortAscButton.addEventListener('click', () => {
+                sortDirection = 'asc';
+                allSites.sort((a, b) => a.site.name.localeCompare(b.site.name));
+                displayCollection(currentPage);
             });
 
-            async function searchStashForMatches() {
-                try {
-                    if (!currentSiteUuid) {
-                        throw new Error('No site selected. Please select a site to search for matches.');
-                    }
-
-                    const response = await fetch('/search_stash_for_matches', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({ site_uuid: currentSiteUuid })
-                    });
-
-                    if (!response.ok) {
-                        throw new Error(`Error ${response.status}: ${await response.text()}`);
-                    }
-
-                    const stashMatches = await response.json();
-                    updateTableWithStashMatches(stashMatches);
-                } catch (error) {
-                    console.error('Error searching Stash:', error);
-                    Toastify({
-                        text: 'Error searching Stash: ' + error.message,
-                        duration: 3000,
-                        close: true,
-                        gravity: "top",
-                        position: "right",
-                        backgroundColor: "linear-gradient(to right, #ff5f6d, #ffc371)"
-                    }).showToast();
-                }
-            }
-
-            function updateTableWithStashMatches(stashMatches) {
-                sceneTableBody.innerHTML = ''; // Clear the current table body
-
-                stashMatches.forEach(match => {
-                    const row = document.createElement('tr');
-                    row.setAttribute('data-scene-id', match.scene_id);
-                    row.innerHTML = `
-                        <td>${match.scene_title}</td>
-                        <td>${match.scene_date}</td>
-                        <td>${formatDuration(match.scene_duration)}</td>
-                        <td>${formatPerformers(match.scene_performers)}</td>
-                        <td>${match.scene_status === 'Found' ? 'Found' : '<i class="fa-solid fa-triangle-exclamation" style="color: red;"></i> Missing'}</td>
-                        <td data-column="file_path"><i class="fa-regular fa-square-check file-path-icon"></i>${match.matched_title} (${match.matched_file_path})</td>
-                        <td data-column="foreign_guid">${match.foreign_guid}</td>
-                        <td data-column="action" class="action-buttons">
-                            <button class="btn btn-success me-2 confirm-match">Confirm</button>
-                            <button class="btn btn-danger cancel-match">Cancel</button>
-                        </td>
-                    `;
-
-                    row.querySelector('.confirm-match').addEventListener('click', async () => {
-                        try {
-                            const response = await fetch('/match_scene', {
-                                method: 'POST',
-                                headers: {
-                                    'Content-Type': 'application/json'
-                                },
-                                body: JSON.stringify({ scene_id: match.scene_id, file_path: match.matched_file_path })
-                            });
-
-                            if (!response.ok) {
-                                const errorText = await response.text();
-                                throw new Error(`Error ${response.status}: ${errorText}`);
-                            }
-
-                            const result = await response.json();
-                            Toastify({
-                                text: result.message,
-                                duration: 3000,
-                                close: true,
-                                gravity: "top",
-                                position: "right",
-                                backgroundColor: "linear-gradient(to right, #00b09b, #96c93d)"
-                            }).showToast();
-                            displayScenes();
-                        } catch (error) {
-                            console.error('Error confirming match:', error);
-                            Toastify({
-                                text: 'Error confirming match: ' + error.message,
-                                duration: 3000,
-                                close: true,
-                                gravity: "top",
-                                position: "right",
-                                backgroundColor: "linear-gradient(to right, #ff5f6d, #ffc371)"
-                            }).showToast();
-                        }
-                    });
-
-                    row.querySelector('.cancel-match').addEventListener('click', () => {
-                        filePathCell.innerHTML = '';
-                        actionCell.innerHTML = '';
-                    });
-
-                    sceneTableBody.appendChild(row);
-                });
-            }
-
-            document.getElementById('search-stash-button').addEventListener('click', searchStashForMatches);
-
-            // Attach event listener to the search button
-            const searchStashButton = document.getElementById('search-stash-button');
-            searchStashButton.addEventListener('click', async function() {
-                try {
-                    console.log('Search Stash button clicked');
-            
-                    if (!currentSiteUuid) {
-                        throw new Error('No site selected. Please select a site to search for matches.');
-                    }
-            
-                    const response = await fetch('/search_stash_for_matches', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({ site_uuid: currentSiteUuid })
-                    });
-            
-                    if (!response.ok) {
-                        throw new Error(`Error ${response.status}: ${await response.text()}`);
-                    }
-            
-                    const stashMatches = await response.json();
-                    console.log('Stash matches:', stashMatches);
-                    updateTableWithStashMatches(stashMatches);
-                    enableBulkUpdateButton(); // Enable bulk update button
-                } catch (error) {
-                    console.error('Error searching Stash:', error);
-                    Toastify({
-                        text: 'Error searching Stash: ' + error.message,
-                        duration: 3000,
-                        close: true,
-                        gravity: "top",
-                        position: "right",
-                        backgroundColor: "linear-gradient(to right, #ff5f6d, #ffc371)"
-                    }).showToast();
-                }
+            sortDescButton.addEventListener('click', () => {
+                sortDirection = 'desc';
+                allSites.sort((a, b) => b.site.name.localeCompare(a.site.name));
+                displayCollection(currentPage);
             });
-            displayCollection();
+
+            fetchCollection();
+
+            function debounce(func, wait) {
+                let timeout;
+                return function(...args) {
+                    const context = this;
+                    clearTimeout(timeout);
+                    timeout = setTimeout(() => func.apply(context, args), wait);
+                };
+            }
         });
     </script>
 </body>

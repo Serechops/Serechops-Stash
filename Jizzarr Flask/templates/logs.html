@@ -32,17 +32,28 @@
                 </tr>
             </thead>
             <tbody id="log-entries">
-                {% for log in logs %}
-                <tr>
-                    <td>{{ log.timestamp }}</td>
-                    <td class="log-level">{{ log.level }}</td>
-                    <td class="log-message">{{ log.message }}</td>
-                </tr>
-                {% endfor %}
+                <!-- Log entries will be loaded here -->
             </tbody>
         </table>
+        <div class="pagination-controls d-flex justify-content-center mt-4">
+            <button id="first-page" class="btn btn-outline-secondary me-2">First</button>
+            <button id="prev-page" class="btn btn-outline-secondary me-2">Prev</button>
+            <button id="next-page" class="btn btn-outline-secondary me-2">Next</button>
+            <button id="last-page" class="btn btn-outline-secondary">Last</button>
+        </div>
     </div>
     <script>
+        const logEntriesContainer = document.getElementById('log-entries');
+        const searchInput = document.getElementById('search-input');
+        const firstPageButton = document.getElementById('first-page');
+        const prevPageButton = document.getElementById('prev-page');
+        const nextPageButton = document.getElementById('next-page');
+        const lastPageButton = document.getElementById('last-page');
+
+        let currentPage = 1;
+        let totalPages = 1;
+        const logsPerPage = 20;
+
         function downloadLogs() {
             window.location.href = '/download_logs';
         }
@@ -52,22 +63,77 @@
             return text.replace(pattern, '<span class="highlight">$1</span>');
         }
 
-        document.getElementById('search-input').addEventListener('input', function() {
-            const searchValue = this.value.toLowerCase();
-            const logEntries = document.querySelectorAll('#log-entries tr');
+        async function fetchLogs(page = 1, search = '') {
+            try {
+                const response = await fetch(`/logs_data?page=${page}&per_page=${logsPerPage}&search=${search}`);
+                const data = await response.json();
+                totalPages = data.total_pages;
+                currentPage = data.current_page;
+                displayLogs(data.logs);
+                updatePaginationButtons();
+            } catch (error) {
+                console.error('Error fetching logs:', error);
+            }
+        }
 
-            logEntries.forEach(entry => {
-                const level = entry.querySelector('.log-level').textContent.toLowerCase();
-                const message = entry.querySelector('.log-message').textContent.toLowerCase();
-                
-                if (level.includes(searchValue) || message.includes(searchValue)) {
-                    entry.style.display = '';
-                    entry.querySelector('.log-message').innerHTML = highlight(entry.querySelector('.log-message').textContent, this.value);
-                } else {
-                    entry.style.display = 'none';
-                }
+        function displayLogs(logs) {
+            logEntriesContainer.innerHTML = '';
+            logs.forEach(log => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${log.timestamp}</td>
+                    <td class="log-level">${log.level}</td>
+                    <td class="log-message">${log.message}</td>
+                `;
+                logEntriesContainer.appendChild(row);
             });
+        }
+
+        function updatePaginationButtons() {
+            firstPageButton.disabled = currentPage === 1;
+            prevPageButton.disabled = currentPage === 1;
+            nextPageButton.disabled = currentPage === totalPages;
+            lastPageButton.disabled = currentPage === totalPages;
+        }
+
+        firstPageButton.addEventListener('click', () => {
+            currentPage = 1;
+            fetchLogs(currentPage, searchInput.value);
         });
+
+        prevPageButton.addEventListener('click', () => {
+            if (currentPage > 1) {
+                currentPage--;
+                fetchLogs(currentPage, searchInput.value);
+            }
+        });
+
+        nextPageButton.addEventListener('click', () => {
+            if (currentPage < totalPages) {
+                currentPage++;
+                fetchLogs(currentPage, searchInput.value);
+            }
+        });
+
+        lastPageButton.addEventListener('click', () => {
+            currentPage = totalPages;
+            fetchLogs(currentPage, searchInput.value);
+        });
+
+        searchInput.addEventListener('input', debounce(() => {
+            fetchLogs(1, searchInput.value);
+        }, 300));
+
+        function debounce(func, wait) {
+            let timeout;
+            return function(...args) {
+                const context = this;
+                clearTimeout(timeout);
+                timeout = setTimeout(() => func.apply(context, args), wait);
+            };
+        }
+
+        fetchLogs();
     </script>
 </body>
 </html>

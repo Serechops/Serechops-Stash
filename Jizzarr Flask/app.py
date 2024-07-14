@@ -785,8 +785,16 @@ def populate_from_stash_thread():
             delete_duplicate_scenes()  # Call the function here to delete duplicates and log space saved
 
             log_entry('INFO', 'Sites and scenes populated from Stash')
+
+            # Reset progress
+            progress['total'] = 0
+            progress['completed'] = 0
         except Exception as e:
             log_entry('ERROR', f"Error populating from stash: {e}")
+            # Reset progress on error
+            progress['total'] = 0
+            progress['completed'] = 0
+
 
 @app.route('/populate_from_stash', methods=['POST'])
 def populate_from_stash():
@@ -871,6 +879,40 @@ def logs():
             'timestamp': log.timestamp
         })
     return render_template('logs.html', logs=log_entries)
+
+@app.route('/logs_data', methods=['GET'])
+def logs_data():
+    try:
+        page = int(request.args.get('page', 1))
+        per_page = int(request.args.get('per_page', 20))
+        search = request.args.get('search', '').lower()
+
+        logger.debug(f"Fetching logs for page {page} with {per_page} items per page and search term '{search}'")
+
+        query = Log.query
+        if search:
+            query = query.filter(Log.message.ilike(f'%{search}%') | Log.level.ilike(f'%{search}%'))
+
+        logs_paginate = query.paginate(page=page, per_page=per_page, error_out=False)
+        logs = [{
+            'timestamp': log.timestamp,
+            'level': log.level,
+            'message': log.message
+        } for log in logs_paginate.items]
+
+        response = {
+            'logs': logs,
+            'total_pages': logs_paginate.pages,
+            'current_page': logs_paginate.page
+        }
+
+        logger.info('Logs data retrieved successfully')
+        return jsonify(response)
+    except Exception as e:
+        logger.error(f"Error retrieving logs data: {e}")
+        return jsonify({"error": str(e)}), 500
+
+
 
 @app.route('/download_logs')
 def download_logs():
