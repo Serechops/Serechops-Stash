@@ -192,6 +192,13 @@ body {
         .mb-3 {
         margin-top: 25px;
         }
+        .jdownloader-icon {
+        width: 24px;
+        height: 24px; 
+        margin-left: 30px;
+        cursor: pointer;
+        vertical-align: middle;
+        }
         @media (max-width: 768px) {
             .container {
                 padding: 10px;
