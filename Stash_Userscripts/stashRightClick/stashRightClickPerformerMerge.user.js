@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         stashRightClickPerformerMerge
 // @namespace    https://github.com/Serechops/Serechops-Stash
-// @version      2.3
+// @version      2.4
 // @description  Adds a performer merge tool to the Performers page in Stash.
 // @match        http://localhost:9999/performers*
 // @grant        GM_addStyle
@@ -348,9 +348,6 @@
                             piercings
                             alias_list
                             image_path
-                            movie_count
-                            performer_count
-                            o_counter
                             rating100
                             details
                             death_date
@@ -358,8 +355,6 @@
                             weight
                             created_at
                             updated_at
-                            gallery_count
-                            scene_count
                             stash_ids {
                                 endpoint
                                 stash_id
@@ -373,7 +368,7 @@
             gqlQuery = `
                 query FindPerformers($filter: String!) {
                     findPerformers(
-                        performer_filter: { name: { value: $filter, modifier: INCLUDES } },
+                        performer_filter: { name: { value: $filter, modifier: MATCHES_REGEX } },
                         filter: { per_page: -1, direction: ASC }
                     ) {
                         performers {
@@ -396,9 +391,6 @@
                             piercings
                             alias_list
                             image_path
-                            movie_count
-                            performer_count
-                            o_counter
                             rating100
                             details
                             death_date
@@ -406,8 +398,6 @@
                             weight
                             created_at
                             updated_at
-                            gallery_count
-                            scene_count
                             stash_ids {
                                 endpoint
                                 stash_id
@@ -416,7 +406,7 @@
                     }
                 }
             `;
-            variables = { filter: query };
+            variables = { filter: "(?i)" + query };
         }
 
         try {
@@ -466,12 +456,6 @@
             <div data-field="tattoos"><strong>Tattoos:</strong> ${performer.tattoos}</div>
             <div data-field="piercings"><strong>Piercings:</strong> ${performer.piercings}</div>
             <div data-field="alias_list"><strong>Aliases:</strong> ${performer.alias_list.join(', ')}</div>
-            <div data-field="scene_count"><strong>Scene Count:</strong> ${performer.scene_count}</div>
-            <div data-field="image_count"><strong>Image Count:</strong> ${performer.image_count}</div>
-            <div data-field="gallery_count"><strong>Gallery Count:</strong> ${performer.gallery_count}</div>
-            <div data-field="movie_count"><strong>Movie Count:</strong> ${performer.movie_count}</div>
-            <div data-field="performer_count"><strong>Performer Count:</strong> ${performer.performer_count}</div>
-            <div data-field="o_counter"><strong>O Counter:</strong> ${performer.o_counter}</div>
             <div data-field="rating100"><strong>Rating:</strong> ${performer.rating100 / 10}/10</div>
             <div data-field="details"><strong>Details:</strong> ${performer.details}</div>
             <div data-field="death_date"><strong>Death Date:</strong> ${performer.death_date}</div>
@@ -506,8 +490,7 @@
             'name', 'disambiguation', 'url', 'gender', 'twitter', 'instagram',
             'birthdate', 'ethnicity', 'country', 'eye_color', 'height_cm',
             'measurements', 'fake_tits', 'career_length', 'tattoos', 'piercings',
-            'alias_list', 'scene_count', 'image_count', 'gallery_count', 'movie_count',
-            'performer_count', 'o_counter', 'rating100', 'details', 'death_date',
+            'alias_list', 'rating100', 'details', 'death_date',
             'hair_color', 'weight', 'created_at', 'updated_at', 'stash_ids'
         ];
 
@@ -530,7 +513,7 @@
         const gqlQuery = `
             query FindGalleries($performer_id: [ID!]) {
                 findGalleries(
-                    gallery_filter: { performers: { modifier: EQUALS, value: $performer_id } },
+                    gallery_filter: { performers: { modifier: INCLUDES, value: $performer_id } },
                     filter: { per_page: -1 }
                 ) {
                     galleries {
@@ -556,7 +539,7 @@
         const gqlQuery = `
             query FindScenes($performer_id: [ID!]) {
                 findScenes(
-                    scene_filter: { performers: { modifier: EQUALS, value: $performer_id } },
+                    scene_filter: { performers: { modifier: INCLUDES, value: $performer_id } },
                     filter: { per_page: -1 }
                 ) {
                     scenes {
@@ -615,8 +598,7 @@
                 'id', 'name', 'disambiguation', 'url', 'gender', 'twitter', 'instagram',
                 'birthdate', 'ethnicity', 'country', 'eye_color', 'height_cm',
                 'measurements', 'fake_tits', 'career_length', 'tattoos', 'piercings',
-                'alias_list', 'scene_count', 'image_count', 'gallery_count', 'performer_count',
-                'o_counter', 'rating100', 'details', 'death_date', 'hair_color', 'weight',
+                'alias_list', 'rating100', 'details', 'death_date', 'hair_color', 'weight',
                 'created_at', 'updated_at', 'stash_ids'
             ];
 
@@ -650,15 +632,24 @@
 
             // Remove duplicate aliases
             updatedData.alias_list = [...new Set(updatedData.alias_list)];
+            console.log('Prefilter AliasList for Mutation:', updatedData.alias_list); // Log the mutation data
+
+            // Remove target performer name from alias list
+            updatedData.alias_list = updatedData.alias_list.filter(e => e.toLowerCase() !== targetPerformer.name.toLowerCase());
+            console.log('Updated AliasList for Mutation:', updatedData.alias_list); // Log the mutation data
 
             console.log('Updated Data for Mutation:', updatedData); // Log the mutation data
 
             await updatePerformer({ id: targetPerformerId, name: `${targetPerformer.name}_temp` });
+            console.log('Updating Data for Mutation:', updatedData); // Log the mutation data
             await updatePerformer(updatedData);
+            console.log('Completed Updating Data for Mutation:', updatedData); // Log the mutation data
             await deletePerformer(sourcePerformerId);
+            console.log('Deleting Merged Performer:', sourcePerformerId); // Log the mutation data
             await updatePerformer({ id: targetPerformerId, name: targetPerformer.name });
 
             // Transfer related items (galleries and scenes) to the target performer
+            console.log('Transferring Items to Performer:', sourcePerformerId); // Log the mutation data
             await transferRelatedItems(sourcePerformerId, targetPerformerId);
 
             showToast('Performers merged successfully', 'success');
@@ -693,11 +684,6 @@
                     piercings
                     alias_list
                     image_path
-                    scene_count
-                    image_count
-                    gallery_count
-                    performer_count
-                    o_counter
                     rating100
                     details
                     death_date
