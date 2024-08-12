@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         stashRightClick for Images
 // @namespace    https://github.com/Serechops/Serechops-Stash
-// @version      1.3
-// @description  Adds a custom right-click menu to .image-card elements with options to add tags, performers, or galleries using GraphQL mutations.
+// @version      1.4
+// @description  Adds a custom right-click menu to .image-card elements with options to add tags, performers, galleries using GraphQL mutations, and to update performer images.
 // @author       Serechops
 // @match        http://localhost:9999/*
 // @grant        none
@@ -128,6 +128,11 @@
             margin-bottom: 5px;
             color: white;
         }
+
+        #popup form select {
+            color: white; /* Change performer text color to white */
+            background-color: black; /* Adjust background color if necessary */
+        }
     `;
 
     // Inject custom CSS into the document
@@ -199,6 +204,17 @@
             createTabulatorPopup('Scenes', imageId, fetchScenes, event);
         });
         menu.appendChild(linkSceneLink);
+
+        const updatePerformerImageLink = document.createElement('a');
+        updatePerformerImageLink.href = '#';
+        updatePerformerImageLink.textContent = 'Update Performer Image...';
+        updatePerformerImageLink.style.display = 'block';
+        updatePerformerImageLink.style.marginBottom = '5px';
+        updatePerformerImageLink.addEventListener('click', async function(e) {
+            e.preventDefault();
+            await updatePerformerImage(imageId, menu);
+        });
+        menu.appendChild(updatePerformerImageLink);
 
         document.body.appendChild(menu);
         currentMenu = menu;
@@ -658,6 +674,125 @@
             console.error('Error updating scene:', error);
             throw new Error('Error updating scene');
         }
+    }
+
+    // Function to update performer image
+    async function updatePerformerImage(imageId, menu) {
+        try {
+            // Fetch the image URL and associated performers
+            const imageQuery = `
+                query FindImage {
+                    findImage(id: ${imageId}) {
+                        paths {
+                            image
+                        }
+                        performers {
+                            id
+                            name
+                        }
+                    }
+                }
+            `;
+            const imageResponse = await fetchGQL(imageQuery);
+            const imageUrl = imageResponse.data.findImage.paths.image;
+            const performers = imageResponse.data.findImage.performers;
+
+            if (performers.length === 0) {
+                showToast('No performers linked to this image.', 'error');
+                return;
+            }
+
+            // Show performers in a popup for selection
+            const selectedPerformer = await showPerformerSelectionPopup(performers, menu);
+
+            if (selectedPerformer) {
+                // Update performer image with the selected image URL
+                const mutation = `
+                    mutation PerformerUpdate {
+                        performerUpdate(input: { id: "${selectedPerformer.id}", image: "${imageUrl}" }) {
+                            id
+                        }
+                    }
+                `;
+                const response = await fetch(config.serverUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `ApiKey ${config.apiKey}`
+                    },
+                    body: JSON.stringify({ query: mutation })
+                });
+                const result = await response.json();
+                if (result.errors) {
+                    console.error(result.errors);
+                    showToast('Failed to update performer image', 'error');
+                } else {
+                    showToast(`Performer image updated successfully for ${selectedPerformer.name}`, 'success');
+                }
+            }
+        } catch (error) {
+            console.error('Error updating performer image:', error);
+            showToast('Failed to update performer image', 'error');
+        }
+    }
+
+    // Function to show performer selection popup
+    async function showPerformerSelectionPopup(performers, menu) {
+        return new Promise((resolve) => {
+            const popup = document.createElement('div');
+            popup.id = 'popup';
+            document.body.appendChild(popup); // Append first to get proper dimensions
+
+            const form = document.createElement('form');
+            form.innerHTML = `
+                <h2>Select Performer</h2>
+                <select id="performer-select">
+                    ${performers.map(p => `<option value="${p.id}">${p.name}</option>`).join('')}
+                </select>
+                <button type="button" id="select-performer">Select</button>
+                <button type="button" id="cancel-performer">Cancel</button>
+            `;
+            popup.appendChild(form);
+
+            document.getElementById('select-performer').addEventListener('click', function() {
+                const selectedId = document.getElementById('performer-select').value;
+                const selectedPerformer = performers.find(p => p.id === selectedId);
+                popup.remove();
+                resolve(selectedPerformer);
+            });
+
+            document.getElementById('cancel-performer').addEventListener('click', function() {
+                popup.remove();
+                resolve(null);
+            });
+
+            // Position the popup below the right-click menu
+            const menuRect = menu.getBoundingClientRect();
+            popup.style.top = `${menuRect.bottom}px`;
+            popup.style.left = `${menuRect.left}px`;
+
+            // Add draggable functionality
+            let isDragging = false;
+            let dragOffsetX, dragOffsetY;
+
+            const header = form.querySelector('h2');
+            header.onmousedown = function(e) {
+                isDragging = true;
+                dragOffsetX = e.clientX - popup.offsetLeft;
+                dragOffsetY = e.clientY - popup.offsetTop;
+                document.onmousemove = function(e) {
+                    if (isDragging) {
+                        popup.style.left = `${e.clientX - dragOffsetX}px`;
+                        popup.style.top = `${e.clientY - dragOffsetY}px`;
+                    }
+                };
+                document.onmouseup = function() {
+                    isDragging = false;
+                    document.onmousemove = null;
+                    document.onmouseup = null;
+                };
+            };
+        });
     }
 
     // Add event listener to .image-card elements
