@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         stashRightClickPerformers
 // @namespace    https://github.com/Serechops/Serechops-Stash
-// @version      2.5
+// @version      2.6
 // @description  Adds a custom right-click menu to .performer-card elements with options like "Missing Scenes", "Change Image", "Auto-Tag", and "Add Tags" using GraphQL queries. Also allows batch image change for selected performers.
 // @match        http://localhost:9999/*
 // @grant        GM_addStyle
@@ -935,29 +935,54 @@
         }
     }
 
-    // Function to fetch tags matching a query
+    // Function to fetch tags matching a query using client-side regex filtering
     async function fetchTags(query) {
+        // Create a regex pattern from the query to match tags
+        const regex = new RegExp(query.split(/\s+/).join('.*'), 'i');
+
         const queryText = `
-            query FindTags($filter: String!) {
-                findTags(tag_filter: { name: { value: $filter, modifier: INCLUDES } }, filter: { per_page: -1 }) {
-                    tags {
-                        id
-                        name
-                    }
+        query FindTags {
+            findTags(filter: { per_page: -1 }) {
+                tags {
+                    id
+                    name
                 }
             }
+        }
         `;
-        const response = await fetch(config.serverUrl, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `ApiKey ${config.apiKey}`
-            },
-            body: JSON.stringify({ query: queryText, variables: { filter: query } })
-        });
-        const result = await response.json();
-        return result.data.findTags.tags;
+
+        try {
+            const response = await fetch(config.serverUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `ApiKey ${config.apiKey}`
+                },
+                body: JSON.stringify({ query: queryText })
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const result = await response.json();
+
+            if (result.errors) {
+                throw new Error(`GraphQL error: ${result.errors.map(e => e.message).join(', ')}`);
+            }
+
+            // Filter the tags on the client side using the regex
+            const filteredTags = result.data.findTags.tags.filter(tag => regex.test(tag.name));
+
+            return filteredTags;
+
+        } catch (error) {
+            console.error('Error fetching tags:', error);
+            return [];
+        }
     }
+
+
 
    // Function to create the Tabulator table in a popup for tag selection
    function createTagTabulatorPopup(performerID) {
