@@ -1,11 +1,13 @@
 // ==UserScript==
 // @name         stashRightClickPerformers
 // @namespace    https://github.com/Serechops/Serechops-Stash
-// @version      2.4
+// @version      2.5
 // @description  Adds a custom right-click menu to .performer-card elements with options like "Missing Scenes", "Change Image", "Auto-Tag", and "Add Tags" using GraphQL queries. Also allows batch image change for selected performers.
 // @match        http://localhost:9999/*
 // @grant        GM_addStyle
 // @grant        GM.xmlHttpRequest
+// @grant        GM.setValue
+// @grant        GM.getValue
 // @connect      stashdb.org
 // @connect      theporndb.net
 // @require      https://cdn.jsdelivr.net/npm/toastify-js@1.12.0/src/toastify.min.js
@@ -20,9 +22,11 @@
     'use strict';
 
     /******************************************
-     * USER CONFIGURATION
+     * USER CONFIGURATION - Using GM functions
      ******************************************/
-    const userConfig = {
+
+    // Default configuration values
+    const defaultConfig = {
         scheme: 'http', // or 'https'
         host: 'localhost', // your server IP or hostname
         port: 9999, // your server port
@@ -30,6 +34,25 @@
         stashDBApiKey: '', // your API key for StashDB
         tpdbApiKey: '' // your API key for TPDB
     };
+
+    // Function to load user configuration from GM storage
+    async function loadConfig() {
+        const storedConfig = await GM.getValue('userConfig', defaultConfig);
+        return { ...defaultConfig, ...storedConfig };
+    }
+
+    // Function to save user configuration to GM storage
+    async function saveConfig(config) {
+        await GM.setValue('userConfig', config);
+    }
+
+    // Load the configuration at the start
+    const userConfig = await loadConfig();
+
+    // If you need to update the configuration, call saveConfig with the updated values
+    // Example:
+    // userConfig.apiKey = 'new-api-key';
+    // await saveConfig(userConfig);
 
     // Build API URL
     const apiUrl = `${userConfig.scheme}://${userConfig.host}:${userConfig.port}/graphql`;
@@ -1022,18 +1045,24 @@
                if (response && response.data && response.data.findPerformers && Array.isArray(response.data.findPerformers.performers)) {
                    const performers = response.data.findPerformers.performers;
 
-                   // Extract tags from performers, sort them by updated_at, and limit to the most recent 10 tags
-                   const tags = performers.flatMap(performer => performer.tags)
+                   // Extract tags from performers, remove duplicates, sort them by updated_at, and limit to the most recent 10 tags
+                   const uniqueTags = {};
+                   performers.flatMap(performer => performer.tags).forEach(tag => {
+                       if (!uniqueTags[tag.id]) {
+                           uniqueTags[tag.id] = tag;
+                       }
+                   });
+
+                   // Convert the unique tags object back to an array and sort by updated_at
+                   const sortedTags = Object.values(uniqueTags)
                        .sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at))
-                       .slice(0, 10) // Take the most recent 10 tags
-                       .map(tag => ({ id: tag.id, name: tag.name }))
-                       .filter(tag => tag.name);
+                       .slice(0, 10); // Take the most recent 10 tags
 
                    const recentTagsContainer = document.getElementById('performers-recent-tags');
 
                    // Check if there are any tags to display
-                   if (tags.length > 0) {
-                       recentTagsContainer.innerHTML = tags.map(tag => `<div class="recent-tag" data-tag-id="${tag.id}">${tag.name}</div>`).join('');
+                   if (sortedTags.length > 0) {
+                       recentTagsContainer.innerHTML = sortedTags.map(tag => `<div class="recent-tag" data-tag-id="${tag.id}">${tag.name}</div>`).join('');
 
                        // Add event listeners to each tag for selection
                        document.querySelectorAll('.recent-tag').forEach(tagElement => {
@@ -1361,13 +1390,22 @@
         currentMenu = menu;
     }
 
-    // Function to handle right-click on performer cards
+    // Function to handle right-click on performer cards or detail header image
     document.addEventListener('contextmenu', function(event) {
+        // Check if the target is within a performer card or the detail header image
         const performerCard = event.target.closest('.performer-card');
-        if (performerCard) {
-            const performerLink = performerCard.querySelector('a');
+        const performerImage = event.target.closest('.detail-header-image');
+
+        if (performerCard || performerImage) {
+            let performerLink;
+            if (performerCard) {
+                performerLink = performerCard.querySelector('a');
+            } else if (performerImage) {
+                performerLink = performerImage.querySelector('img.performer');
+            }
+
             if (performerLink) {
-                const performerID = getPerformerID(performerLink.href);
+                const performerID = getPerformerID(performerLink.src || performerLink.href);
                 if (performerID) showCustomMenu(event, performerID);
             }
         }
