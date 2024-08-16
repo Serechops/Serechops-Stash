@@ -1,14 +1,16 @@
 // ==UserScript==
 // @name         stashRightClickPerformers
 // @namespace    https://github.com/Serechops/Serechops-Stash
-// @version      2.3
-// @description  Adds a custom right-click menu to .performer-card elements with options like "Missing Scenes", "Change Image", and "Auto-Tag" using GraphQL queries. Also allows batch image change for selected performers.
+// @version      2.4
+// @description  Adds a custom right-click menu to .performer-card elements with options like "Missing Scenes", "Change Image", "Auto-Tag", and "Add Tags" using GraphQL queries. Also allows batch image change for selected performers.
 // @match        http://localhost:9999/*
 // @grant        GM_addStyle
 // @grant        GM.xmlHttpRequest
 // @connect      stashdb.org
+// @connect      theporndb.net
 // @require      https://cdn.jsdelivr.net/npm/toastify-js@1.12.0/src/toastify.min.js
 // @require      https://cdn.jsdelivr.net/npm/chart.js
+// @require      https://unpkg.com/tabulator-tables@5.0.8/dist/js/tabulator.min.js
 // @downloadURL  https://github.com/Serechops/Serechops-Stash/raw/main/Stash_Userscripts/stashRightClick/stashRightClickPerformers.user.js
 // @updateURL    https://github.com/Serechops/Serechops-Stash/raw/main/Stash_Userscripts/stashRightClick/stashRightClickPerformers.user.js
 // @run-at       document-end
@@ -25,7 +27,8 @@
         host: 'localhost', // your server IP or hostname
         port: 9999, // your server port
         apiKey: '', // your API key for local Stash server
-        stashDBApiKey: '' // your API key for StashDB
+        stashDBApiKey: '', // your API key for StashDB
+        tpdbApiKey: '' // your API key for TPDB
     };
 
     // Build API URL
@@ -35,14 +38,16 @@
     const config = {
         serverUrl: apiUrl,
         apiKey: userConfig.apiKey,
-        stashDBApiKey: userConfig.stashDBApiKey
+        stashDBApiKey: userConfig.stashDBApiKey,
+        tpdbApiKey: userConfig.tpdbApiKey
     };
 
-    // Inject CSS for the custom menu, modals, and loading spinner
+    // Inject CSS for the custom menu, modals, loading spinner, and Tabulator
     GM_addStyle(`
         @import url('https://cdn.jsdelivr.net/npm/toastify-js@1.12.0/src/toastify.min.css');
         @import url('https://unpkg.com/tabulator-tables@5.0.8/dist/css/tabulator_midnight.min.css');
 
+        /* Styles for the custom popup */
         #performers-custom-popup {
             position: absolute;
             background: rgba(0, 0, 0, 0.5);
@@ -55,20 +60,24 @@
             max-height: 80%;
             overflow-y: auto;
         }
+
         #performers-custom-popup h2 {
             margin-top: 0;
-            cursor: move; /* Make the header cursor indicate that it's draggable */
+            cursor: move;
         }
+
         #performers-custom-popup form label {
             display: block;
             margin-top: 10px;
         }
+
         #performers-custom-popup form input, #performers-custom-popup form select {
             width: 100%;
             padding: 8px;
             margin-top: 5px;
             box-sizing: border-box;
         }
+
         #performers-custom-popup form button {
             margin-top: 15px;
             padding: 10px;
@@ -76,6 +85,7 @@
             background: rgba(0, 0, 0, 0.5);
             color: #fff;
         }
+
         #performers-custom-popup input[type="text"], #performers-custom-popup select {
             color: black;
         }
@@ -97,7 +107,66 @@
             color: white;
         }
 
-        .performers-custom-modal {
+        /* Styles for the tag Tabulator popup */
+        #performers-tag-popup {
+            position: absolute;
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid #ccc;
+            z-index: 10002;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+            width: 500px;
+            max-height: 80%;
+            overflow-y: auto;
+        }
+
+        #performers-tag-popup h2 {
+            margin-top: 0;
+        }
+
+        #performers-tag-popup #performers-tag-table {
+            height: 300px;
+        }
+
+        #performers-tag-popup form button {
+            margin-top: 15px;
+            padding: 10px;
+            cursor: pointer;
+            background: rgba(0, 0, 0, 0.5);
+            color: #fff;
+            width: 100%;
+        }
+        #performers-tag-search {
+        color: black;
+       }
+       .performers-tag-close {
+           position: absolute;
+           top: 10px;
+           right: 15px;
+           font-size: 28px;
+           font-weight: bold;
+           color: white;
+           cursor: pointer;
+           z-index: 10003;
+       }
+
+       .performers-tag-close:hover {
+           color: red;
+       }
+       .recent-tag {
+           cursor: pointer;
+           padding: 5px;
+           margin: 3px 0;
+           background-color: rgba(255, 255, 255, 0.2);
+           border-radius: 4px;
+       }
+
+       .recent-tag.selected {
+           background-color: rgba(255, 255, 255, 0.7);
+           color: black;
+           font-weight: bold;
+       }
+       .performers-custom-modal {
             display: none;
             position: fixed;
             z-index: 10001;
@@ -292,6 +361,7 @@
     document.body.insertAdjacentHTML('beforeend', dimOverlayHTML);
 
     let slideshowInterval;
+
     function startSlideshow(images) {
         const spinner = document.getElementById('performers-loading-spinner');
         let currentIndex = 0;
@@ -306,14 +376,14 @@
             imgElement.addEventListener('animationend', () => {
                 const allImages = spinner.querySelectorAll('img');
                 if (allImages.length > 1) {
-                    allImages[1].remove(); // Remove the previous image
+                    allImages[1].remove();
                 }
             });
             currentIndex++;
         }
 
         showNextImage();
-        setInterval(showNextImage, 2000); // Change image every 3 seconds
+        setInterval(showNextImage, 2000);
     }
 
     function showLoadingSpinner(images) {
@@ -343,29 +413,34 @@
         return urlParts[urlParts.length - 1];
     }
 
-    // Function to fetch performer's StashDB ID
-    async function fetchPerformerStashDBID(performerID) {
+    // Function to fetch performer's StashDB and TPDB IDs
+    async function fetchPerformerIDs(performerID) {
         const query = `
             query FindPerformer($id: ID!) {
                 findPerformer(id: $id) {
                     stash_ids {
+                        endpoint
                         stash_id
                     }
                 }
             }
         `;
-        console.log("GraphQL query for fetching performer's StashDB ID:", query);
+        console.log("GraphQL query for fetching performer's IDs:", query);
         try {
             const response = await graphqlRequest(query, { id: performerID }, config.apiKey);
-            console.log("Response for performer's StashDB ID:", response);
+            console.log("Response for performer's IDs:", response);
             if (response && response.data && response.data.findPerformer) {
-                return response.data.findPerformer.stash_ids.map(id => id.stash_id);
+                const stash_ids = response.data.findPerformer.stash_ids;
+                return {
+                    stashDBID: stash_ids.find(id => id.endpoint === 'https://stashdb.org/graphql')?.stash_id,
+                    tpdbID: stash_ids.find(id => id.endpoint === 'https://theporndb.net/graphql')?.stash_id
+                };
             } else {
                 console.error('No stash_ids found for performer:', performerID);
                 return null;
             }
         } catch (error) {
-            console.error('Error fetching performer StashDB ID:', error);
+            console.error('Error fetching performer IDs:', error);
             return null;
         }
     }
@@ -395,6 +470,35 @@
             }
         } catch (error) {
             console.error('Error fetching performer images from StashDB:', error);
+            return [];
+        }
+    }
+
+    // Function to fetch performer images from TPDB
+    async function fetchPerformerImagesFromTPDB(performerTPDBID) {
+        const query = `
+            query FindPerformer($id: ID!) {
+                findPerformer(id: $id) {
+                    images {
+                        url
+                        width
+                        height
+                    }
+                }
+            }
+        `;
+        console.log("GraphQL query for fetching performer images from TPDB:", query);
+        try {
+            const response = await gqlQuery('https://theporndb.net/graphql', query, { id: performerTPDBID }, config.tpdbApiKey);
+            console.log("Response for performer images from TPDB:", response);
+            if (response && response.data && response.data.findPerformer) {
+                return response.data.findPerformer.images;
+            } else {
+                console.error('No images found for performer in TPDB:', performerTPDBID);
+                return [];
+            }
+        } catch (error) {
+            console.error('Error fetching performer images from TPDB:', error);
             return [];
         }
     }
@@ -642,8 +746,8 @@
             const end = start + imagesPerPage;
             const imageHTML = images.slice(start, end).map(img => `
                 <div class="performers-custom-image-option-container">
-                    <img src="${source === 'StashDB' ? img.url : img.paths.thumbnail}" class="performers-custom-image-option" data-url="${source === 'StashDB' ? img.url : img.paths.thumbnail}">
-                    <div class="performers-image-dimensions">(${img.files ? img.files[0]?.width : img.width} x ${img.files ? img.files[0]?.height : img.height})</div>
+                    <img src="${source === 'StashDB' || source === 'TPDB' ? img.url : img.paths.thumbnail}" class="performers-custom-image-option" data-url="${source === 'StashDB' || source === 'TPDB' ? img.url : img.paths.thumbnail}">
+                    ${img.width && img.height && img.width > 0 && img.height > 0 ? `<div class="performers-image-dimensions">(${img.width} x ${img.height})</div>` : ''}
                 </div>
             `).join('');
             document.getElementById('performers-custom-imageGallery').innerHTML = imageHTML;
@@ -703,7 +807,7 @@
                 const imageUrl = selectedImage.getAttribute('data-url');
                 const success = await updatePerformerImage(performerID, imageUrl);
                 if (success) {
-                    updatePerformerImageInDOM(performerID, imageUrl); // Update the image in the DOM
+                    updatePerformerImageInDOM(performerID, imageUrl);
                     Toastify({
                         text: 'Image updated successfully',
                         backgroundColor: 'green',
@@ -808,6 +912,253 @@
         }
     }
 
+    // Function to fetch tags matching a query
+    async function fetchTags(query) {
+        const queryText = `
+            query FindTags($filter: String!) {
+                findTags(tag_filter: { name: { value: $filter, modifier: INCLUDES } }, filter: { per_page: -1 }) {
+                    tags {
+                        id
+                        name
+                    }
+                }
+            }
+        `;
+        const response = await fetch(config.serverUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `ApiKey ${config.apiKey}`
+            },
+            body: JSON.stringify({ query: queryText, variables: { filter: query } })
+        });
+        const result = await response.json();
+        return result.data.findTags.tags;
+    }
+
+   // Function to create the Tabulator table in a popup for tag selection
+   function createTagTabulatorPopup(performerID) {
+       console.log(`Creating Tabulator popup for Tags`);
+       const popup = document.createElement('div');
+       popup.id = 'performers-tag-popup';
+       document.body.appendChild(popup);
+
+       const form = document.createElement('form');
+       form.innerHTML = `
+           <div id="performers-tag-close" class="performers-tag-close">&times;</div>
+           <h2>Select Tags for Performer</h2>
+           <div style="display: flex; gap: 20px;">
+               <div style="flex: 1;">
+                   <input type="text" id="performers-tag-search" placeholder="Search Tags">
+                   <div id="performers-tag-table"></div>
+               </div>
+               <div style="flex: 1;">
+                   <h3>Recent Tags</h3>
+                   <div id="performers-recent-tags"></div>
+               </div>
+           </div>
+           <button type="button" id="performers-apply-tags">Apply Tags</button>
+       `;
+       popup.appendChild(form);
+
+        // Close button logic
+        document.getElementById('performers-tag-close').onclick = function() {
+            popup.remove();
+        };
+
+        const tableColumns = [
+            { title: "ID", field: "id" },
+            { title: "Name", field: "name" },
+        ];
+
+        const table = new Tabulator(`#performers-tag-table`, {
+            layout: "fitColumns",
+            height: "300px",
+            placeholder: "No Tags Available",
+            selectable: true,
+            columns: tableColumns,
+        });
+
+        async function fetchData(query) {
+            const data = await fetchTags(query);
+            table.setData(data);
+        }
+
+       // Function to get the current timestamp in ISO format
+       function getCurrentTimestamp() {
+           return new Date().toISOString();
+       }
+
+       // Fetch recent tags used for performers and display them
+       async function fetchRecentTags() {
+           const currentTimestamp = getCurrentTimestamp();
+
+           const recentTagsQuery = `
+               query FindPerformers {
+                   findPerformers(
+                       performer_filter: { updated_at: { value: "${currentTimestamp}", modifier: LESS_THAN } }
+                       filter: { per_page: -1 }
+                   ) {
+                       performers {
+                           id
+                           name
+                           tags {
+                               id
+                               name
+                               updated_at
+                           }
+                       }
+                   }
+               }
+           `;
+
+           try {
+               const response = await graphqlRequest(recentTagsQuery);
+
+               // Log the entire response to understand what is returned
+               console.log("Response from server:", response);
+
+               // Check if the response contains the expected structure
+               if (response && response.data && response.data.findPerformers && Array.isArray(response.data.findPerformers.performers)) {
+                   const performers = response.data.findPerformers.performers;
+
+                   // Extract tags from performers, sort them by updated_at, and limit to the most recent 10 tags
+                   const tags = performers.flatMap(performer => performer.tags)
+                       .sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at))
+                       .slice(0, 10) // Take the most recent 10 tags
+                       .map(tag => ({ id: tag.id, name: tag.name }))
+                       .filter(tag => tag.name);
+
+                   const recentTagsContainer = document.getElementById('performers-recent-tags');
+
+                   // Check if there are any tags to display
+                   if (tags.length > 0) {
+                       recentTagsContainer.innerHTML = tags.map(tag => `<div class="recent-tag" data-tag-id="${tag.id}">${tag.name}</div>`).join('');
+
+                       // Add event listeners to each tag for selection
+                       document.querySelectorAll('.recent-tag').forEach(tagElement => {
+                           tagElement.addEventListener('click', function() {
+                               tagElement.classList.toggle('selected');
+                           });
+                       });
+
+                   } else {
+                       recentTagsContainer.innerHTML = `<div>No Recent Tags Found</div>`;
+                   }
+               } else {
+                   // Handle cases where the structure is not as expected or no performers are returned
+                   console.warn('Unexpected response structure or no performers found:', response);
+                   document.getElementById('performers-recent-tags').innerHTML = `<div>No Recent Tags Found</div>`;
+               }
+           } catch (error) {
+               // Log the error for debugging
+               console.error('Error fetching recent tags:', error);
+
+               // Display an error message to the user
+               document.getElementById('performers-recent-tags').innerHTML = `<div>Error fetching recent tags</div>`;
+           }
+       }
+
+       fetchRecentTags();
+
+        // Debounce function to limit the rate at which a function can fire
+        function debounce(func, wait) {
+            let timeout;
+            return function(...args) {
+                clearTimeout(timeout);
+                timeout = setTimeout(() => func.apply(this, args), wait);
+            };
+        }
+
+        // Add input field for filtering
+        const filterInput = document.getElementById(`performers-tag-search`);
+        filterInput.addEventListener('input', debounce((e) => {
+            const query = e.target.value;
+            fetchData(query);
+        }, 300));
+
+        document.getElementById(`performers-apply-tags`).addEventListener('click', async function() {
+            const selectedRows = table.getSelectedData();
+            const selectedIds = selectedRows.map(row => row.id);
+
+            // Get selected recent tags
+            const selectedRecentTags = Array.from(document.querySelectorAll('.recent-tag.selected')).map(tag => tag.getAttribute('data-tag-id'));
+
+            // Combine selected table tags and recent tags
+            const combinedTagIds = Array.from(new Set([...selectedIds, ...selectedRecentTags]));
+
+            if (combinedTagIds.length > 0) {
+                const success = await addTagsToPerformer(performerID, combinedTagIds);
+                if (success) {
+                    Toastify({
+                        text: 'Tags added successfully',
+                        backgroundColor: 'green',
+                        position: "center",
+                        duration: 3000
+                    }).showToast();
+                } else {
+                    Toastify({
+                        text: 'Failed to add tags',
+                        backgroundColor: 'red',
+                        position: "center",
+                        duration: 3000
+                    }).showToast();
+                }
+                popup.remove();
+            } else {
+                Toastify({
+                    text: 'Please select at least one tag',
+                    backgroundColor: 'orange',
+                    position: "center",
+                    duration: 3000
+                }).showToast();
+            }
+        });
+
+        // Position the popup appropriately directly under the right-click menu
+        const rect = currentMenu.getBoundingClientRect();
+        popup.style.top = `${rect.bottom}px`;
+        popup.style.left = `${rect.left}px`;
+    }
+
+    // Function to add tags to a performer
+    async function addTagsToPerformer(performerID, newTagIds) {
+        // First, fetch existing tags for the performer
+        const existingTagsQuery = `
+            query FindPerformer($id: ID!) {
+                findPerformer(id: $id) {
+                    tags {
+                        id
+                    }
+                }
+            }
+        `;
+
+        const existingTagsResponse = await graphqlRequest(existingTagsQuery, { id: performerID }, config.apiKey);
+        const existingTags = existingTagsResponse.data.findPerformer.tags.map(tag => tag.id);
+
+        // Combine existing tags with new tags, ensuring no duplicates
+        const combinedTagIds = Array.from(new Set([...existingTags, ...newTagIds]));
+
+        // Mutation to update the performer with the combined tags
+        const mutation = `
+            mutation PerformerUpdate($id: ID!, $tag_ids: [ID!]) {
+                performerUpdate(input: { id: $id, tag_ids: $tag_ids }) {
+                    id
+                }
+            }
+        `;
+
+        try {
+            const response = await graphqlRequest(mutation, { id: performerID, tag_ids: combinedTagIds }, config.apiKey);
+            console.log("Response for adding tags to performer:", response);
+            return response && response.data && response.data.performerUpdate;
+        } catch (error) {
+            console.error('Error adding tags to performer:', error);
+            return null;
+        }
+    }
+
     // Function to create the custom menu
     function createCustomMenu(performerID) {
         const menu = document.createElement('div');
@@ -818,15 +1169,15 @@
         missingScenesLink.textContent = 'Missing Scenes';
         missingScenesLink.addEventListener('click', async function(e) {
             e.preventDefault();
-            const stashIDs = await fetchPerformerStashDBID(performerID);
-            if (stashIDs) {
-                const images = await fetchPerformerImagesFromStashDB(stashIDs[0]);
+            const performerIDs = await fetchPerformerIDs(performerID);
+            if (performerIDs && performerIDs.stashDBID) {
+                const images = await fetchPerformerImagesFromStashDB(performerIDs.stashDBID);
                 showLoadingSpinner(images);
                 const localDetails = await fetchPerformerDetails(performerID);
                 const stashDBScenes = [];
                 let page = 1;
                 while (true) {
-                    const result = await fetchStashDBScenes(stashIDs, page);
+                    const result = await fetchStashDBScenes([performerIDs.stashDBID], page);
                     stashDBScenes.push(...result.scenes);
                     if (stashDBScenes.length >= result.count || result.scenes.length < 25) break;
                     page++;
@@ -850,11 +1201,11 @@
         changeImageLink.textContent = 'Change Image from StashDB...';
         changeImageLink.addEventListener('click', async function(e) {
             e.preventDefault();
-            const stashIDs = await fetchPerformerStashDBID(performerID);
+            const performerIDs = await fetchPerformerIDs(performerID);
             const performerDetails = await fetchPerformerDetails(performerID);
             const performerName = performerDetails ? performerDetails.name : 'Unknown';
-            if (stashIDs && stashIDs.length > 0) {
-                const images = await fetchPerformerImagesFromStashDB(stashIDs[0]);
+            if (performerIDs && performerIDs.stashDBID) {
+                const images = await fetchPerformerImagesFromStashDB(performerIDs.stashDBID);
                 if (images && images.length > 0) {
                     createImageSelectionModal(images, performerID, performerName, "StashDB");
                     document.getElementById('performers-custom-imageSelectionModal').style.display = 'block';
@@ -866,6 +1217,28 @@
             }
         });
         menu.appendChild(changeImageLink);
+
+        const changeImageFromTPDBLink = document.createElement('a');
+        changeImageFromTPDBLink.href = '#';
+        changeImageFromTPDBLink.textContent = 'Change Image from TPDB...';
+        changeImageFromTPDBLink.addEventListener('click', async function(e) {
+            e.preventDefault();
+            const performerIDs = await fetchPerformerIDs(performerID);
+            const performerDetails = await fetchPerformerDetails(performerID);
+            const performerName = performerDetails ? performerDetails.name : 'Unknown';
+            if (performerIDs && performerIDs.tpdbID) {
+                const images = await fetchPerformerImagesFromTPDB(performerIDs.tpdbID);
+                if (images && images.length > 0) {
+                    createImageSelectionModal(images, performerID, performerName, "TPDB");
+                    document.getElementById('performers-custom-imageSelectionModal').style.display = 'block';
+                } else {
+                    console.error('No images found for performer');
+                }
+            } else {
+                console.error('Failed to fetch performer TPDB ID');
+            }
+        });
+        menu.appendChild(changeImageFromTPDBLink);
 
         const changeImageFromGalleryLink = document.createElement('a');
         changeImageFromGalleryLink.href = '#';
@@ -893,6 +1266,15 @@
         });
         menu.appendChild(autoTagLink);
 
+        const addTagLink = document.createElement('a');
+        addTagLink.href = '#';
+        addTagLink.textContent = 'Add Tags...';
+        addTagLink.addEventListener('click', async function(e) {
+            e.preventDefault();
+            createTagTabulatorPopup(performerID);
+        });
+        menu.appendChild(addTagLink);
+
         const batchChangeImageLink = document.createElement('a');
         batchChangeImageLink.href = '#';
         batchChangeImageLink.textContent = 'Batch Change Image...';
@@ -906,9 +1288,9 @@
                         const performerID = selectedPerformers[currentPerformerIndex];
                         const performerDetails = await fetchPerformerDetails(performerID);
                         const performerName = performerDetails ? performerDetails.name : 'Unknown';
-                        const stashIDs = await fetchPerformerStashDBID(performerID);
-                        if (stashIDs && stashIDs.length > 0) {
-                            const images = await fetchPerformerImagesFromStashDB(stashIDs[0]);
+                        const performerIDs = await fetchPerformerIDs(performerID);
+                        if (performerIDs && performerIDs.stashDBID) {
+                            const images = await fetchPerformerImagesFromStashDB(performerIDs.stashDBID);
                             if (images && images.length > 0) {
                                 createImageSelectionModal(images, performerID, performerName, "StashDB", () => {
                                     currentPerformerIndex++;
