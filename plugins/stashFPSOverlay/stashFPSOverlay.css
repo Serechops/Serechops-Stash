@@ -1,0 +1,14 @@
+.overlay-fps {
+    font-size: 13px;
+    color: white;
+    background-color: none;
+    padding: 2px 4px;
+    margin-left: 5px;
+    border-radius: 3px;
+    display: inline-block;
+}
+
+.overlay-fps:before {
+    content: '';
+    color: white;
+}

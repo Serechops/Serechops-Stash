@@ -1,0 +1,8 @@
+name: Stash FPS Overlay
+description: Adds an FPS overlay on the scene cards.
+version: 1.0
+ui:
+  javascript:
+    - stashFPSOverlay.js
+  css:
+    - stashFPSOverlay.css
