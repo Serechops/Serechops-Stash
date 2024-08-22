@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         stashRightClick for Scenes with Video Player
 // @namespace    https://github.com/Serechops/Serechops-Stash
-// @version      2.9
+// @version      3.0
 // @description  Adds a custom right-click menu to .scene-card elements with options to add tags, performers, or galleries using GraphQL mutations. Updated with debounced searchable dropdowns, improved popup positioning, appending tags/performers/galleries instead of replacing them, and includes a popout video player for scenes with video files. Now includes a custom playlist functionality.
 // @author       Serechops
 // @match        http://localhost:9999/*
@@ -220,10 +220,21 @@ const userConfig = {
         });
         menu.appendChild(editSceneLink);
 
+        // Add Support link at the bottom of the menu with target="_blank"
+        const supportLink = document.createElement('a');
+        supportLink.href = 'https://www.patreon.com/serechops/membership';
+        supportLink.textContent = 'Support';
+        supportLink.style.display = 'block';
+        supportLink.style.marginTop = '10px'; // Adds some space above the support link
+        supportLink.style.color = '#FFD700'; // Optional: You can style the link differently if desired
+        supportLink.target = '_blank'; // Opens the link in a new tab
+        menu.appendChild(supportLink);
+
         document.body.appendChild(menu);
         currentMenu = menu;
         return menu;
     }
+
 
     // Function to show the custom menu
     function showCustomMenu(event, sceneId) {

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         stashRightClick for Galleries
 // @namespace    https://github.com/Serechops/Serechops-Stash
-// @version      1.4
+// @version      1.2
 // @description  Adds a custom right-click menu to .gallery-card elements with options to add tags, performers, or scenes using GraphQL mutations.
 // @author       Serechops
 // @match        http://localhost:9999/*
@@ -198,10 +198,21 @@
         });
         menu.appendChild(addScenesLink);
 
+        // Add Support link at the bottom of the menu with target="_blank"
+        const supportLink = document.createElement('a');
+        supportLink.href = 'https://www.patreon.com/serechops/membership';
+        supportLink.textContent = 'Support';
+        supportLink.style.display = 'block';
+        supportLink.style.marginTop = '10px'; // Adds some space above the support link
+        supportLink.style.color = '#FFD700'; // Optional: You can style the link differently if desired
+        supportLink.target = '_blank'; // Opens the link in a new tab
+        menu.appendChild(supportLink);
+
         document.body.appendChild(menu);
         currentMenu = menu;
         return menu;
     }
+
 
     // Function to show the custom menu
     function showCustomMenu(event, galleryId) {

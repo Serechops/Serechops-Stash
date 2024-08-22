@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         stashRightClick for Images
 // @namespace    https://github.com/Serechops/Serechops-Stash
-// @version      1.4
+// @version      1.5
 // @description  Adds a custom right-click menu to .image-card elements with options to add tags, performers, galleries using GraphQL mutations, and to update performer images.
 // @author       Serechops
 // @match        http://localhost:9999/*
@@ -216,10 +216,21 @@
         });
         menu.appendChild(updatePerformerImageLink);
 
+        // Add Support link at the bottom of the menu with target="_blank"
+        const supportLink = document.createElement('a');
+        supportLink.href = 'https://www.patreon.com/serechops/membership';
+        supportLink.textContent = 'Support';
+        supportLink.style.display = 'block';
+        supportLink.style.marginTop = '10px'; // Adds some space above the support link
+        supportLink.style.color = '#FFD700'; // Optional: You can style the link differently if desired
+        supportLink.target = '_blank'; // Opens the link in a new tab
+        menu.appendChild(supportLink);
+
         document.body.appendChild(menu);
         currentMenu = menu;
         return menu;
     }
+
 
     // Function to show the custom menu
     function showCustomMenu(event, imageId) {
@@ -702,14 +713,12 @@
                 return;
             }
 
-            // Show performers in a popup for selection
-            const selectedPerformer = await showPerformerSelectionPopup(performers, menu);
-
-            if (selectedPerformer) {
-                // Update performer image with the selected image URL
+            // If there's only one performer, update the image directly
+            if (performers.length === 1) {
+                const performer = performers[0];
                 const mutation = `
                     mutation PerformerUpdate {
-                        performerUpdate(input: { id: "${selectedPerformer.id}", image: "${imageUrl}" }) {
+                        performerUpdate(input: { id: "${performer.id}", image: "${imageUrl}" }) {
                             id
                         }
                     }
@@ -727,7 +736,35 @@
                     console.error(result.errors);
                     showToast('Failed to update performer image', 'error');
                 } else {
-                    showToast(`Performer image updated successfully for ${selectedPerformer.name}`, 'success');
+                    showToast(`Performer image updated successfully for ${performer.name}`, 'success');
+                }
+            } else {
+                // Show performers in a popup for selection if there are multiple performers
+                const selectedPerformer = await showPerformerSelectionPopup(performers, menu);
+
+                if (selectedPerformer) {
+                    const mutation = `
+                        mutation PerformerUpdate {
+                            performerUpdate(input: { id: "${selectedPerformer.id}", image: "${imageUrl}" }) {
+                                id
+                            }
+                        }
+                    `;
+                    const response = await fetch(config.serverUrl, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `ApiKey ${config.apiKey}`
+                        },
+                        body: JSON.stringify({ query: mutation })
+                    });
+                    const result = await response.json();
+                    if (result.errors) {
+                        console.error(result.errors);
+                        showToast('Failed to update performer image', 'error');
+                    } else {
+                        showToast(`Performer image updated successfully for ${selectedPerformer.name}`, 'success');
+                    }
                 }
             }
         } catch (error) {
@@ -735,6 +772,7 @@
             showToast('Failed to update performer image', 'error');
         }
     }
+
 
     // Function to show performer selection popup
     async function showPerformerSelectionPopup(performers, menu) {

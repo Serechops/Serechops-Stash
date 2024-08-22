@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         stashRightClickSettings
 // @namespace    https://github.com/Serechops/Serechops-Stash
-// @version      3.5
+// @version      3.6
 // @description  Adds a custom right-click menu to the settings icon in Stash.
 // @match        http://localhost:9999/*
 // @grant        GM_addStyle
@@ -653,6 +653,15 @@
         });
         menu.appendChild(duplicateCheckerLink);
 
+        // Add Support link at the bottom of the menu
+        const supportLink = document.createElement('a');
+        supportLink.href = 'https://www.patreon.com/serechops/membership';
+        supportLink.textContent = 'Support';
+        supportLink.target = '_blank'; // Open in a new tab
+        supportLink.style.marginTop = '10px';
+        supportLink.style.color = '#FFD700';
+        menu.appendChild(supportLink);
+
         document.body.appendChild(menu);
 
         // Adjust menu position to align to the left of the cursor
@@ -672,6 +681,7 @@
 
         document.addEventListener('click', handleClickOutside);
     }
+
 
     // Function to handle right-click on the settings button
     document.addEventListener('contextmenu', function(event) {

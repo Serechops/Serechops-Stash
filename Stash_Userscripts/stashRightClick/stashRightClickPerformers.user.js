@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         stashRightClickPerformers
 // @namespace    https://github.com/Serechops/Serechops-Stash
-// @version      2.6
+// @version      2.7
 // @description  Adds a custom right-click menu to .performer-card elements with options like "Missing Scenes", "Change Image", "Auto-Tag", and "Add Tags" using GraphQL queries. Also allows batch image change for selected performers.
 // @match        http://localhost:9999/*
 // @grant        GM_addStyle
@@ -1375,9 +1375,19 @@
         });
         menu.appendChild(batchChangeImageLink);
 
+        // Add Support link at the bottom of the menu
+        const supportLink = document.createElement('a');
+        supportLink.href = 'https://www.patreon.com/serechops/membership';
+        supportLink.textContent = 'Support';
+        supportLink.target = '_blank'; // Open in a new tab
+        supportLink.style.marginTop = '10px';
+        supportLink.style.color = '#FFD700';
+        menu.appendChild(supportLink);
+
         document.body.appendChild(menu);
         return menu;
     }
+
 
     // Function to get selected performers
     function getSelectedPerformers() {
