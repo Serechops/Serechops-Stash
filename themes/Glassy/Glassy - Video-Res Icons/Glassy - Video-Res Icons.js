@@ -1,37 +1,48 @@
 // Custom Resolution Icons in Scene Card
 
 const resolutionMap = {
-    '480p': 'https://imgur.com/qZZczlK.png',
-    '720p': 'https://imgur.com/7yw1fBI.png',
-    '1080p': 'https://imgur.com/O3FanXv.png',
-    '1440p': 'https://imgur.com/9y7a1cZ.png',
-    '4K': 'https://imgur.com/rI3crtx.png',
-    '5K': 'https://imgur.com/8TCEWHH.png',
-    '6K': 'https://imgur.com/QSgCChT.png',
-    '8K': 'https://imgur.com/1KXygPI.png',
-    '16K': 'https://imgur.com/rN7XKqt.png'
-    
+    '480p': '/plugin/Glassy - Video-Res Icons/assets/icons/480.png',
+    '720p': '/plugin/Glassy - Video-Res Icons/assets/icons/720.png',
+    '1080p': '/plugin/Glassy - Video-Res Icons/assets/icons/1080.png',
+    '1440p': '/plugin/Glassy - Video-Res Icons/assets/icons/1440.png',
+    '4K': '/plugin/Glassy - Video-Res Icons/assets/icons/4k.png',
+    '5K': '/plugin/Glassy - Video-Res Icons/assets/icons/5k.png',
+    '6K': '/plugin/Glassy - Video-Res Icons/assets/icons/6k.png',
+    '8K': '/plugin/Glassy - Video-Res Icons/assets/icons/8k.png',
+    '16K': '/plugin/Glassy - Video-Res Icons/assets/icons/16k.png'
 };
 
 function setupElementObserver() {
-    waitForElement('.scene-card.zoom-1.grid-card.card', (element) => {
+    waitForElement('.scene-card', (element) => {
+        // Check if an icon is already added to prevent duplicates
+        if (element.querySelector('.resolution-icon')) {
+            return;
+        }
+
         const overlays = element.querySelectorAll('span.overlay-resolution');
         overlays.forEach(overlay => {
             const resolution = overlay.textContent.trim();
             if (resolutionMap[resolution]) {
-                // Create an image element
+                // Create an image element for the icon
                 const img = document.createElement('img');
                 img.src = resolutionMap[resolution]; // Link to the image from the map
                 img.alt = resolution;
+                img.classList.add('resolution-icon'); // Add a class for easy identification
 
-                // Apply CSS styles to position the image
+                // Apply CSS styles to position the image in the top left corner
                 img.style.position = 'absolute';
-                img.style.top = '0';
-                img.style.right = '0';
-                img.style.transform = 'translateY(-190px)'; // Adjust this as needed
+                img.style.top = '5px'; // Slightly offset from the top edge
+                img.style.left = '5px'; // Slightly offset from the left edge
+                img.style.zIndex = '10'; // Ensure it's on top of other elements
+                
+                // Adjust the size based on the card dimensions
+                const iconSize = Math.min(element.offsetWidth, element.offsetHeight) * 0.15; // Icon width is 15% of the smaller dimension
+                const iconHeight = iconSize * 0.6; // Adjust height to 60% of the width for a widescreen aspect ratio
+                img.style.width = `${iconSize}px`;
+                img.style.height = `${iconHeight}px`;
 
-                // Replace the overlay span with the image
-                overlay.replaceWith(img);
+                // Append the image to the scene card
+                element.appendChild(img);
             }
         });
     });

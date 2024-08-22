@@ -1,6 +1,8 @@
 name: Glassy - Video-Res Icons
 description: A Glassy Add-On Module.
-version: 0.1
+version: 0.2
 ui:
   javascript:
     - Glassy - Video-Res Icons.js
+  assets:
+    /icons: icons
