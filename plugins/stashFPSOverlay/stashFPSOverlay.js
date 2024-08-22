@@ -1,13 +1,3 @@
-/******************************************
- * USER CONFIGURATION
- ******************************************/
-const userConfig = {
-    scheme: 'http', // or 'https'
-    host: 'localhost', // your server IP or hostname
-    port: 9999, // your server port
-    apiKey: '' // your API key, if needed
-};
-
 (async function () {
     'use strict';
 
