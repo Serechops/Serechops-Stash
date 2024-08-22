@@ -14,7 +14,7 @@ function customizeDonateButton() {
         // Apply CSS to position the custom div at the top right of the screen
         customSupportDiv.style.position = 'fixed';
         customSupportDiv.style.top = '4px'; 
-        customSupportDiv.style.right = '190px'; 
+        customSupportDiv.style.right = '225px'; 
         customSupportDiv.style.zIndex = '10000'; 
 
         // Create a new link element for the custom support button
