@@ -1,0 +1,6 @@
+name: Stash Scene Specs Overlay
+description: Hides all the scene specs overlay within the scene card and reveals them on hover.
+version: 0.1
+ui:
+  javascript:
+    - sceneSpecsOverlay.js

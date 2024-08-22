@@ -1,0 +1,6 @@
+name: Stash Scene File Size
+description: Display file size on scene cards.
+version: 0.1
+ui:
+  javascript:
+    - stashSceneFileSize.js
