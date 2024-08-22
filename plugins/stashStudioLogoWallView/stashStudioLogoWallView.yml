@@ -1,13 +1,8 @@
 name: Stash Studio Logo Wall View
 description: Adds the studio logo on the scene cards in Wall view.
-version: 1.0
+version: 1.1
 ui:
   javascript:
     - stashStudioLogoWallView.js
   css:
     - stashStudioLogoWallView.css
-settings:
-  showStudioOverlay:
-    displayName: Show Studio Overlay in Wall Mode.
-    description: Toggle the visibility of the studio logos on the scene cards.
-    type: BOOLEAN
