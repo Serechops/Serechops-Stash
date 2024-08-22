@@ -3,7 +3,10 @@
 
     console.log("FPS Injector Script started");
 
-    // Move query to be a constant and use GQL variables
+    // Define the GraphQL endpoint
+    const graphqlEndpoint = '/graphql';
+
+    // GraphQL query to fetch FPS
     const query = `query ($sceneId: ID!) {
         findScene(id: $sceneId) {
             id
@@ -11,19 +14,18 @@
         }
     }`;
 
-    // Async function that returns a promise to fetch FPS
+    // Async function to fetch FPS for a scene
     const fetchFPS = (sceneId) =>
-        fetch(`${userConfig.scheme}://${userConfig.host}:${userConfig.port}/graphql`, {
+        fetch(graphqlEndpoint, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Apikey ${userConfig.apiKey}`
             },
             body: JSON.stringify({ query, variables: { sceneId } })
         })
-        .then(res => res.json()) // Automatically await JSON response
-        .then(data => data?.data?.findScene?.files?.[0]?.frame_rate) // Use nullish coalescing operator
-        .then(fps => fps ? Math.round(fps) : null) // Round FPS to the nearest whole number
+        .then(res => res.json())
+        .then(data => data?.data?.findScene?.files?.[0]?.frame_rate)
+        .then(fps => fps ? Math.round(fps) : null)
         .catch(error => console.error(`Error fetching FPS for scene ID ${sceneId}:`, error));
 
     // Extract scene ID from a scene card
@@ -52,7 +54,7 @@
         if (fps) {
             const fpsSpan = document.createElement('span');
             fpsSpan.className = 'overlay-fps';
-            fpsSpan.textContent = ` ${fps} FPS`;
+            fpsSpan.textContent = ` ${fps}`;
             resolutionOverlay.appendChild(fpsSpan);
         } else {
             console.warn(`No FPS found for scene ID: ${sceneId}`);
