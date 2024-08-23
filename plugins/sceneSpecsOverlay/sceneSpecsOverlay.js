@@ -2,40 +2,39 @@ function addSlideUpEffect() {
     waitForElement('.scene-card', (element) => {
         // Find the scene specs overlay
         const sceneSpecsOverlay = element.querySelector('.scene-specs-overlay');
-        const thumbnailSection = element.querySelector('.thumbnail-section');
+        const cardSection = element.querySelector('.card-section');
 
-        if (sceneSpecsOverlay && thumbnailSection) {
-            // Apply initial hidden state using inline styles
+        if (sceneSpecsOverlay && cardSection) {
+            // Apply initial hidden state using inline styles for scene specs
             sceneSpecsOverlay.style.position = 'absolute';
-            sceneSpecsOverlay.style.bottom = '1';
-            sceneSpecsOverlay.style.left = 'auto'; // Position it at the bottom right
-            sceneSpecsOverlay.style.width = 'auto'; // Width adjusts to the content
-            sceneSpecsOverlay.style.height = 'auto'; // Height adjusts to the content
-            sceneSpecsOverlay.style.backgroundColor = 'rgba(0, 0, 0, 0.1)';
+            sceneSpecsOverlay.style.bottom = '10px';
+            sceneSpecsOverlay.style.left = 'auto';
+            sceneSpecsOverlay.style.width = 'auto';
+            sceneSpecsOverlay.style.height = 'auto';
+            sceneSpecsOverlay.style.backgroundColor = 'rgba(0, 0, 0, 0.2)';
             sceneSpecsOverlay.style.color = 'white';
             sceneSpecsOverlay.style.padding = '5px';
             sceneSpecsOverlay.style.boxSizing = 'border-box';
             sceneSpecsOverlay.style.textAlign = 'center';
-            sceneSpecsOverlay.style.borderRadius = '4px'; // Rounded corners
-            sceneSpecsOverlay.style.transform = 'translateY(30%)'; // Slightly hidden initially
+            sceneSpecsOverlay.style.borderRadius = '4px';
+            sceneSpecsOverlay.style.transform = 'translateY(100%)';
             sceneSpecsOverlay.style.transition = 'transform 0.3s ease-in-out, opacity 0.3s ease-in-out';
             sceneSpecsOverlay.style.opacity = '0';
             sceneSpecsOverlay.style.visibility = 'hidden';
             sceneSpecsOverlay.style.zIndex = '9';
 
-            // Ensure the thumbnail section is positioned correctly
-            thumbnailSection.style.position = 'relative';
-            thumbnailSection.style.overflow = 'hidden';
+            // Ensure the card section is positioned correctly
+            cardSection.style.position = 'relative';
 
             // Apply the hover effect to the .scene-card
             element.addEventListener('mouseover', () => {
-                sceneSpecsOverlay.style.transform = 'translateY(0)'; // Move into view
+                sceneSpecsOverlay.style.transform = 'translateY(0)';
                 sceneSpecsOverlay.style.opacity = '1';
                 sceneSpecsOverlay.style.visibility = 'visible';
             });
 
             element.addEventListener('mouseout', () => {
-                sceneSpecsOverlay.style.transform = 'translateY(30%)'; // Partially hidden
+                sceneSpecsOverlay.style.transform = 'translateY(100%)';
                 sceneSpecsOverlay.style.opacity = '0';
                 sceneSpecsOverlay.style.visibility = 'hidden';
             });
