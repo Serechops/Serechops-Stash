@@ -1,6 +1,7 @@
 // Custom Resolution Icons in Scene Card
 
 const resolutionMap = {
+    '360p': '/plugin/Glassy - Video-Res Icons/assets/icons/360.png',
     '480p': '/plugin/Glassy - Video-Res Icons/assets/icons/480.png',
     '720p': '/plugin/Glassy - Video-Res Icons/assets/icons/720.png',
     '1080p': '/plugin/Glassy - Video-Res Icons/assets/icons/1080.png',
@@ -32,7 +33,7 @@ function setupElementObserver() {
                 // Apply CSS styles to position the image in the top left corner
                 img.style.position = 'absolute';
                 img.style.top = '5px'; // Slightly offset from the top edge
-                img.style.left = '5px'; // Slightly offset from the left edge
+                img.style.right = '5px'; // Slightly offset from the right edge
                 img.style.zIndex = '10'; // Ensure it's on top of other elements
                 
                 // Adjust the size based on the card dimensions
