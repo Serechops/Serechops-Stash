@@ -1,6 +1,7 @@
 // Custom Resolution Icons in Scene Card
 
 const resolutionMap = {
+    '360p': '/plugin/Glassy - Video-Res Icons/assets/icons/360.png',
     '480p': '/plugin/Glassy - Video-Res Icons/assets/icons/480.png',
     '720p': '/plugin/Glassy - Video-Res Icons/assets/icons/720.png',
     '1080p': '/plugin/Glassy - Video-Res Icons/assets/icons/1080.png',
