@@ -10,7 +10,7 @@ Import over 2k curated Tags with Descriptions from StashDB into your Stash to ha
 
 ## Usage
 
-Run the `Import StashDB Tags` plugin task to import over 2,000 curated Tags with descriptions from StashDB.
+Run the `Import StashDB Tags` plugin task in `Settings > Tasks > Plugin Tasks` to import over 2,000 curated Tags with descriptions from StashDB.
 
 ## Configuration
 
