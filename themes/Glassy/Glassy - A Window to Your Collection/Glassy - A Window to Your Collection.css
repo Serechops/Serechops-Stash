@@ -891,6 +891,20 @@ div.filled-star svg.svg-inline--fa.fa-star.fa-icon.set path {
 .justify-content-center .studio-card .studio-card-image {
     width: 100%; 
 }
+.nav-utility.custom-support-div,
+.scene-header-container,
+.scrubber-wrapper {
+	display: none;
+}
+
+.mr-auto.nav.nav-tabs {
+	margin-top: 175px;
+}
+
+.VideoPlayer {
+	margin-top: 60px;
+}
+
 }
 
 /*Adjusts text size of headers in mobile*/
