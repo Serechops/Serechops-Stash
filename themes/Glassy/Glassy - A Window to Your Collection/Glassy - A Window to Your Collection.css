@@ -944,6 +944,13 @@ div.filled-star svg.svg-inline--fa.fa-star.fa-icon.set path {
 	}
 }
 
+/* Adjust Scene Page in Mobile */
+@media only screen and (max-width: 767px) {
+	.scrubber-wrapper {
+		display: none;
+	}
+}
+
 /* Media query for mobile devices */
 @media only screen and (max-width: 767px) {
 
@@ -973,6 +980,8 @@ div.filled-star svg.svg-inline--fa.fa-star.fa-icon.set path {
 		/* Adjust the height as needed */
 		z-index: 1000;
 		/* Adjust the z-index as needed */
+		margin-top: 60px;
+		margin-bottom: 1px;
 	}
 
 	.nav.nav-tabs {
@@ -1063,6 +1072,35 @@ div.filled-star svg.svg-inline--fa.fa-star.fa-icon.set path {
 			/* Adjust margin-top as needed to reduce the gap */
 		}
 	}
+/**************** Mobile Scene Page Adjustments ***********************/
+@media only screen and (max-width: 767px) {
+.scene-tabs {
+	transform: translateY(230px);
+}
+
+.scene-header,
+.mr-auto.nav.nav-tabs {
+	margin: 1px;
+}
+
+.nav-utility.custom-support-div {
+	display: none;
+}
+
+}
+
+@media only screen and (max-width: 576px) {
+	.VideoPlayer {
+		margin-top: 0;
+		margin-bottom: 1px;
+	}
+	
+	.scene-header,
+	.mr-auto.nav.nav-tabs {
+	margin: 1px;
+}
+}
+
 
 
 .performer.performer-video.lazy-load {
