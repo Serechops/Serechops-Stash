@@ -880,6 +880,10 @@ div.filled-star svg.svg-inline--fa.fa-star.fa-icon.set path {
 	fill: gold;
 }
 
+/****** Studio Logo and Resolution Stays Visible on Hover *****/
+.scene-card .studio-overlay {
+      opacity: 100% !important;
+}
 
 /*******************************************************************************************************************************/
 
