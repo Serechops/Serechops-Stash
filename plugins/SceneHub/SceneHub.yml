@@ -1,0 +1,17 @@
+name: SceneHub
+description: Collects the latest scenes from popular network sites and displays them all in one page.
+version: 0.1
+ui:
+  javascript:
+    - SceneHub.js
+  assets:
+    /: .
+exec:
+  - python
+  - "{pluginDir}/template/scraper_handler.py"
+interface: raw
+tasks:
+  - name: SceneHub Scenes Update
+    description: Runs the recent scene scrapers to get the latest scene information from all supported sites.
+    defaultArgs:
+      mode: main

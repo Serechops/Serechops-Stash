@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SceneHub</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+    <!-- Logo Navbar with Scroll Arrows -->
+    <div class="logo-navbar-wrapper">
+        <button class="scroll-arrow left-arrow" onclick="scrollLogoLeft()">&#9664;</button>
+        <nav class="logo-navbar">
+            <img src="brazzers.png" alt="Brazzers Logo" class="logo" onclick="loadScenes('brazzers_scenes.json', 'Brazzers', 'brazzers.png')">
+            <img src="bang.png" alt="Bang Logo" class="logo" onclick="loadScenes('bang_scenes.json', 'Bang', 'bang.png')">
+            <img src="newsensations.png" alt="NewSensations Logo" class="logo" onclick="loadScenes('newsensations_scenes.json', 'NewSensations', 'newsensations.png')">
+            <img src="lubed.png" alt="Lubed Logo" class="logo" onclick="loadScenes('lubed_scenes.json', 'Lubed', 'lubed.png')">
+            <img src="holed.png" alt="Holed Logo" class="logo" onclick="loadScenes('holed_scenes.json', 'Holed', 'holed.png')">
+            <img src="tiny4k.png" alt="Tiny4K Logo" class="logo" onclick="loadScenes('tiny4k_scenes.json', 'Tiny4K', 'tiny4k.png')">
+            <img src="exotic4k.png" alt="Exotic 4K Logo" class="logo" onclick="loadScenes('exotic4k_scenes.json', 'Exotic4K', 'exotic4k.png')">
+            <img src="pornpros.png" alt="PornPros Logo" class="logo" onclick="loadScenes('pornpros_scenes.json', 'PornPros', 'pornpros.png')">
+            <img src="realitykings.png" alt="RealityKings Logo" class="logo" onclick="loadScenes('realitykings_scenes.json', 'RealityKings', 'realitykings.png')">
+            <img src="vixen.png" alt="Vixen Logo" class="logo" onclick="loadScenes('vixen_scenes.json', 'VIXEN', 'vixen.png')">
+            <img src="private.png" alt="Private Logo" class="logo" onclick="loadScenes('private_scenes.json', 'PRIVATE', 'private.png')">
+            <img src="digitalplayground.png" alt="Digital Playground Logo" class="logo" onclick="loadScenes('digitalplayground_scenes.json', 'Digital Playground', 'digitalplayground.png')">
+        </nav>
+        <button class="scroll-arrow right-arrow" onclick="scrollLogoRight()">&#9654;</button>
+    </div>
+
+    <!-- Donate Button -->
+    <div class="donate-container">
+        <a href="https://www.patreon.com/serechops/membership" target="_blank">
+            <img src="patreon.png" alt="Donate on Patreon" class="donate-logo">
+        </a>
+    </div>
+	
+    <!-- Container for Scene Grid and Header -->
+    <div class="container">
+        <!-- Header to show the current site name and logo -->
+        <div class="current-site-header-wrapper">
+            <h1 id="current-site-name" class="current-site-header">Brazzers</h1>
+            <img id="current-site-logo" src="brazzers.png" alt="Current Site Logo" class="current-site-logo">
+        </div>
+
+        <!-- Scene Grid -->
+        <div class="scene-grid" id="scene-grid">
+            <!-- The scene cards will be dynamically added here -->
+        </div>
+    </div>
+
+    <script>
+        // Function to create a scene card and add it to the grid
+        function createSceneCard(scene) {
+            const sceneGrid = document.getElementById('scene-grid');
+        
+            const imageUrl = scene.image || 'default-image.jpg'; // Fallback image
+            const videoUrl = scene.video || ''; // Empty string if no video
+
+            const sceneCard = document.createElement('div');
+            sceneCard.classList.add('scene-card');
+
+            // Load static poster first and load video preview on hover
+            sceneCard.innerHTML = `
+                <a href="${scene.link}" target="_blank">
+                    <div class="video-container">
+                        <video class="scene-video" muted loop preload="none" poster="${imageUrl}">
+                            <source data-src="${videoUrl}" type="video/mp4">
+                            Your browser does not support the video tag.
+                        </video>
+                    </div>
+                    <h3>${scene.title}</h3>
+                    <p>Performers: ${scene.performers.join(', ')}</p>
+                    <p>Date: ${scene.date}</p>
+                </a>
+            `;
+
+            sceneGrid.appendChild(sceneCard);
+
+            const video = sceneCard.querySelector('.scene-video');
+            sceneCard.addEventListener('mouseover', () => {
+                if (!video.src && videoUrl) {
+                    video.src = videoUrl;
+                    video.load();
+                }
+                video.play();
+            });
+
+            sceneCard.addEventListener('mouseleave', () => {
+                video.pause();
+                video.currentTime = 0;
+            });
+        }
+
+        // Function to clear the existing scene cards and load new ones
+        function loadScenes(jsonFile, siteName, logoFile) {
+            const sceneGrid = document.getElementById('scene-grid');
+            const siteHeader = document.getElementById('current-site-name');
+            const siteLogo = document.getElementById('current-site-logo');
+
+            sceneGrid.innerHTML = '';  // Clear existing scene cards
+
+            // Set the current site name and logo in the header
+            siteHeader.textContent = siteName;
+            siteLogo.src = logoFile;
+            siteLogo.alt = `${siteName} Logo`;
+
+            // Fetch the scene metadata from the specified JSON file and generate scene cards
+            fetch(jsonFile)
+                .then(response => response.json())
+                .then(scenes => {
+                    scenes.forEach(scene => createSceneCard(scene));
+                })
+                .catch(error => {
+                    console.error('Error loading scenes:', error);
+                    siteHeader.textContent = 'Error loading scenes';
+                });
+        }
+
+        // Scroll function for arrows
+        function scrollLogoLeft() {
+            const logoNavbar = document.querySelector('.logo-navbar');
+            logoNavbar.scrollBy({
+                top: 0,
+                left: -200, // Scroll by a set pixel amount
+                behavior: 'smooth'
+            });
+        }
+        
+        function scrollLogoRight() {
+            const logoNavbar = document.querySelector('.logo-navbar');
+            logoNavbar.scrollBy({
+                top: 0,
+                left: 200, // Scroll by a set pixel amount
+                behavior: 'smooth'
+            });
+        }
+        
+        // Initial load of scenes (default to Brazzers)
+        loadScenes('brazzers_scenes.json', 'Brazzers', 'brazzers.png');
+
+    </script>
+
+</body>
+</html>
