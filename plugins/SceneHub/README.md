@@ -10,7 +10,7 @@ SceneHub is a customizable web platform that allows users to easily browse and d
 - 🔄 **Customizable Scrapers**: Automatically retrieve the latest scene information from supported websites.
 - 🖼️ **Dynamic Scene Cards**: Browse newly released scenes with thumbnails, titles, performers, and release dates.
 - 📱 **Mobile-Friendly Navbar**: Effortlessly switch between different content providers via a scrollable navbar.
-- 🔑 **Local Stash Integration**: Seamlessly access your local **Stash** instance for deeper scene management.
+- 🔑 **Local Stash Integration**: Seamlessly access `SceneHub` from your local **Stash** instance.
 
 ---
 
