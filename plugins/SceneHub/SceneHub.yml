@@ -1,6 +1,6 @@
 name: SceneHub
 description: Collects the latest scenes from popular network sites and displays them all in one page.
-version: 0.1
+version: 0.2
 ui:
   javascript:
     - SceneHub.js

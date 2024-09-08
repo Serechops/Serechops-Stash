@@ -10,6 +10,7 @@ script_dir = os.path.dirname(os.path.abspath(__file__))
 scrapers = [
     'bang_scraper.py',
     'brazzers_scraper.py',
+    'digitalplayground_scraper.py',
     'newsensations_scraper.py',
     'pornpros_scraper.py',
     'private_scraper.py',
