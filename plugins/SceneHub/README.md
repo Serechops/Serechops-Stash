@@ -20,18 +20,18 @@ Currently, **SceneHub** supports the following websites:
 
 | Website           | Status   |
 |-------------------|----------|
-| Brazzers           | ✅ |
-| Vixen              | ✅ |
-| Bang               | ✅ |
-| NewSensations      | ✅ |
-| Lubed              | ✅ |
-| Holed              | ✅ |
-| Tiny4K             | ✅ |
-| Exotic4K           | ✅ |
-| PornPros           | ✅ |
-| RealityKings       | ✅ |
-| Private            | ✅ |
-| Digital Playground | ✅ |
+| Bang                | ✅ |
+| Brazzers            | ✅ |
+| Digital Playground  | ✅ |
+| Exotic4K            | ✅ |
+| Holed               | ✅ |
+| Lubed               | ✅ |
+| NewSensations	      | ✅ |
+| PornPros	          | ✅ |
+| Private             | ✅ |
+| RealityKings        | ✅ |
+| Tiny4K	          | ✅ |
+| Vixen               | ✅ |
 
 ---
 
