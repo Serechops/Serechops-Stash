@@ -1,6 +1,6 @@
 name: Studio Top Performer
 description: Adds a Queen icon with the top performer listed in the studio cards as determined by most scenes starred in from that particular studio.
-version: 1.0
+version: 1.1
 ui:
   javascript:
     - studioTopPerformer.js

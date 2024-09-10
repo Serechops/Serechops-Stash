@@ -14,15 +14,16 @@ const userConfig = {
 (async function () {
     'use strict';
 
-    console.log("Top Performer Queen Icon Script started");
-
     // Construct the GraphQL endpoint based on user configuration
     const graphqlEndpoint = `${userConfig.scheme}://${userConfig.host}:${userConfig.port}/graphql`;
 
-    // GraphQL query to fetch performers for a studio
+    // GraphQL query to fetch female performers for a studio
     const query = `query FindPerformers($studioId: [ID!]) {
         findPerformers(
-            performer_filter: { studios: { value: $studioId, modifier: INCLUDES } }
+            performer_filter: {
+                studios: { value: $studioId, modifier: INCLUDES }
+                gender: { value: FEMALE, modifier: EQUALS }
+            }
             filter: { per_page: -1 }
         ) {
             performers {
@@ -36,7 +37,6 @@ const userConfig = {
     // Function to save data to localStorage
     const saveToLocalStorage = (studioId, data) => {
         localStorage.setItem(`studio_${studioId}_performers`, JSON.stringify(data));
-        
     };
 
     // Function to load data from localStorage
@@ -50,7 +50,6 @@ const userConfig = {
         // Check localStorage first
         const cachedPerformers = loadFromLocalStorage(studioId);
         if (cachedPerformers) {
-            
             return cachedPerformers;
         }
 
@@ -59,35 +58,51 @@ const userConfig = {
             variables: { studioId: [studioId] }
         };
 
-        return fetch(graphqlEndpoint, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                ...(userConfig.apiKey ? { 'Authorization': `Apikey ${userConfig.apiKey}` } : {}) // Only add API key if provided
-            },
-            body: JSON.stringify(requestBody)
-        })
-            .then(async (res) => {
-                const response = await res.json();
-                
-
-                const performers = response?.data?.findPerformers?.performers || [];
-                if (performers.length) {
-                    // Save performers to localStorage
-                    saveToLocalStorage(studioId, performers);
-                }
-                return performers;
-            })
-            .catch(error => {
-                console.error(`Error fetching performers for studio ID ${studioId}:`, error);
+        try {
+            const response = await fetch(graphqlEndpoint, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...(userConfig.apiKey ? { 'Authorization': `Apikey ${userConfig.apiKey}` } : {}) // Only add API key if provided
+                },
+                body: JSON.stringify(requestBody)
             });
+
+            // Log the entire server response for troubleshooting
+            const rawResponse = await response.text();
+            
+
+            // Handle non-successful responses gracefully
+            if (!response.ok) {
+                if (response.status === 422) {
+                    // Log a warning message for "Unprocessable Entity" errors
+                    console.warn(`Warning: No performers found for studio ID ${studioId}.`);
+                } else {
+                    // Log all other types of errors (critical errors)
+                    console.error(`Error fetching performers for studio ID ${studioId}: ${response.statusText}`);
+                }
+                return [];
+            }
+
+            const responseData = JSON.parse(rawResponse);
+            const performers = responseData?.data?.findPerformers?.performers || [];
+            if (performers.length) {
+                // Save performers to localStorage
+                saveToLocalStorage(studioId, performers);
+            }
+            return performers;
+
+        } catch (error) {
+            // Log critical errors like network failures or unexpected exceptions
+            console.error(`Error fetching performers for studio ID ${studioId}:`, error);
+            return [];
+        }
     };
 
     // Inject the top performer and queen icon into the studio card
     const injectTopPerformer = async (element) => {
         const studioId = extractStudioId(element);
         if (!studioId) {
-         
             return;
         }
 
@@ -98,8 +113,7 @@ const userConfig = {
 
         const performers = await fetchPerformers(studioId);
         if (!performers.length) {
-            
-            return;
+            return; // Skip this studio if there are no performers
         }
 
         // Find the highest scene count and the top performers
@@ -117,6 +131,11 @@ const userConfig = {
 
         // Add the queen icon for each top performer with hyperlink
         topPerformers.forEach(performer => {
+            // Check if the performer is already listed (to avoid duplicates)
+            if (element.querySelector(`a[href$="/performers/${performer.id}/scenes?sortby=date"]`)) {
+                return; // Performer is already listed, so skip
+            }
+
             const performerContainer = document.createElement('div');
             performerContainer.style.display = 'flex';
             performerContainer.style.alignItems = 'center';
@@ -190,7 +209,5 @@ const userConfig = {
 
     // Reapply cached performers on page load
     reapplyCachedPerformers(); 
-
-    console.log("Top Performer Queen Icon Script initialized");
 
 })();
