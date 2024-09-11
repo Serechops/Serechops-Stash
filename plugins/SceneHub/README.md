@@ -16,10 +16,10 @@ SceneHub is a customizable web platform that allows users to easily browse and d
 
 ## 🌐 **Supported Websites** 🌐
 
-Currently, **SceneHub** supports the following websites:
+### Public Websites
 
-| Website           | Status   |
-|-------------------|----------|
+| Website             | Status   |
+|---------------------|----------|
 | Bang                | ✅ |
 | Brazzers            | ✅ |
 | Digital Playground  | ✅ |
@@ -32,6 +32,27 @@ Currently, **SceneHub** supports the following websites:
 | RealityKings        | ✅ |
 | Tiny4K	          | ✅ |
 | Vixen               | ✅ |
+
+### Patreon Only <img src="https://c14.patreon.com/qhd_Patreon_Symbol_6fff9723d3.png" alt="Patreon Icon" width="40"/>
+
+| Website             | Status   |
+|---------------------|----------|
+| AllAnal             | ✅ |
+| AnalOnly            | ✅ |
+| Blacked             | ✅ |
+| Blacked Raw         | ✅ |
+| Deeper              | ✅ |
+| Dirty Auditions     | ✅ |
+| Elegant Angel       | ✅ |
+| GirlCum             | ✅ |
+| Nympho              | ✅ |
+| PornPlus            | ✅ |
+| Real Ex Girlfriends | ✅ |
+| Slayed              | ✅ |
+| Tushy               | ✅ |
+| Tushy Raw           | ✅ |
+| Twistys             | ✅ |
+
 
 ---
 
