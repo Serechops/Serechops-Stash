@@ -16,6 +16,7 @@ Add this index as a new source in your Stash `Settings > Plugins > Add Source`: 
 - [Movie Duration from Scenes](#movie-duration-from-scenes)
 - [Performer Gallery Scraper](#performer-gallery-scraper)
 - [Renamer](#renamer)
+- [SceneHub](#SceneHub)
 - [StashDB Mass Tag Import](#stashdb-mass-tag-import)
 - [Stash Disable All](#stash-disable-all)
 - [Stash Timestamps](#stash-timestamps)
@@ -78,6 +79,14 @@ Scan your Stash for all performers and scrape solo galleries to enrich their pro
 Automatically renames files based on user-defined settings whenever a scene is updated.
 
 - [Documentation](https://github.com/Serechops/Serechops-Stash/tree/main/plugins/Renamer#renamer)
+
+---
+
+### SceneHub 🖧 
+
+Grabs various recently released scenes across 30 sites all in one hub. Never miss out on the action!
+
+- [Documentation](https://github.com/Serechops/Serechops-Stash/tree/main/plugins/SceneHub#-scenehub-)
 
 ---
 
