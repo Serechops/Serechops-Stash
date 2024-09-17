@@ -1,25 +1,6 @@
 (async function() {
     'use strict';
 
-    /******************************************
-     * USER CONFIGURATION
-     ******************************************/
-    const userConfig = {
-        scheme: 'http', // or 'https'
-        host: 'localhost', // your server IP or hostname
-        port: 9999, // your server port
-        apiKey: '', // your API key for the local Stash server
-    };
-
-    // Build API URL
-    const apiUrl = `${userConfig.scheme}://${userConfig.host}:${userConfig.port}/graphql`;
-
-    // Server and API key configuration
-    const config = {
-        serverUrl: apiUrl,
-        apiKey: userConfig.apiKey
-    };
-
     // Dynamically load Toastify CSS
     const toastifyCSS = document.createElement('link');
     toastifyCSS.rel = 'stylesheet';
@@ -67,7 +48,7 @@
             }
         `;
         try {
-            const response = await graphqlRequest(mutation, {}, config.apiKey);
+            const response = await graphqlRequest(mutation);
             if (response && response.data && response.data.metadataAutoTag) {
                 Toastify({
                     text: 'Auto-tagging completed successfully',
@@ -118,7 +99,7 @@
         `;
 
         try {
-            const markersResponse = await graphqlRequest(findMarkersQuery, {}, config.apiKey);
+            const markersResponse = await graphqlRequest(findMarkersQuery);
             if (markersResponse && markersResponse.data && markersResponse.data.findSceneMarkers) {
                 const markers = markersResponse.data.findSceneMarkers.scene_markers;
                 for (const marker of markers) {
@@ -160,7 +141,7 @@
             }
         `;
         try {
-            const response = await graphqlRequest(mutation, {}, config.apiKey);
+            const response = await graphqlRequest(mutation);
             if (response && response.data && response.data.sceneMarkerDestroy) {
                 return response.data.sceneMarkerDestroy;
             } else {
@@ -181,7 +162,7 @@
             }
         `;
         try {
-            const response = await graphqlRequest(mutation, {}, config.apiKey);
+            const response = await graphqlRequest(mutation);
             if (response && response.data && response.data.tagDestroy) {
                 return response.data.tagDestroy;
             } else {
@@ -263,12 +244,11 @@
     });
 
     // GraphQL request function
-    async function graphqlRequest(query, variables = {}, apiKey = '') {
-        const response = await fetch(config.serverUrl, {
+    async function graphqlRequest(query, variables = {}) {
+        const response = await fetch('/graphql', {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json',
-                'Apikey': apiKey
+                'Content-Type': 'application/json'
             },
             body: JSON.stringify({ query, variables })
         });

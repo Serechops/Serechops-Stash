@@ -1,28 +1,6 @@
-// User Configuration IIFE
-(function() {
-    /******************************************
-     * USER CONFIGURATION
-     ******************************************/
-    window.userConfig = {
-        scheme: 'http', // or 'https'
-        host: 'localhost', // your server IP or hostname
-        port: 9999, // your server port
-        apiKey: '' // your API key
-    };
-})();
-
 // Main script IIFE
 (async function() {
     'use strict';
-
-    // Build API URL
-    const apiUrl = `${window.userConfig.scheme}://${window.userConfig.host}:${window.userConfig.port}/graphql`;
-
-    // Server and API key configuration
-    const config = {
-        serverUrl: apiUrl,
-        apiKey: window.userConfig.apiKey
-    };
 
     // Inject CSS
     const styleElement = document.createElement('style');
@@ -115,15 +93,16 @@
     `;
     document.head.appendChild(styleElement);
 
-    const fetchGQL = async (query, variables = {}) =>
-        fetch(config.serverUrl, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'ApiKey': config.apiKey
-            },
-            body: JSON.stringify({ query, variables })
-        }).then(res => res.json());
+   // Updated GraphQL request function using relative URL
+	const fetchGQL = async (query, variables = {}) =>
+		fetch('/graphql', { // Use relative URL for cookie-based auth
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json'
+			},
+			body: JSON.stringify({ query, variables })
+		}).then(res => res.json());
+
 
     // Example of using Toastify
     function showToast(message, type = "success") {
@@ -454,7 +433,7 @@
 
     // Function to open the edit scene page and select the 'Edit' tab
     function openEditScenePage(sceneId) {
-        const editPageUrl = `${userConfig.scheme}://${userConfig.host}:${userConfig.port}/scenes/${sceneId}/edit`;
+        const editPageUrl = `/scenes/${sceneId}/edit`; // Updated to use relative URL
         const newWindow = window.open(editPageUrl, '_blank');
         if (newWindow) {
             newWindow.onload = () => {

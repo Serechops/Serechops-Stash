@@ -12,3 +12,5 @@ ui:
       style-src:
       - https://cdn.jsdelivr.net/npm/toastify-js@1.12.0/src/toastify.min.css
       - https://unpkg.com/tabulator-tables@5.0.8/dist/css/tabulator_midnight.min.css
+        
+      

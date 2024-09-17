@@ -1,16 +1,6 @@
 (function () {
     'use strict';
 
-    /******************************************
-     * USER CONFIGURATION - stashBatchCreateAll
-     ******************************************/
-    const userConfig = {
-        scheme: 'http', // or 'https'
-        host: 'localhost', // your server IP or hostname
-        port: 9999, // your server port
-        apiKey: '' // your API key
-    };
-
     console.log("Script started");
 
     const DEFAULT_DELAY = 100; 

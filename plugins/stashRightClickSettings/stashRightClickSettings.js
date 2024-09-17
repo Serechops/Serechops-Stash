@@ -1,19 +1,6 @@
 (async function() {
     'use strict';
-
-    /******************************************
-     * USER CONFIGURATION
-     ******************************************/
-    const userConfig = {
-        scheme: 'http', // or 'https'
-        host: 'localhost', // your server IP or hostname
-        port: 9999, // your server port
-        apiKey: '' // your API key
-    };
-
-    // Build API URL
-    const apiUrl = `${userConfig.scheme}://${userConfig.host}:${userConfig.port}/graphql`;
-
+	
     // Load Toastify CSS and JS
     const toastifyCSS = document.createElement('link');
     toastifyCSS.rel = 'stylesheet';
@@ -178,7 +165,7 @@
         }
 
         .settings-highlight {
-            background-color: green;
+            background-color: #8e042f;
         }
     `;
     document.head.appendChild(styleElement);
@@ -200,7 +187,7 @@
                 }
             `;
             try {
-                const response = await graphqlRequest(query, {}, config.apiKey);
+                const response = await graphqlRequest(query);
                 return response.data.pluginTasks;
             } catch (error) {
                 console.error('Error fetching plugin tasks:', error);
@@ -216,7 +203,7 @@
                 }
             `;
             try {
-                const response = await graphqlRequest(mutation, { pluginID }, config.apiKey);
+                const response = await graphqlRequest(mutation, { pluginID });
                 return response.data.runPluginTask;
             } catch (error) {
                 console.error('Error running plugin task:', error);
@@ -232,7 +219,7 @@
                 }
             `;
             try {
-                const response = await graphqlRequest(mutation, { id: sceneID, deleteGenerated, deleteFile }, config.apiKey);
+                const response = await graphqlRequest(mutation, { id: sceneID, deleteGenerated, deleteFile });
                 return response.data.sceneDestroy;
             } catch (error) {
                 console.error('Error deleting scene:', error);
@@ -256,118 +243,118 @@
             return `${hours}h ${minutes}m`;
         }
 
-        // Function to display results in custom modal
         function displayResultsInModal(duplicates, flaggedScenes, duplicateTitles, totalSize) {
-            const modal = document.createElement('div');
-            modal.id = 'settings-duplicate-modal';
-
-            const modalContent = document.createElement('div');
-            modalContent.className = 'settings-duplicate-modal-content';
-
-            const header = document.createElement('div');
-            header.className = 'settings-custom-modal-header';
-            header.innerHTML = `
-                <span>Review Results</span><br>
-                <span>Total Scene Pairings: ${duplicateTitles.length}</span>
-            `;
-            modalContent.appendChild(header);
-
-            const closeButton = document.createElement('span');
-            closeButton.className = 'settings-custom-close';
-            closeButton.innerHTML = '&times;';
-            closeButton.onclick = () => {
-                modal.style.display = 'none';
-                modal.remove();
-            };
-
-            modalContent.appendChild(closeButton);
-
-            if (duplicates.length > 0) {
-                const duplicateHeader = document.createElement('div');
-                duplicateHeader.className = 'settings-custom-plugin-header';
-                duplicateHeader.textContent = 'Duplicate Files';
-                modalContent.appendChild(duplicateHeader);
-
-                duplicates.forEach((pair, index) => {
-                    if (index % 2 === 0) {
-                        const rowDiv = document.createElement('div');
-                        rowDiv.className = 'settings-comparison-row';
-                        modalContent.appendChild(rowDiv);
-                    }
-
-                    const rowDiv = modalContent.lastElementChild;
-
-                    const isOriginalSmaller = pair.original.files[0].size < pair.duplicate.files[0].size;
-
-                    const originalDiv = document.createElement('div');
-                    originalDiv.className = `settings-custom-scene ${isOriginalSmaller ? 'settings-highlight' : ''}`;
-                    originalDiv.innerHTML = `
-                        <div class="settings-scene-details">
-                            <strong>Original Scene:</strong><br>
-                            <img src="${pair.original.scene.paths.screenshot}" alt="Original Scene Screenshot">
-                            <div class="settings-scene-info">
-                                <strong>Title:</strong> ${pair.original.scene.title} (ID: ${pair.original.scene.id})<br>
-                                <strong class="file-size ${isOriginalSmaller ? 'settings-highlight' : ''}">Size:</strong> ${formatFileSize(pair.original.files[0].size)}<br>
-                                <strong>Date:</strong> ${pair.original.scene.date}<br>
-                                <strong>Created At:</strong> ${pair.original.scene.created_at}<br>
-                                <strong>Updated At:</strong> ${pair.original.scene.updated_at}
-                            </div>
-                            <div class="settings-file-details">
-                                <strong>Files:</strong>
-                                <ul>
-                                    ${pair.original.files.map(file => `
-                                        <li>
-                                            <strong>Path:</strong> ${file.path}<br>
-                                            <strong>Size:</strong> ${formatFileSize(file.size)}<br>
-                                            <strong>Width:</strong> ${file.width}<br>
-                                            <strong>Height:</strong> ${file.height}<br>
-                                            <strong>Duration:</strong> ${formatDuration(file.duration)}<br>
-                                            <strong>Fingerprint:</strong> ${file.fingerprints.map(fp => `${fp.type}: ${fp.value}`).join(', ')}
-                                        </li>
-                                    `).join('')}
-                                </ul>
-                            </div>
-                            <button data-id="${pair.original.scene.id}" data-deletegenerated="true" data-deletefile="false" class="settings-delete-scene">Delete Scene and Generated Files</button>
-                            <button data-id="${pair.original.scene.id}" data-deletegenerated="true" data-deletefile="true" class="settings-delete-scene">Delete Scene, Generated Files, and Local File</button>
-                        </div>
-                    `;
-                    rowDiv.appendChild(originalDiv);
-
-                    const duplicateDiv = document.createElement('div');
-                    duplicateDiv.className = `settings-custom-scene ${!isOriginalSmaller ? 'settings-highlight' : ''}`;
-                    duplicateDiv.innerHTML = `
-                        <div class="settings-scene-details">
-                            <strong>Duplicate Scene:</strong><br>
-                            <img src="${pair.duplicate.scene.paths.screenshot}" alt="Duplicate Scene Screenshot">
-                            <div class="settings-scene-info">
-                                <strong>Title:</strong> ${pair.duplicate.scene.title} (ID: ${pair.duplicate.scene.id})<br>
-                                <strong class="file-size ${!isOriginalSmaller ? 'settings-highlight' : ''}">Size:</strong> ${formatFileSize(pair.duplicate.files[0].size)}<br>
-                                <strong>Date:</strong> ${pair.duplicate.scene.date}<br>
-                                <strong>Created At:</strong> ${pair.duplicate.scene.created_at}<br>
-                                <strong>Updated At:</strong> ${pair.duplicate.scene.updated_at}
-                            </div>
-                            <div class="settings-file-details">
-                                <strong>Files:</strong>
-                                <ul>
-                                    ${pair.duplicate.files.map(file => `
-                                        <li>
-                                            <strong>Path:</strong> ${file.path}<br>
-                                            <strong>Size:</strong> ${formatFileSize(file.size)}<br>
-                                            <strong>Width:</strong> ${file.width}<br>
-                                            <strong>Height:</strong> ${file.height}<br>
-                                            <strong>Duration:</strong> ${formatDuration(file.duration)}<br>
-                                            <strong>Fingerprint:</strong> ${file.fingerprints.map(fp => `${fp.type}: ${fp.value}`).join(', ')}
-                                        </li>
-                                    `).join('')}
-                                </ul>
-                            </div>
-                            <button data-id="${pair.duplicate.scene.id}" data-deletegenerated="true" data-deletefile="false" class="settings-delete-scene">Delete Scene and Generated Files</button>
-                            <button data-id="${pair.duplicate.scene.id}" data-deletegenerated="true" data-deletefile="true" class="settings-delete-scene">Delete Scene, Generated Files, and Local File</button>
-                        </div>
-                    `;
-                    rowDiv.appendChild(duplicateDiv);
-                });
-            }
+			const modal = document.createElement('div');
+			modal.id = 'settings-duplicate-modal';
+		
+			const modalContent = document.createElement('div');
+			modalContent.className = 'settings-duplicate-modal-content';
+		
+			const header = document.createElement('div');
+			header.className = 'settings-custom-modal-header';
+			header.innerHTML = `
+				<span>Review Results</span><br>
+				<span>Total Scene Pairings: ${duplicateTitles.length}</span>
+			`;
+			modalContent.appendChild(header);
+		
+			const closeButton = document.createElement('span');
+			closeButton.className = 'settings-custom-close';
+			closeButton.innerHTML = '&times;';
+			closeButton.onclick = () => {
+				modal.style.display = 'none';
+				modal.remove();
+			};
+		
+			modalContent.appendChild(closeButton);
+		
+			if (duplicates.length > 0) {
+				const duplicateHeader = document.createElement('div');
+				duplicateHeader.className = 'settings-custom-plugin-header';
+				duplicateHeader.textContent = 'Duplicate Files';
+				modalContent.appendChild(duplicateHeader);
+		
+				duplicates.forEach((pair, index) => {
+					if (index % 2 === 0) {
+						const rowDiv = document.createElement('div');
+						rowDiv.className = 'settings-comparison-row';
+						modalContent.appendChild(rowDiv);
+					}
+		
+					const rowDiv = modalContent.lastElementChild;
+		
+					const originalSize = pair.original.files[0].size;
+					const duplicateSize = pair.duplicate.files[0].size;
+		
+					const originalDiv = document.createElement('div');
+					originalDiv.className = `settings-custom-scene ${originalSize < duplicateSize ? 'settings-highlight' : ''}`;
+					originalDiv.innerHTML = `
+						<div class="settings-scene-details">
+							<strong>Original Scene:</strong><br>
+							<img src="${pair.original.scene.paths.screenshot}" alt="Original Scene Screenshot">
+							<div class="settings-scene-info">
+								<strong>Title:</strong> ${pair.original.scene.title} (ID: ${pair.original.scene.id})<br>
+								<strong class="file-size">Size:</strong> ${formatFileSize(originalSize)}<br>
+								<strong>Date:</strong> ${pair.original.scene.date}<br>
+								<strong>Created At:</strong> ${pair.original.scene.created_at}<br>
+								<strong>Updated At:</strong> ${pair.original.scene.updated_at}
+							</div>
+							<div class="settings-file-details">
+								<strong>Files:</strong>
+								<ul>
+									${pair.original.files.map(file => `
+										<li>
+											<strong>Path:</strong> ${file.path}<br>
+											<strong>Size:</strong> ${formatFileSize(file.size)}<br>
+											<strong>Width:</strong> ${file.width}<br>
+											<strong>Height:</strong> ${file.height}<br>
+											<strong>Duration:</strong> ${formatDuration(file.duration)}<br>
+											<strong>Fingerprint:</strong> ${file.fingerprints.map(fp => `${fp.type}: ${fp.value}`).join(', ')}
+										</li>
+									`).join('')}
+								</ul>
+							</div>
+							<button data-id="${pair.original.scene.id}" data-deletegenerated="true" data-deletefile="false" class="settings-delete-scene">Delete Scene and Generated Files</button>
+							<button data-id="${pair.original.scene.id}" data-deletegenerated="true" data-deletefile="true" class="settings-delete-scene">Delete Scene, Generated Files, and Local File</button>
+						</div>
+					`;
+					rowDiv.appendChild(originalDiv);
+		
+					const duplicateDiv = document.createElement('div');
+					duplicateDiv.className = `settings-custom-scene ${duplicateSize < originalSize ? 'settings-highlight' : ''}`;
+					duplicateDiv.innerHTML = `
+						<div class="settings-scene-details">
+							<strong>Duplicate Scene:</strong><br>
+							<img src="${pair.duplicate.scene.paths.screenshot}" alt="Duplicate Scene Screenshot">
+							<div class="settings-scene-info">
+								<strong>Title:</strong> ${pair.duplicate.scene.title} (ID: ${pair.duplicate.scene.id})<br>
+								<strong class="file-size">Size:</strong> ${formatFileSize(duplicateSize)}<br>
+								<strong>Date:</strong> ${pair.duplicate.scene.date}<br>
+								<strong>Created At:</strong> ${pair.duplicate.scene.created_at}<br>
+								<strong>Updated At:</strong> ${pair.duplicate.scene.updated_at}
+							</div>
+							<div class="settings-file-details">
+								<strong>Files:</strong>
+								<ul>
+									${pair.duplicate.files.map(file => `
+										<li>
+											<strong>Path:</strong> ${file.path}<br>
+											<strong>Size:</strong> ${formatFileSize(file.size)}<br>
+											<strong>Width:</strong> ${file.width}<br>
+											<strong>Height:</strong> ${file.height}<br>
+											<strong>Duration:</strong> ${formatDuration(file.duration)}<br>
+											<strong>Fingerprint:</strong> ${file.fingerprints.map(fp => `${fp.type}: ${fp.value}`).join(', ')}
+										</li>
+									`).join('')}
+								</ul>
+							</div>
+							<button data-id="${pair.duplicate.scene.id}" data-deletegenerated="true" data-deletefile="false" class="settings-delete-scene">Delete Scene and Generated Files</button>
+							<button data-id="${pair.duplicate.scene.id}" data-deletegenerated="true" data-deletefile="true" class="settings-delete-scene">Delete Scene, Generated Files, and Local File</button>
+						</div>
+					`;
+					rowDiv.appendChild(duplicateDiv);
+				});
+			}
 
             if (flaggedScenes.length > 0) {
                 const flaggedHeader = document.createElement('div');
@@ -476,43 +463,43 @@
             }
 
             modal.appendChild(modalContent);
-            document.body.appendChild(modal);
-
-            modal.style.display = 'block';
-
-            // Attach delete scene event listeners
-            modal.querySelectorAll('.settings-delete-scene').forEach(button => {
-                button.addEventListener('click', async (e) => {
-                    const sceneID = e.target.getAttribute('data-id');
-                    const deleteGenerated = e.target.getAttribute('data-deletegenerated') === 'true';
-                    const deleteFile = e.target.getAttribute('data-deletefile') === 'true';
-                    const result = await deleteScene(sceneID, deleteGenerated, deleteFile);
-                    if (result) {
-                        e.target.closest('.settings-custom-scene').remove();
-                        Toastify({
-                            text: 'Scene deleted successfully',
-                            backgroundColor: 'green',
-                            position: "center",
-                            duration: 3000
-                        }).showToast();
-                    } else {
-                        Toastify({
-                            text: 'Failed to delete scene',
-                            backgroundColor: 'red',
-                            position: "center",
-                            duration: 3000
-                        }).showToast();
-                    }
-                });
-            });
-
-            window.onclick = (event) => {
-                if (event.target == modal) {
-                    modal.style.display = 'none';
-                    modal.remove();
-                }
-            };
-        }
+			document.body.appendChild(modal);
+		
+			modal.style.display = 'block';
+		
+			// Attach delete scene event listeners
+			modal.querySelectorAll('.settings-delete-scene').forEach(button => {
+				button.addEventListener('click', async (e) => {
+					const sceneID = e.target.getAttribute('data-id');
+					const deleteGenerated = e.target.getAttribute('data-deletegenerated') === 'true';
+					const deleteFile = e.target.getAttribute('data-deletefile') === 'true';
+					const result = await deleteScene(sceneID, deleteGenerated, deleteFile);
+					if (result) {
+						e.target.closest('.settings-custom-scene').remove();
+						Toastify({
+							text: 'Scene deleted successfully',
+							backgroundColor: 'green',
+							position: "center",
+							duration: 3000
+						}).showToast();
+					} else {
+						Toastify({
+							text: 'Failed to delete scene',
+							backgroundColor: 'red',
+							position: "center",
+							duration: 3000
+						}).showToast();
+					}
+				});
+			});
+		
+			window.onclick = (event) => {
+				if (event.target == modal) {
+					modal.style.display = 'none';
+					modal.remove();
+				}
+			};
+		}
 
         // Function to check for duplicate files and scenes with no files
         async function checkDuplicateFiles() {
@@ -546,7 +533,7 @@
                 }
             `;
             try {
-                const response = await graphqlRequest(query, {}, userConfig.apiKey);
+                const response = await graphqlRequest(query);
                 const scenes = response.data.allScenes;
                 const fileMap = new Map();
                 const titleMap = new Map();
@@ -680,7 +667,6 @@
             document.addEventListener('click', handleClickOutside);
         }
 
-
         // Function to handle right-click on the settings button
         document.addEventListener('contextmenu', function(event) {
             const settingsButton = event.target.closest('button[title="Settings"]');
@@ -691,22 +677,16 @@
         });
 
         // GraphQL request function
-        async function graphqlRequest(query, variables = {}, apiKey = '') {
-            const response = await fetch(apiUrl, {
+        async function graphqlRequest(query, variables = {}) {
+            const response = await fetch('/graphql', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
-                    'Apikey': apiKey
+                    'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({ query, variables })
             });
             return response.json();
         }
-
-        const config = {
-            serverUrl: apiUrl,
-            apiKey: userConfig.apiKey
-        };
 
         // Function to show the custom modal for plugin tasks
         async function showSettingsCustomModal() {

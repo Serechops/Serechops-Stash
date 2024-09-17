@@ -1,28 +1,6 @@
-// User Configuration IIFE
-(function() {
-    /******************************************
-     * USER CONFIGURATION
-     ******************************************/
-    window.userConfig = {
-        scheme: 'http', // or 'https'
-        host: 'localhost', // your server IP or hostname
-        port: 9999, // your server port
-        apiKey: '' // your API key
-    };
-})();
-
 // Main script IIFE
 (async function() {
     'use strict';
-
-    // Build API URL
-    const apiUrl = `${window.userConfig.scheme}://${window.userConfig.host}:${window.userConfig.port}/graphql`;
-
-    // Server and API key configuration
-    const config = {
-        serverUrl: apiUrl,
-        apiKey: window.userConfig.apiKey
-    };
 
     // Load Toastify and Tabulator dynamically
     const loadScript = (src) => {
@@ -66,7 +44,7 @@
         }
         #gallery-popup h2 {
             margin-top: 0;
-            cursor: move; /* Make the header cursor indicate that it's draggable */
+            cursor: move;
         }
         #gallery-popup form label {
             display: block;
@@ -112,13 +90,12 @@
     style.textContent = customCSS;
     document.head.appendChild(style);
 
-    // Fetch GraphQL data
+    // Fetch GraphQL data using relative URL
     const fetchGQL = async (query, variables = {}) =>
-        fetch(config.serverUrl, {
+        fetch('/graphql', { // Use relative URL for cookie-based auth
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json',
-                'ApiKey': config.apiKey
+                'Content-Type': 'application/json'
             },
             body: JSON.stringify({ query, variables })
         }).then(res => res.json());
@@ -133,7 +110,7 @@
         menu.id = 'gallery-custom-menu';
 
         const viewLink = document.createElement('a');
-        viewLink.href = `${window.userConfig.scheme}://${window.userConfig.host}:${window.userConfig.port}/galleries/${galleryId}`;
+        viewLink.href = `/galleries/${galleryId}`;
         viewLink.textContent = 'View Gallery';
         menu.appendChild(viewLink);
 
@@ -169,9 +146,9 @@
         supportLink.href = 'https://www.patreon.com/serechops/membership';
         supportLink.textContent = 'Support';
         supportLink.style.display = 'block';
-        supportLink.style.marginTop = '10px'; // Adds some space above the support link
-        supportLink.style.color = '#FFD700'; // Optional: You can style the link differently if desired
-        supportLink.target = '_blank'; // Opens the link in a new tab
+        supportLink.style.marginTop = '10px';
+        supportLink.style.color = '#FFD700';
+        supportLink.target = '_blank';
         menu.appendChild(supportLink);
 
         document.body.appendChild(menu);
@@ -332,15 +309,7 @@
                 }
             }
         `;
-        const response = await fetch(config.serverUrl, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `ApiKey ${config.apiKey}`
-            },
-            body: JSON.stringify({ query: queryText, variables: { filter: query } })
-        });
-        const result = await response.json();
+        const result = await fetchGQL(queryText, { filter: query });
         return result.data.findTags.tags;
     }
 
@@ -356,15 +325,7 @@
                 }
             }
         `;
-        const response = await fetch(config.serverUrl, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `ApiKey ${config.apiKey}`
-            },
-            body: JSON.stringify({ query: queryText, variables: { filter: query } })
-        });
-        const result = await response.json();
+        const result = await fetchGQL(queryText, { filter: query });
         return result.data.findPerformers.performers;
     }
 
@@ -379,61 +340,37 @@
                 }
             }
         `;
-        const response = await fetch(config.serverUrl, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `ApiKey ${config.apiKey}`
-            },
-            body: JSON.stringify({ query: queryText, variables: { filter: query } })
-        });
-        const result = await response.json();
+        const result = await fetchGQL(queryText, { filter: query });
         return result.data.findScenes.scenes;
     }
 
     async function updateGalleryWithTags(galleryId, newTagIds) {
         const existingTagsQuery = `
-            query FindGallery {
-                findGallery(id: ${galleryId}) {
+            query FindGallery($id: ID!) {
+                findGallery(id: $id) {
                     tags {
                         id
                     }
                 }
             }
         `;
-
-        const existingTagsResponse = await fetch(config.serverUrl, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `ApiKey ${config.apiKey}`
-            },
-            body: JSON.stringify({ query: existingTagsQuery })
-        });
-        const existingTagsResult = await existingTagsResponse.json();
+        const existingTagsResult = await fetchGQL(existingTagsQuery, { id: galleryId });
         const existingTagIds = existingTagsResult.data.findGallery.tags.map(tag => tag.id);
 
         const combinedTagIds = Array.from(new Set([...existingTagIds, ...newTagIds]));
 
         const mutationQuery = `
-            mutation GalleryUpdate {
-                galleryUpdate(input: { id: "${galleryId}", tag_ids: ${JSON.stringify(combinedTagIds)} }) {
+            mutation GalleryUpdate($input: GalleryUpdateInput!) {
+                galleryUpdate(input: $input) {
                     id
                 }
             }
         `;
 
-        try {
-            const response = await fetch(config.serverUrl, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `ApiKey ${config.apiKey}`
-                },
-                body: JSON.stringify({ query: mutationQuery })
-            });
+        const input = { id: galleryId, tag_ids: combinedTagIds };
 
-            const result = await response.json();
+        try {
+            const result = await fetchGQL(mutationQuery, { input });
             if (result.errors) {
                 console.error(result.errors);
                 showToast('Failed to update the gallery with tags', 'error');
@@ -449,47 +386,31 @@
 
     async function updateGalleryWithPerformers(galleryId, newPerformerIds) {
         const existingPerformersQuery = `
-            query FindGallery {
-                findGallery(id: ${galleryId}) {
+            query FindGallery($id: ID!) {
+                findGallery(id: $id) {
                     performers {
                         id
                     }
                 }
             }
         `;
-
-        const existingPerformersResponse = await fetch(config.serverUrl, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `ApiKey ${config.apiKey}`
-            },
-            body: JSON.stringify({ query: existingPerformersQuery })
-        });
-        const existingPerformersResult = await existingPerformersResponse.json();
+        const existingPerformersResult = await fetchGQL(existingPerformersQuery, { id: galleryId });
         const existingPerformerIds = existingPerformersResult.data.findGallery.performers.map(performer => performer.id);
 
         const combinedPerformerIds = Array.from(new Set([...existingPerformerIds, ...newPerformerIds]));
 
         const mutationQuery = `
-            mutation GalleryUpdate {
-                galleryUpdate(input: { id: "${galleryId}", performer_ids: ${JSON.stringify(combinedPerformerIds)} }) {
+            mutation GalleryUpdate($input: GalleryUpdateInput!) {
+                galleryUpdate(input: $input) {
                     id
                 }
             }
         `;
 
-        try {
-            const response = await fetch(config.serverUrl, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `ApiKey ${config.apiKey}`
-                },
-                body: JSON.stringify({ query: mutationQuery })
-            });
+        const input = { id: galleryId, performer_ids: combinedPerformerIds };
 
-            const result = await response.json();
+        try {
+            const result = await fetchGQL(mutationQuery, { input });
             if (result.errors) {
                 console.error(result.errors);
                 showToast('Failed to update the gallery with performers', 'error');
@@ -505,47 +426,31 @@
 
     async function updateGalleryWithScenes(galleryId, newSceneIds) {
         const existingScenesQuery = `
-            query FindGallery {
-                findGallery(id: ${galleryId}) {
+            query FindGallery($id: ID!) {
+                findGallery(id: $id) {
                     scenes {
                         id
                     }
                 }
             }
         `;
-
-        const existingScenesResponse = await fetch(config.serverUrl, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `ApiKey ${config.apiKey}`
-            },
-            body: JSON.stringify({ query: existingScenesQuery })
-        });
-        const existingScenesResult = await existingScenesResponse.json();
+        const existingScenesResult = await fetchGQL(existingScenesQuery, { id: galleryId });
         const existingSceneIds = existingScenesResult.data.findGallery.scenes.map(scene => scene.id);
 
         const combinedSceneIds = Array.from(new Set([...existingSceneIds, ...newSceneIds]));
 
         const mutationQuery = `
-            mutation GalleryUpdate {
-                galleryUpdate(input: { id: "${galleryId}", scene_ids: ${JSON.stringify(combinedSceneIds)} }) {
+            mutation GalleryUpdate($input: GalleryUpdateInput!) {
+                galleryUpdate(input: $input) {
                     id
                 }
             }
         `;
 
-        try {
-            const response = await fetch(config.serverUrl, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `ApiKey ${config.apiKey}`
-                },
-                body: JSON.stringify({ query: mutationQuery })
-            });
+        const input = { id: galleryId, scene_ids: combinedSceneIds };
 
-            const result = await response.json();
+        try {
+            const result = await fetchGQL(mutationQuery, { input });
             if (result.errors) {
                 console.error(result.errors);
                 showToast('Failed to update the gallery with scenes', 'error');
@@ -564,8 +469,8 @@
         Toastify({
             text: message,
             duration: 3000,
-            gravity: "top", // `top` or `bottom`
-            position: "center", // `left`, `center` or `right`
+            gravity: "top",
+            position: "center",
             backgroundColor: type === "success" ? "green" : "red",
         }).showToast();
     }
