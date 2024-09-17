@@ -1,0 +1,18 @@
+name: Stash Right Click Performers
+description: Adds a custom right-click menu to the performer cards to perform various quick tasks related to performers.
+version: 1.0
+ui:
+  javascript:
+    - stashRightClickPerformers.js
+  csp:
+      script-src:
+      - https://cdn.jsdelivr.net/npm/toastify-js@1.12.0/src/toastify.min.js
+      - https://unpkg.com/tabulator-tables@5.0.8/dist/js/tabulator.min.js
+        
+      style-src:
+      - https://cdn.jsdelivr.net/npm/toastify-js@1.12.0/src/toastify.min.css
+      - https://unpkg.com/tabulator-tables@5.0.8/dist/css/tabulator_midnight.min.css
+      
+      connect-src:
+      - https://theporndb.net/graphql
+      - https://stashdb.org/graphql

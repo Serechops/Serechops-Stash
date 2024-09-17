@@ -1,0 +1,6 @@
+name: Stash Batch Create All
+description: Adds a 'Create All' button to the scene tagger view. It will target all 'Create' buttons and add new tags as well.
+version: 1.0
+ui:
+  javascript:
+    - stashBatchCreateAll.js
