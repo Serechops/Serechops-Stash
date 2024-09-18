@@ -1,51 +1,69 @@
-// Main script IIFE
 (async function() {
     'use strict';
 
+    // Initial configuration object with default values
+    const config = {
+        serverUrl: `/graphql`, // Relative URL for local GraphQL endpoint
+        localApiKey: '', // Will be updated after fetching configuration
+        stashDBApiKey: '',
+        stashDBEndpoint: '',
+        tpdbApiKey: '',
+        tpdbEndpoint: ''
+    };
+
     // Function to fetch configuration for StashDB and TPDB
     async function fetchConfiguration() {
-        const configQuery = `
-            query Configuration {
-                configuration {
-                    general {
-                        stashBoxes {
-                            endpoint
-                            api_key
-                            name
-                        }
-                    }
-                }
-            }
-        `;
-    
-        try {
-            // Directly call graphqlRequest with the local server URL
-            const response = await graphqlRequest('/graphql', configQuery);
-            if (response && response.data && response.data.configuration) {
-                return response.data.configuration.general.stashBoxes;
-            } else {
-                console.error('Failed to fetch configuration');
-                return [];
-            }
-        } catch (error) {
-            console.error('Error fetching configuration:', error);
-            return [];
-        }
-    }
+		const configQuery = `
+			query Configuration {
+				configuration {
+					general {
+						stashBoxes {
+							endpoint
+							api_key
+							name
+						}
+						apiKey
+					}
+				}
+			}
+		`;
+		
+		try {
+			// Correctly pass query and variables to graphqlRequest
+			const response = await graphqlRequest(configQuery);
+			if (response && response.data && response.data.configuration) {
+				return {
+					stashBoxes: response.data.configuration.general.stashBoxes,
+					localApiKey: response.data.configuration.general.apiKey,
+				};
+			} else {
+				console.error('Failed to fetch configuration');
+				return {
+					stashBoxes: [],
+					localApiKey: '',
+				};
+			}
+		} catch (error) {
+			console.error('Error fetching configuration:', error);
+			return {
+				stashBoxes: [],
+				localApiKey: '',
+			};
+		}
+	}
 
     // Fetch the configuration for StashDB and TPDB
-    const stashBoxes = await fetchConfiguration();
+    const configData = await fetchConfiguration();
+    const stashBoxes = configData.stashBoxes;
     const stashDBConfig = stashBoxes.find(box => box.name === 'StashDB');
     const tpdbConfig = stashBoxes.find(box => box.name === 'ThePornDB');
 
-    // Configuration object to store the fetched endpoints and API keys
-    const config = {
-        serverUrl: `/graphql`, // Relative URL for local GraphQL endpoint
-        stashDBApiKey: stashDBConfig ? stashDBConfig.api_key : '',
-        stashDBEndpoint: stashDBConfig ? stashDBConfig.endpoint : '',
-        tpdbApiKey: tpdbConfig ? tpdbConfig.api_key : '',
-        tpdbEndpoint: tpdbConfig ? tpdbConfig.endpoint : ''
-    };
+    // Update the configuration object with fetched data
+    config.localApiKey = configData.localApiKey || '';
+    config.stashDBApiKey = stashDBConfig ? stashDBConfig.api_key : '';
+    config.stashDBEndpoint = stashDBConfig ? stashDBConfig.endpoint : '';
+    config.tpdbApiKey = tpdbConfig ? tpdbConfig.api_key : '';
+    config.tpdbEndpoint = tpdbConfig ? tpdbConfig.endpoint : '';
 
     // Dynamically load Toastify and Tabulator CSS
     const toastifyCSS = document.createElement('link');
@@ -432,35 +450,37 @@
 
     // Function to fetch performer IDs
     async function fetchPerformerIDs(performerID) {
-        const query = `
-            query FindPerformer($id: ID!) {
-                findPerformer(id: $id) {
-                    stash_ids {
-                        endpoint
-                        stash_id
-                    }
-                }
-            }
-        `;
-        console.log("GraphQL query for fetching performer's IDs:", query);
-        try {
-            const response = await graphqlRequest('/graphql', query, { id: performerID }, config.apiKey);
-            console.log("Response for performer's IDs:", response);
-            if (response && response.data && response.data.findPerformer) {
-                const stash_ids = response.data.findPerformer.stash_ids;
-                return {
-                    stashDBID: stash_ids.find(id => id.endpoint === 'https://stashdb.org/graphql')?.stash_id,
-                    tpdbID: stash_ids.find(id => id.endpoint === 'https://theporndb.net/graphql')?.stash_id
-                };
-            } else {
-                console.error('No data found for performer:', performerID);
-                return null;
-            }
-        } catch (error) {
-            console.error('Error fetching performer IDs:', error);
-            return null;
-        }
-    }
+		const query = `
+			query FindPerformer($id: ID!) {
+				findPerformer(id: $id) {
+					stash_ids {
+						endpoint
+						stash_id
+					}
+				}
+			}
+		`;
+		console.log("GraphQL query for fetching performer's IDs:", query);
+		try {
+			// Correct the order and content of the parameters
+			const response = await graphqlRequest(query, { id: performerID });
+			console.log("Response for performer's IDs:", response);
+			if (response && response.data && response.data.findPerformer) {
+				const stash_ids = response.data.findPerformer.stash_ids;
+				return {
+					stashDBID: stash_ids.find(id => id.endpoint === 'https://stashdb.org/graphql')?.stash_id,
+					tpdbID: stash_ids.find(id => id.endpoint === 'https://theporndb.net/graphql')?.stash_id
+				};
+			} else {
+				console.error('No data found for performer:', performerID);
+				return null;
+			}
+		} catch (error) {
+			console.error('Error fetching performer IDs:', error);
+			return null;
+		}
+	}
+
 
     // Function to fetch performer images from StashDB
     async function fetchPerformerImagesFromStashDB(performerStashID) {
@@ -616,13 +636,12 @@
 				}
 			}
 		`;
-		// Ensure we only add '/graphql' once to the origin
-		const fullEndpoint = `${window.location.origin}/graphql`;
-		console.log("Full URL being used for the request:", fullEndpoint);
+		
 		console.log("GraphQL query:", query);
 	
 		try {
-			const response = await graphqlRequest(fullEndpoint, query, { id: performerID }, config.apiKey);
+			// Correct the order and content of the parameters
+			const response = await graphqlRequest(query, { id: performerID });
 			console.log("Response for performer details:", response);
 			if (response && response.data && response.data.findPerformer) {
 				return response.data.findPerformer;
@@ -879,9 +898,11 @@
 			}
 		`;
 		console.log("GraphQL mutation for updating performer image:", mutation);
+		console.log("Performer ID:", performerID, "Image URL:", imageUrl); // Log for validation
+	
 		try {
-			// Ensure the mutation is sent as the `query` argument and variables are sent separately
-			const response = await graphqlRequest('/graphql', mutation, { id: performerID, image: imageUrl }, config.apiKey);
+			// Ensure the mutation is sent correctly with variables
+			const response = await graphqlRequest(mutation, { id: performerID, image: imageUrl }, config.localApiKey);
 			console.log("Response for updating performer image:", response);
 			if (response && response.data && response.data.performerUpdate) {
 				return response.data.performerUpdate.id;
@@ -894,7 +915,6 @@
 			return null;
 		}
 	}
-
 
     // Function to auto-tag performer
     async function autoTagPerformer(performerID) {
@@ -1444,41 +1464,49 @@
         }
     });
 
-    // Modify graphqlRequest to accept the endpoint URL as a parameter
-	async function graphqlRequest(endpoint, query, variables = {}, apiKey = '') {
-		// Check if the endpoint is a full URL or a relative path
-		const fullUrl = endpoint.startsWith('http') ? endpoint : `${window.location.origin}${endpoint}`;
+    // Simplify graphqlRequest by removing the endpoint parameter
+    async function graphqlRequest(query, variables = {}, apiKey = '') {
+		const relativeUrl = '/graphql'; // Use the relative URL directly
+	
+		// Use the localApiKey if no apiKey is provided and ensure it is a string
+		const effectiveApiKey = typeof apiKey === 'string' && apiKey.length > 0 ? apiKey : config.localApiKey || '';
 		
-		console.log("Full URL being used for the request:", fullUrl);
+		console.log("Relative URL being used for the request:", relativeUrl);
 		console.log("GraphQL query:", query);
 		console.log("Variables:", variables);
+		console.log("Effective API Key:", effectiveApiKey); // Log the effective API key
 	
 		try {
-			const response = await fetch(fullUrl, { // Use the correctly formed URL
+			// Create the headers object
+			const headers = {
+				'Content-Type': 'application/json',
+			};
+			
+			// Include the API key only if it is defined and not empty
+			if (effectiveApiKey) {
+				headers['Apikey'] = effectiveApiKey;
+			}
+	
+			const response = await fetch(relativeUrl, {
 				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json',
-					'Apikey': apiKey
-				},
-				body: JSON.stringify({ query, variables }) // Correctly format the request body
+				headers: headers,
+				body: JSON.stringify({ query, variables })
 			});
 	
 			// Log the response status and headers
 			console.log("Response Status:", response.status);
 			console.log("Response Headers:", Array.from(response.headers.entries()));
 	
-			// Check the content type to ensure it's JSON
-			const contentType = response.headers.get('Content-Type');
-			if (!contentType || !contentType.includes('application/json')) {
-				console.error("Response is not JSON:", contentType);
-				const responseText = await response.text();
-				console.error("Response text:", responseText);
-				throw new Error('Response is not in JSON format');
+			// Ensure response is valid JSON
+			let jsonResponse;
+			try {
+				jsonResponse = await response.json();
+				console.log("Parsed GraphQL response:", jsonResponse);
+			} catch (jsonError) {
+				console.error('Error parsing JSON response:', jsonError);
+				throw new Error('Failed to parse JSON response');
 			}
 	
-			// Parse the JSON response
-			const jsonResponse = await response.json();
-			console.log("Parsed GraphQL response:", jsonResponse);
 			if (!response.ok) {
 				console.error('Error in GraphQL request:', response.status, response.statusText);
 				throw new Error(`Error: ${response.status} ${response.statusText}`);
@@ -1490,7 +1518,6 @@
 			throw error;
 		}
 	}
-
 
 
     // Function to make GraphQL requests to a specific external endpoint (StashDB or TPDB)
