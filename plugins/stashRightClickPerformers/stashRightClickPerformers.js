@@ -1,37 +1,51 @@
-// User Configuration IIFE
-(function() {
-    /******************************************
-     * USER CONFIGURATION
-     ******************************************/
-    window.userConfig = {
-        scheme: 'http', // or 'https'
-        host: 'localhost', // your server IP or hostname
-        port: 9999, // your server port
-        apiKey: '', // your API key for local Stash server
-        stashDBApiKey: '', // your API key for StashDB
-        tpdbApiKey: '' // your API key for TPDB
-    };
-    
-})();
-
 // Main script IIFE
 (async function() {
     'use strict';
 
-    // Ensure userConfig is defined
-    if (typeof window.userConfig === 'undefined') {
-        console.error('userConfig is not defined');
-        return; // Stop further execution if userConfig is not defined
+    // Function to fetch configuration for StashDB and TPDB
+    async function fetchConfiguration() {
+        const configQuery = `
+            query Configuration {
+                configuration {
+                    general {
+                        stashBoxes {
+                            endpoint
+                            api_key
+                            name
+                        }
+                    }
+                }
+            }
+        `;
+    
+        try {
+            // Directly call graphqlRequest with the local server URL
+            const response = await graphqlRequest('/graphql', configQuery);
+            if (response && response.data && response.data.configuration) {
+                return response.data.configuration.general.stashBoxes;
+            } else {
+                console.error('Failed to fetch configuration');
+                return [];
+            }
+        } catch (error) {
+            console.error('Error fetching configuration:', error);
+            return [];
+        }
     }
 
-    // Directly use window.userConfig for creating config
-    const config = {
-        serverUrl: `${window.userConfig.scheme}://${window.userConfig.host}:${window.userConfig.port}/graphql`,
-        apiKey: window.userConfig.apiKey,
-        stashDBApiKey: window.userConfig.stashDBApiKey,
-        tpdbApiKey: window.userConfig.tpdbApiKey
-    };
+    // Fetch the configuration for StashDB and TPDB
+    const stashBoxes = await fetchConfiguration();
+    const stashDBConfig = stashBoxes.find(box => box.name === 'StashDB');
+    const tpdbConfig = stashBoxes.find(box => box.name === 'ThePornDB');
 
+    // Configuration object to store the fetched endpoints and API keys
+    const config = {
+        serverUrl: `/graphql`, // Relative URL for local GraphQL endpoint
+        stashDBApiKey: stashDBConfig ? stashDBConfig.api_key : '',
+        stashDBEndpoint: stashDBConfig ? stashDBConfig.endpoint : '',
+        tpdbApiKey: tpdbConfig ? tpdbConfig.api_key : '',
+        tpdbEndpoint: tpdbConfig ? tpdbConfig.endpoint : ''
+    };
 
     // Dynamically load Toastify and Tabulator CSS
     const toastifyCSS = document.createElement('link');
@@ -47,7 +61,7 @@
     // Inject custom CSS for the custom menu, modals, loading spinner, and Tabulator
     const styleElement = document.createElement('style');
     styleElement.innerHTML = `
-	/* Styles for the custom popup */
+        /* Styles for the custom popup */
         #performers-custom-popup {
             position: absolute;
             background: rgba(0, 0, 0, 0.5);
@@ -137,36 +151,39 @@
             width: 100%;
         }
         #performers-tag-search {
-        color: black;
-       }
-       .performers-tag-close {
-           position: absolute;
-           top: 10px;
-           right: 15px;
-           font-size: 28px;
-           font-weight: bold;
-           color: white;
-           cursor: pointer;
-           z-index: 10003;
-       }
+            color: black;
+        }
 
-       .performers-tag-close:hover {
-           color: red;
-       }
-       .recent-tag {
-           cursor: pointer;
-           padding: 5px;
-           margin: 3px 0;
-           background-color: rgba(255, 255, 255, 0.2);
-           border-radius: 4px;
-       }
+        .performers-tag-close {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            font-size: 28px;
+            font-weight: bold;
+            color: white;
+            cursor: pointer;
+            z-index: 10003;
+        }
 
-       .recent-tag.selected {
-           background-color: rgba(255, 255, 255, 0.7);
-           color: black;
-           font-weight: bold;
-       }
-       .performers-custom-modal {
+        .performers-tag-close:hover {
+            color: red;
+        }
+
+        .recent-tag {
+            cursor: pointer;
+            padding: 5px;
+            margin: 3px 0;
+            background-color: rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+        }
+
+        .recent-tag.selected {
+            background-color: rgba(255, 255, 255, 0.7);
+            color: black;
+            font-weight: bold;
+        }
+
+        .performers-custom-modal {
             display: none;
             position: fixed;
             z-index: 10001;
@@ -308,30 +325,28 @@
         }
 
         #performers-loading-spinner img {
-        position: absolute;
-        width: 100%;
-        height: 100%;
-        object-fit: contain;
-        opacity: 0;
-        animation: fadeIn 1s forwards;
-         }
-
-       @keyframes fadeIn {
-       0% { opacity: 0; }
-       100% { opacity: 1; }
-         }
-
-
-        #performers-loading-spinner .performers-loading-header {
-        position: absolute;
-        bottom: 10px;
-        width: 100%;
-        text-align: center;
-        color: white;
-        font-size: 18px;
-        font-weight: bold;
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            opacity: 0;
+            animation: fadeIn 1s forwards;
         }
 
+        @keyframes fadeIn {
+            0% { opacity: 0; }
+            100% { opacity: 1; }
+        }
+
+        #performers-loading-spinner .performers-loading-header {
+            position: absolute;
+            bottom: 10px;
+            width: 100%;
+            text-align: center;
+            color: white;
+            font-size: 18px;
+            font-weight: bold;
+        }
 
         @keyframes bookSlide {
             0% { transform: translateX(0); }
@@ -350,12 +365,12 @@
         }
 
         .performers-loading-header {
-        outline: 1px solid black;
-        background: rgba(0, 0, 0, 0.5);
-       }
+            outline: 1px solid black;
+            background: rgba(0, 0, 0, 0.5);
+        }
     `;
-	
-	document.head.appendChild(styleElement);
+    
+    document.head.appendChild(styleElement);
 
     const spinnerHTML = `<div id="performers-loading-spinner"><img src=""></div>`;
     const dimOverlayHTML = `<div id="performers-dim-overlay"></div>`;
@@ -415,7 +430,7 @@
         return urlParts[urlParts.length - 1];
     }
 
-    // Function to fetch performer's StashDB and TPDB IDs
+    // Function to fetch performer IDs
     async function fetchPerformerIDs(performerID) {
         const query = `
             query FindPerformer($id: ID!) {
@@ -429,7 +444,7 @@
         `;
         console.log("GraphQL query for fetching performer's IDs:", query);
         try {
-            const response = await graphqlRequest(query, { id: performerID }, config.apiKey);
+            const response = await graphqlRequest('/graphql', query, { id: performerID }, config.apiKey);
             console.log("Response for performer's IDs:", response);
             if (response && response.data && response.data.findPerformer) {
                 const stash_ids = response.data.findPerformer.stash_ids;
@@ -438,7 +453,7 @@
                     tpdbID: stash_ids.find(id => id.endpoint === 'https://theporndb.net/graphql')?.stash_id
                 };
             } else {
-                console.error('No stash_ids found for performer:', performerID);
+                console.error('No data found for performer:', performerID);
                 return null;
             }
         } catch (error) {
@@ -462,7 +477,7 @@
         `;
         console.log("GraphQL query for fetching performer images from StashDB:", query);
         try {
-            const response = await gqlQuery('https://stashdb.org/graphql', query, { id: performerStashID }, config.stashDBApiKey);
+            const response = await gqlQuery(config.stashDBEndpoint, query, { id: performerStashID }, config.stashDBApiKey);
             console.log("Response for performer images from StashDB:", response);
             if (response && response.data && response.data.findPerformer) {
                 return response.data.findPerformer.images;
@@ -478,35 +493,33 @@
 
     // Function to fetch performer images from TPDB
     async function fetchPerformerImagesFromTPDB(performerTPDBID) {
-		console.log("TPDB API Key before request:", config.tpdbApiKey); // Add this line
-		const query = `
-			query FindPerformer($id: ID!) {
-				findPerformer(id: $id) {
-					images {
-						url
-						width
-						height
-					}
-				}
-			}
-		`;
-		console.log("GraphQL query for fetching performer images from TPDB:", query);
-		try {
-			const response = await gqlQuery('https://theporndb.net/graphql', query, { id: performerTPDBID }, config.tpdbApiKey);
-			console.log("Response for performer images from TPDB:", response);
-			if (response && response.data && response.data.findPerformer) {
-				return response.data.findPerformer.images;
-			} else {
-				console.error('No images found for performer in TPDB:', performerTPDBID);
-				return [];
-			}
-		} catch (error) {
-			console.error('Error fetching performer images from TPDB:', error);
-			return [];
-		}
-	}
-
-
+        console.log("TPDB API Key before request:", config.tpdbApiKey);
+        const query = `
+            query FindPerformer($id: ID!) {
+                findPerformer(id: $id) {
+                    images {
+                        url
+                        width
+                        height
+                    }
+                }
+            }
+        `;
+        console.log("GraphQL query for fetching performer images from TPDB:", query);
+        try {
+            const response = await gqlQuery(config.tpdbEndpoint, query, { id: performerTPDBID }, config.tpdbApiKey);
+            console.log("Response for performer images from TPDB:", response);
+            if (response && response.data && response.data.findPerformer) {
+                return response.data.findPerformer.images;
+            } else {
+                console.error('No images found for performer in TPDB:', performerTPDBID);
+                return [];
+            }
+        } catch (error) {
+            console.error('Error fetching performer images from TPDB:', error);
+            return [];
+        }
+    }
 
     // Function to fetch performer images from local server
     async function fetchPerformerImagesFromLocal(performerID) {
@@ -588,36 +601,40 @@
     }
 
     // Function to fetch performer details
-    async function fetchPerformerDetails(performerID) {
-        const query = `
-            query FindPerformer($id: ID!) {
-                findPerformer(id: $id) {
-                    id
-                    name
-                    scenes {
-                        title
-                        stash_ids {
-                            stash_id
-                        }
-                    }
-                }
-            }
-        `;
-        console.log("GraphQL query for fetching performer details:", query);
-        try {
-            const response = await graphqlRequest(query, { id: performerID }, config.apiKey);
-            console.log("Response for performer details:", response);
-            if (response && response.data && response.data.findPerformer) {
-                return response.data.findPerformer;
-            } else {
-                console.error('No details found for performer:', performerID);
-                return null;
-            }
-        } catch (error) {
-            console.error('Error fetching performer details:', error);
-            return null;
-        }
-    }
+	async function fetchPerformerDetails(performerID) {
+		const query = `
+			query FindPerformer($id: ID!) {
+				findPerformer(id: $id) {
+					id
+					name
+					scenes {
+						title
+						stash_ids {
+							stash_id
+						}
+					}
+				}
+			}
+		`;
+		// Ensure we only add '/graphql' once to the origin
+		const fullEndpoint = `${window.location.origin}/graphql`;
+		console.log("Full URL being used for the request:", fullEndpoint);
+		console.log("GraphQL query:", query);
+	
+		try {
+			const response = await graphqlRequest(fullEndpoint, query, { id: performerID }, config.apiKey);
+			console.log("Response for performer details:", response);
+			if (response && response.data && response.data.findPerformer) {
+				return response.data.findPerformer;
+			} else {
+				console.error('No details found for performer:', performerID);
+				return null;
+			}
+		} catch (error) {
+			console.error('Error fetching performer details:', error);
+			return null;
+		}
+	}
 
     // Function to fetch scenes from StashDB
     async function fetchStashDBScenes(stash_ids, page = 1) {
@@ -656,7 +673,7 @@
         `;
         console.log("GraphQL query for fetching StashDB scenes:", query);
         try {
-            const response = await gqlQuery('https://stashdb.org/graphql', query, { stash_ids, page }, config.stashDBApiKey);
+            const response = await gqlQuery(config.stashDBEndpoint, query, { stash_ids, page }, config.stashDBApiKey);
             console.log("Response for StashDB scenes:", response);
             if (response && response.data && response.data.queryScenes) {
                 return response.data.queryScenes;
@@ -854,28 +871,30 @@
 
     // Function to update performer image
     async function updatePerformerImage(performerID, imageUrl) {
-        const mutation = `
-            mutation PerformerUpdate($id: ID!, $image: String!) {
-                performerUpdate(input: { id: $id, image: $image }) {
-                    id
-                }
-            }
-        `;
-        console.log("GraphQL mutation for updating performer image:", mutation);
-        try {
-            const response = await graphqlRequest(mutation, { id: performerID, image: imageUrl }, config.apiKey);
-            console.log("Response for updating performer image:", response);
-            if (response && response.data && response.data.performerUpdate) {
-                return response.data.performerUpdate.id;
-            } else {
-                console.error('Failed to update performer image:', performerID);
-                return null;
-            }
-        } catch (error) {
-            console.error('Error updating performer image:', error);
-            return null;
-        }
-    }
+		const mutation = `
+			mutation PerformerUpdate($id: ID!, $image: String!) {
+				performerUpdate(input: { id: $id, image: $image }) {
+					id
+				}
+			}
+		`;
+		console.log("GraphQL mutation for updating performer image:", mutation);
+		try {
+			// Ensure the mutation is sent as the `query` argument and variables are sent separately
+			const response = await graphqlRequest('/graphql', mutation, { id: performerID, image: imageUrl }, config.apiKey);
+			console.log("Response for updating performer image:", response);
+			if (response && response.data && response.data.performerUpdate) {
+				return response.data.performerUpdate.id;
+			} else {
+				console.error('Failed to update performer image:', performerID);
+				return null;
+			}
+		} catch (error) {
+			console.error('Error updating performer image:', error);
+			return null;
+		}
+	}
+
 
     // Function to auto-tag performer
     async function autoTagPerformer(performerID) {
@@ -964,32 +983,30 @@
         }
     }
 
+    // Function to create the Tabulator table in a popup for tag selection
+    function createTagTabulatorPopup(performerID) {
+        console.log(`Creating Tabulator popup for Tags`);
+        const popup = document.createElement('div');
+        popup.id = 'performers-tag-popup';
+        document.body.appendChild(popup);
 
-
-   // Function to create the Tabulator table in a popup for tag selection
-   function createTagTabulatorPopup(performerID) {
-       console.log(`Creating Tabulator popup for Tags`);
-       const popup = document.createElement('div');
-       popup.id = 'performers-tag-popup';
-       document.body.appendChild(popup);
-
-       const form = document.createElement('form');
-       form.innerHTML = `
-           <div id="performers-tag-close" class="performers-tag-close">&times;</div>
-           <h2>Select Tags for Performer</h2>
-           <div style="display: flex; gap: 20px;">
-               <div style="flex: 1;">
-                   <input type="text" id="performers-tag-search" placeholder="Search Tags">
-                   <div id="performers-tag-table"></div>
-               </div>
-               <div style="flex: 1;">
-                   <h3>Recent Tags</h3>
-                   <div id="performers-recent-tags"></div>
-               </div>
-           </div>
-           <button type="button" id="performers-apply-tags">Apply Tags</button>
-       `;
-       popup.appendChild(form);
+        const form = document.createElement('form');
+        form.innerHTML = `
+            <div id="performers-tag-close" class="performers-tag-close">&times;</div>
+            <h2>Select Tags for Performer</h2>
+            <div style="display: flex; gap: 20px;">
+                <div style="flex: 1;">
+                    <input type="text" id="performers-tag-search" placeholder="Search Tags">
+                    <div id="performers-tag-table"></div>
+                </div>
+                <div style="flex: 1;">
+                    <h3>Recent Tags</h3>
+                    <div id="performers-recent-tags"></div>
+                </div>
+            </div>
+            <button type="button" id="performers-apply-tags">Apply Tags</button>
+        `;
+        popup.appendChild(form);
 
         // Close button logic
         document.getElementById('performers-tag-close').onclick = function() {
@@ -1014,88 +1031,88 @@
             table.setData(data);
         }
 
-       // Function to get the current timestamp in ISO format
-       function getCurrentTimestamp() {
-           return new Date().toISOString();
-       }
+        // Function to get the current timestamp in ISO format
+        function getCurrentTimestamp() {
+            return new Date().toISOString();
+        }
 
-       // Fetch recent tags used for performers and display them
-       async function fetchRecentTags() {
-           const currentTimestamp = getCurrentTimestamp();
+        // Fetch recent tags used for performers and display them
+        async function fetchRecentTags() {
+            const currentTimestamp = getCurrentTimestamp();
 
-           const recentTagsQuery = `
-               query FindPerformers {
-                   findPerformers(
-                       performer_filter: { updated_at: { value: "${currentTimestamp}", modifier: LESS_THAN } }
-                       filter: { per_page: -1 }
-                   ) {
-                       performers {
-                           id
-                           name
-                           tags {
-                               id
-                               name
-                               updated_at
-                           }
-                       }
-                   }
-               }
-           `;
+            const recentTagsQuery = `
+                query FindPerformers {
+                    findPerformers(
+                        performer_filter: { updated_at: { value: "${currentTimestamp}", modifier: LESS_THAN } }
+                        filter: { per_page: -1 }
+                    ) {
+                        performers {
+                            id
+                            name
+                            tags {
+                                id
+                                name
+                                updated_at
+                            }
+                        }
+                    }
+                }
+            `;
 
-           try {
-               const response = await graphqlRequest(recentTagsQuery);
+            try {
+                const response = await graphqlRequest(recentTagsQuery);
 
-               // Log the entire response to understand what is returned
-               console.log("Response from server:", response);
+                // Log the entire response to understand what is returned
+                console.log("Response from server:", response);
 
-               // Check if the response contains the expected structure
-               if (response && response.data && response.data.findPerformers && Array.isArray(response.data.findPerformers.performers)) {
-                   const performers = response.data.findPerformers.performers;
+                // Check if the response contains the expected structure
+                if (response && response.data && response.data.findPerformers && Array.isArray(response.data.findPerformers.performers)) {
+                    const performers = response.data.findPerformers.performers;
 
-                   // Extract tags from performers, remove duplicates, sort them by updated_at, and limit to the most recent 10 tags
-                   const uniqueTags = {};
-                   performers.flatMap(performer => performer.tags).forEach(tag => {
-                       if (!uniqueTags[tag.id]) {
-                           uniqueTags[tag.id] = tag;
-                       }
-                   });
+                    // Extract tags from performers, remove duplicates, sort them by updated_at, and limit to the most recent 10 tags
+                    const uniqueTags = {};
+                    performers.flatMap(performer => performer.tags).forEach(tag => {
+                        if (!uniqueTags[tag.id]) {
+                            uniqueTags[tag.id] = tag;
+                        }
+                    });
 
-                   // Convert the unique tags object back to an array and sort by updated_at
-                   const sortedTags = Object.values(uniqueTags)
-                       .sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at))
-                       .slice(0, 10); // Take the most recent 10 tags
+                    // Convert the unique tags object back to an array and sort by updated_at
+                    const sortedTags = Object.values(uniqueTags)
+                        .sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at))
+                        .slice(0, 10); // Take the most recent 10 tags
 
-                   const recentTagsContainer = document.getElementById('performers-recent-tags');
+                    const recentTagsContainer = document.getElementById('performers-recent-tags');
 
-                   // Check if there are any tags to display
-                   if (sortedTags.length > 0) {
-                       recentTagsContainer.innerHTML = sortedTags.map(tag => `<div class="recent-tag" data-tag-id="${tag.id}">${tag.name}</div>`).join('');
+                    // Check if there are any tags to display
+                    if (sortedTags.length > 0) {
+                        recentTagsContainer.innerHTML = sortedTags.map(tag => `<div class="recent-tag" data-tag-id="${tag.id}">${tag.name}</div>`).join('');
 
-                       // Add event listeners to each tag for selection
-                       document.querySelectorAll('.recent-tag').forEach(tagElement => {
-                           tagElement.addEventListener('click', function() {
-                               tagElement.classList.toggle('selected');
-                           });
-                       });
+                        // Add event listeners to each tag for selection
+                        document.querySelectorAll('.recent-tag').forEach(tagElement => {
+                            tagElement.addEventListener('click', function() {
+                                tagElement.classList.toggle('selected');
+                            });
+                        });
 
-                   } else {
-                       recentTagsContainer.innerHTML = `<div>No Recent Tags Found</div>`;
-                   }
-               } else {
-                   // Handle cases where the structure is not as expected or no performers are returned
-                   console.warn('Unexpected response structure or no performers found:', response);
-                   document.getElementById('performers-recent-tags').innerHTML = `<div>No Recent Tags Found</div>`;
-               }
-           } catch (error) {
-               // Log the error for debugging
-               console.error('Error fetching recent tags:', error);
+                    } else {
+                        recentTagsContainer.innerHTML = `<div>No Recent Tags Found</div>`;
+                    }
+                } else {
+                    // Handle cases where the structure is not as expected or no performers are returned
+                    console.warn('Unexpected response structure or no performers found:', response);
+                    document.getElementById('performers-recent-tags').innerHTML = `<div>No Recent Tags Found</div>`;
+                }
+            } catch (error) {
+                // Log the error for debugging
+                console.error('Error fetching recent tags:', error);
 
-               // Display an error message to the user
-               document.getElementById('performers-recent-tags').innerHTML = `<div>Error fetching recent tags</div>`;
-           }
-       }
+                // Display an error message to the user
+                document.getElementById('performers-recent-tags').innerHTML = `<div>Error fetching recent tags</div>`;
+            }
+        }
 
-       fetchRecentTags();
+        fetchRecentTags();
 
         // Debounce function to limit the rate at which a function can fire
         function debounce(func, wait) {
@@ -1370,7 +1387,6 @@
         return menu;
     }
 
-
     // Function to get selected performers
     function getSelectedPerformers() {
         const selectedPerformers = [];
@@ -1428,105 +1444,84 @@
         }
     });
 
-   // Function to make GraphQL requests using XMLHttpRequest
-	async function graphqlRequest(query, variables = {}, apiKey = '') {
-		console.log("Making GraphQL request with variables:", variables);
-		console.log("GraphQL query:", query);
-	
-		return new Promise((resolve, reject) => {
-			const xhr = new XMLHttpRequest();
-			xhr.open('POST', config.serverUrl, true);
-			xhr.setRequestHeader('Content-Type', 'application/json');
-			xhr.setRequestHeader('Apikey', apiKey);
-	
-			// Log headers and request body for debugging
-			console.log("Request Headers:", {
-				'Content-Type': 'application/json',
-				'Apikey': apiKey
-			});
-	
-			xhr.onreadystatechange = function() {
-				if (xhr.readyState === 4) {
-					console.log("Response Status:", xhr.status);
-					console.log("Response Headers:", xhr.getAllResponseHeaders());
-					console.log("Response Body:", xhr.responseText);
-	
-					if (xhr.status >= 200 && xhr.status < 300) {
-						try {
-							const jsonResponse = JSON.parse(xhr.responseText);
-							console.log("GraphQL response:", jsonResponse);
-							resolve(jsonResponse);
-						} catch (parseError) {
-							console.error('Error parsing JSON response:', parseError);
-							reject(new Error(`Error parsing JSON response: ${parseError.message}`));
-						}
-					} else {
-						// Log full error details including response text
-						console.error('Error in GraphQL request:', xhr.status, xhr.statusText, xhr.responseText);
-						reject(new Error(`Error: ${xhr.status} ${xhr.statusText}`));
-					}
-				}
-			};
-	
-			xhr.onerror = function() {
-				console.error('Network error');
-				reject(new Error('Network error'));
-			};
-	
-			xhr.send(JSON.stringify({ query, variables }));
-		});
-	}
-
-	
-	// Function to make GraphQL requests using XMLHttpRequest to a specific endpoint
-	async function gqlQuery(endpoint, query, variables = {}, apiKey = '') {
-		console.log("Making GraphQL request to endpoint:", endpoint);
+    // Modify graphqlRequest to accept the endpoint URL as a parameter
+	async function graphqlRequest(endpoint, query, variables = {}, apiKey = '') {
+		// Check if the endpoint is a full URL or a relative path
+		const fullUrl = endpoint.startsWith('http') ? endpoint : `${window.location.origin}${endpoint}`;
+		
+		console.log("Full URL being used for the request:", fullUrl);
 		console.log("GraphQL query:", query);
 		console.log("Variables:", variables);
-		console.log("API Key being used:", apiKey); // Add this line
 	
-		return new Promise((resolve, reject) => {
-			const xhr = new XMLHttpRequest();
-			xhr.open('POST', endpoint, true);
-			xhr.setRequestHeader('Content-Type', 'application/json');
-			xhr.setRequestHeader('Apikey', apiKey);
-	
-			// Log headers for debugging
-			console.log("Request Headers:", {
-				'Content-Type': 'application/json',
-				'Apikey': apiKey
+		try {
+			const response = await fetch(fullUrl, { // Use the correctly formed URL
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+					'Apikey': apiKey
+				},
+				body: JSON.stringify({ query, variables }) // Correctly format the request body
 			});
 	
-			xhr.onreadystatechange = function() {
-				if (xhr.readyState === 4) {
-					console.log("Response Status:", xhr.status);
-					console.log("Response Headers:", xhr.getAllResponseHeaders());
-					console.log("Response Body:", xhr.responseText);
+			// Log the response status and headers
+			console.log("Response Status:", response.status);
+			console.log("Response Headers:", Array.from(response.headers.entries()));
 	
-					if (xhr.status >= 200 && xhr.status < 300) {
-						try {
-							const jsonResponse = JSON.parse(xhr.responseText);
-							console.log("GraphQL response:", jsonResponse);
-							resolve(jsonResponse);
-						} catch (parseError) {
-							console.error('Error parsing JSON response:', parseError);
-							reject(new Error(`Error parsing JSON response: ${parseError.message}`));
-						}
-					} else {
-						console.error('Error in GraphQL request:', xhr.status, xhr.statusText, xhr.responseText);
-						reject(new Error(`Error: ${xhr.status} ${xhr.statusText}`));
-					}
-				}
-			};
+			// Check the content type to ensure it's JSON
+			const contentType = response.headers.get('Content-Type');
+			if (!contentType || !contentType.includes('application/json')) {
+				console.error("Response is not JSON:", contentType);
+				const responseText = await response.text();
+				console.error("Response text:", responseText);
+				throw new Error('Response is not in JSON format');
+			}
 	
-			xhr.onerror = function() {
-				console.error('Network error');
-				reject(new Error('Network error'));
-			};
+			// Parse the JSON response
+			const jsonResponse = await response.json();
+			console.log("Parsed GraphQL response:", jsonResponse);
+			if (!response.ok) {
+				console.error('Error in GraphQL request:', response.status, response.statusText);
+				throw new Error(`Error: ${response.status} ${response.statusText}`);
+			}
 	
-			xhr.send(JSON.stringify({ query, variables }));
-		});
+			return jsonResponse;
+		} catch (error) {
+			console.error('Error fetching GraphQL data:', error);
+			throw error;
+		}
 	}
+
+
+
+    // Function to make GraphQL requests to a specific external endpoint (StashDB or TPDB)
+    async function gqlQuery(endpoint, query, variables = {}, apiKey = '') {
+        console.log("Making GraphQL request to endpoint:", endpoint);
+        console.log("GraphQL query:", query);
+        console.log("Variables:", variables);
+
+        try {
+            const response = await fetch(endpoint, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Apikey': apiKey
+                },
+                body: JSON.stringify({ query, variables })
+            });
+
+            if (!response.ok) {
+                console.error('Error in GraphQL request:', response.status, response.statusText);
+                throw new Error(`Error: ${response.status} ${response.statusText}`);
+            }
+
+            const jsonResponse = await response.json();
+            console.log("GraphQL response:", jsonResponse);
+            return jsonResponse;
+        } catch (error) {
+            console.error('Error fetching GraphQL data:', error);
+            throw error;
+        }
+    }
 
     // Store the currently opened right-click menu to close it if another right-click occurs
     let currentMenu = null;
