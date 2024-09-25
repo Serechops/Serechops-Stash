@@ -121,11 +121,34 @@
         }
     }
 
-    // Function to extract performer ID from the URL
-    function getPerformerID(url) {
-        const urlParts = url.split('/');
-        return urlParts[urlParts.length - 1];
-    }
+   // Function to extract performer ID from the active URL
+	function getPerformerIDFromURL() {
+		const url = window.location.href; // Get the current active URL
+		const regex = /\/performers\/(\d+)\//; // Regex to match the performer ID in the URL
+		const match = url.match(regex); // Execute the regex on the URL
+		if (match && match[1]) {
+			return match[1]; // Return the performer ID if matched
+		} else {
+			console.error('Failed to parse performer ID from URL:', url);
+			return null; // Return null if the ID can't be parsed
+		}
+	}
+	
+	// Event listener for right-click context menu
+	document.addEventListener('contextmenu', function(event) {
+		// Check if the target is within a performer card or the detail header image
+		const performerCard = event.target.closest('.performer-card');
+		const performerImage = event.target.closest('.detail-header-image');
+	
+		// Attempt to get performer ID from the active URL, not the image src
+		const performerID = getPerformerIDFromURL();
+	
+		if (performerID) {
+			showCustomMenu(event, performerID); // Show the custom menu if the performer ID is found
+		} else {
+			console.error('Failed to extract performer ID from URL');
+		}
+	});
 
     // Function to fetch performer IDs
     async function fetchPerformerIDs(performerID) {
@@ -1123,25 +1146,18 @@
     }
 
     // Function to handle right-click on performer cards or detail header image
-    document.addEventListener('contextmenu', function(event) {
-        // Check if the target is within a performer card or the detail header image
-        const performerCard = event.target.closest('.performer-card');
-        const performerImage = event.target.closest('.detail-header-image');
-
-        if (performerCard || performerImage) {
-            let performerLink;
-            if (performerCard) {
-                performerLink = performerCard.querySelector('a');
-            } else if (performerImage) {
-                performerLink = performerImage.querySelector('img.performer');
-            }
-
-            if (performerLink) {
-                const performerID = getPerformerID(performerLink.src || performerLink.href);
-                if (performerID) showCustomMenu(event, performerID);
-            }
-        }
-    });
+	document.addEventListener('contextmenu', function(event) {
+		event.preventDefault(); // Prevent default right-click menu
+	
+		const performerID = getPerformerIDFromURL(); // Always use the active URL to extract the performer ID
+	
+		if (performerID) {
+			console.log("Performer ID extracted from URL:", performerID);
+			showCustomMenu(event, performerID); // Show the custom menu if the performer ID is found
+		} else {
+			console.error('Failed to extract performer ID from URL');
+		}
+	});
 
     // Simplify graphqlRequest by removing the endpoint parameter
     async function graphqlRequest(query, variables = {}, apiKey = '') {
