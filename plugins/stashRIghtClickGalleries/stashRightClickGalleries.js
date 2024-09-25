@@ -28,68 +28,6 @@
     tabulatorCSS.href = 'https://unpkg.com/tabulator-tables@5.0.8/dist/css/tabulator_midnight.min.css';
     document.head.appendChild(tabulatorCSS);
 
-    // Custom CSS for the popup
-    const customCSS = `
-        #gallery-popup {
-            position: absolute;
-            background: rgba(0, 0, 0, 0.5);
-            backdrop-filter: blur(10px);
-            border: 1px solid #ccc;
-            z-index: 10001;
-            padding: 20px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
-            width: 500px;
-            max-height: 80%;
-            overflow-y: auto;
-        }
-        #gallery-popup h2 {
-            margin-top: 0;
-            cursor: move;
-        }
-        #gallery-popup form label {
-            display: block;
-            margin-top: 10px;
-        }
-        #gallery-popup form input, #gallery-popup form select {
-            width: 100%;
-            padding: 8px;
-            margin-top: 5px;
-            box-sizing: border-box;
-        }
-        #gallery-popup form button {
-            margin-top: 15px;
-            padding: 10px;
-            cursor: pointer;
-            background: rgba(0, 0, 0, 0.5);
-            color: #fff;
-        }
-        #gallery-popup input[type="text"], #gallery-popup select {
-            color: black;
-        }
-
-        #gallery-custom-menu {
-            background-color: #000;
-            background: rgba(0, 0, 0, 0.6) !important;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
-            backdrop-filter: blur(10px) !important;
-            position: absolute;
-            border: 1px solid #ccc;
-            z-index: 10000;
-            padding: 10px;
-        }
-
-        #gallery-custom-menu a {
-            display: block;
-            margin-bottom: 5px;
-            color: white;
-        }
-    `;
-
-    // Inject custom CSS into the document
-    const style = document.createElement('style');
-    style.textContent = customCSS;
-    document.head.appendChild(style);
-
     // Fetch GraphQL data using relative URL
     const fetchGQL = async (query, variables = {}) =>
         fetch('/graphql', { // Use relative URL for cookie-based auth
@@ -464,7 +402,7 @@
         }
     }
 
-    // Example of using Toastify
+    // Toastify
     function showToast(message, type = "success") {
         Toastify({
             text: message,

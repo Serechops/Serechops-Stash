@@ -7,33 +7,6 @@
     toastifyCSS.href = 'https://cdn.jsdelivr.net/npm/toastify-js@1.12.0/src/toastify.min.css';
     document.head.appendChild(toastifyCSS);
 
-    // Inject custom CSS for the custom menu
-    const styleElement = document.createElement('style');
-    styleElement.innerHTML = `
-        #tags-custom-menu {
-            background-color: #000;
-            background: rgba(0, 0, 0, 0.3);
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
-            backdrop-filter: blur(10px);
-            position: absolute;
-            border: 1px solid #ccc;
-            z-index: 10000;
-            padding: 10px;
-        }
-
-        #tags-custom-menu a {
-            display: block;
-            margin-bottom: 5px;
-            color: white;
-        }
-
-        .tags-loading-header {
-            outline: 1px solid black;
-            background: rgba(0, 0, 0, 0.5);
-        }
-    `;
-    document.head.appendChild(styleElement);
-
     // Function to extract tag ID from the URL
     function getTagID(url) {
         const urlParts = url.split('/');

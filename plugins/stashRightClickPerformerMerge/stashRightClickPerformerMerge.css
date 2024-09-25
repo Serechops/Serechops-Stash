@@ -1,0 +1,132 @@
+#performermerge-custom-menu {
+            background-color: #000;
+            background: rgba(0, 0, 0, 0.3);
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+            position: absolute;
+            border: 1px solid #ccc;
+            z-index: 10000;
+            padding: 10px;
+        }
+
+        #performermerge-custom-menu a {
+            display: block;
+            margin-bottom: 5px;
+            color: white;
+            text-decoration: none;
+        }
+
+        #performermerge-custom-menu a:hover {
+            text-decoration: underline;
+        }
+
+        #performermerge-merge-modal {
+            display: none;
+            position: fixed;
+            z-index: 10001;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+
+        .performermerge-merge-modal-content {
+            background: rgba(0, 0, 0, 0.3);
+            margin: 5% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 800px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .performermerge-merge-close {
+            color: red;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .performermerge-merge-close:hover,
+        .performermerge-merge-close:focus {
+            color: red;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .performermerge-merge-header {
+            text-align: center;
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+
+        .performermerge-merge-search {
+            margin-bottom: 20px;
+        }
+
+        .performermerge-merge-search input {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            color: black;
+        }
+
+        .performermerge-merge-container {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .performermerge-merge-pane {
+            width: 48%;
+            background-color: rgba(0, 0, 0, 0.5);
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+
+        .performermerge-merge-pane img {
+            display: block;
+            margin: 0 auto 10px auto;
+            max-width: 100px;
+            max-height: 100px;
+            border-radius: 8px;
+        }
+
+        .performermerge-merge-pane .performermerge-performer-result {
+            padding: 8px;
+            margin: 5px 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            cursor: pointer;
+            text-align: center;
+        }
+
+        .performermerge-merge-pane .performermerge-performer-result:hover {
+            background-color: green;
+        }
+
+        .performermerge-merge-button {
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #333;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+        }
+
+        .performermerge-merge-button:hover {
+            background-color: #444;
+        }
+
+        .performermerge-merge-actions {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .performermerge-highlight {
+            background-color: #B03608;
+        }

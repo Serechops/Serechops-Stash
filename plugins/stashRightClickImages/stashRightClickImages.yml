@@ -1,7 +1,9 @@
 name: Stash Right Click Images
 description: Adds a custom right-click menu to the image cards to perform various quick tasks related to images.
-version: 1.0
+version: 1.1
 ui:
+  css: 
+    - stashRightClickImages.css
   javascript:
     - stashRightClickImages.js
   csp:

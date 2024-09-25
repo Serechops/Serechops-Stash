@@ -1,0 +1,58 @@
+#popup {
+            position: absolute;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+            border: 1px solid #ccc;
+            z-index: 10001;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+            width: 500px;
+            max-height: 80%;
+            overflow-y: auto;
+        }
+        #popup h2 {
+            margin-top: 0;
+            cursor: move; /* Make the header cursor indicate that it's draggable */
+        }
+        #popup form label {
+            display: block;
+            margin-top: 10px;
+        }
+        #popup form input, #popup form select {
+            width: 100%;
+            padding: 8px;
+            margin-top: 5px;
+            box-sizing: border-box;
+        }
+        #popup form button {
+            margin-top: 15px;
+            padding: 10px;
+            cursor: pointer;
+            background: rgba(0, 0, 0, 0.5);
+            color: #fff;
+        }
+        #popup input[type="text"], #popup select {
+            color: black;
+        }
+
+        #custom-menu {
+            background-color: #000;
+            background: rgba(0, 0, 0, 0.6) !important;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px) !important;
+            position: absolute;
+            border: 1px solid #ccc;
+            z-index: 10000;
+            padding: 10px;
+        }
+
+        #custom-menu a {
+            display: block;
+            margin-bottom: 5px;
+            color: white;
+        }
+
+        #popup form select {
+            color: white; /* Change performer text color to white */
+            background-color: black; /* Adjust background color if necessary */
+        }

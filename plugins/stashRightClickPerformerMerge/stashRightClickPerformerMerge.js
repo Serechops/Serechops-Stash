@@ -1,168 +1,105 @@
 (async function() {
     'use strict';
 
-    /******************************************
-     * USER CONFIGURATION
-     ******************************************/
-    const userConfig = {
-        scheme: 'http', // or 'https'
-        host: 'localhost', // your server IP or hostname
-        port: 9999, // your server port
-        apiKey: '' // your API key
+    // Configuration object with default values
+    const config = {
+        serverUrl: `/graphql`, // Relative URL for local GraphQL endpoint
+        localApiKey: '', // Will be updated after fetching configuration
+        stashDBApiKey: '',
+        stashDBEndpoint: "https://stashdb.org/graphql",
+        tpdbApiKey: '',
+        tpdbEndpoint: '',
+        fansdbApiKey: '',
+        fansdbEndpoint: "https://fansdb.cc/graphql",
+        stashBoxNames: {} // This will map endpoints to user-friendly names dynamically
     };
 
-    // Build API URL
-    const apiUrl = `${userConfig.scheme}://${userConfig.host}:${userConfig.port}/graphql`;
+    // Load Toastify library and wait for it to load
+    await loadToastifyLibrary();
 
-    // Friendly names for endpoints
-    const friendlyEndpoints = {
-        "https://stashdb.org/graphql": "StashDB",
-        "https://theporndb.net/graphql": "ThePornDB"
-    };
+    // Function to load Toastify library
+    async function loadToastifyLibrary() {
+        return new Promise((resolve) => {
+            const toastifyScript = document.createElement('script');
+            toastifyScript.src = "https://cdn.jsdelivr.net/npm/toastify-js@1.12.0/src/toastify.min.js";
+            document.head.appendChild(toastifyScript);
+            toastifyScript.onload = resolve;
+        });
+    }
 
-    // Inject CSS for the custom modal and styling
-    const style = document.createElement('style');
-    style.textContent = `
-        #performermerge-custom-menu {
-            background-color: #000;
-            background: rgba(0, 0, 0, 0.3);
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
-            backdrop-filter: blur(10px);
-            position: absolute;
-            border: 1px solid #ccc;
-            z-index: 10000;
-            padding: 10px;
+    // Fetch configuration for StashDB and TPDB
+    async function fetchConfiguration() {
+        const configQuery = `
+            query Configuration {
+                configuration {
+                    general {
+                        stashBoxes {
+                            endpoint
+                            api_key
+                            name
+                        }
+                        apiKey
+                    }
+                }
+            }
+        `;
+        try {
+            const response = await graphqlRequest(configQuery);
+            if (response && response.data && response.data.configuration) {
+                return {
+                    stashBoxes: response.data.configuration.general.stashBoxes,
+                    localApiKey: response.data.configuration.general.apiKey,
+                };
+            } else {
+                console.error('Failed to fetch configuration');
+                return {
+                    stashBoxes: [],
+                    localApiKey: '',
+                };
+            }
+        } catch (error) {
+            console.error('Error fetching configuration:', error);
+            return {
+                stashBoxes: [],
+                localApiKey: '',
+            };
         }
+    }
 
-        #performermerge-custom-menu a {
-            display: block;
-            margin-bottom: 5px;
-            color: white;
-            text-decoration: none;
+    // Fetch the configuration and update config object
+    const configData = await fetchConfiguration();
+    const stashBoxes = configData.stashBoxes;
+
+    // Update configuration with API keys and endpoints, and create the friendly names dynamically
+    stashBoxes.forEach(box => {
+        config.stashBoxNames[box.endpoint] = box.name; // Dynamically map endpoint to name
+        if (box.endpoint === config.stashDBEndpoint) {
+            config.stashDBApiKey = box.api_key;
         }
-
-        #performermerge-custom-menu a:hover {
-            text-decoration: underline;
+        if (box.endpoint.startsWith("https://theporndb.net/graphql")) {
+            config.tpdbApiKey = box.api_key;
+            config.tpdbEndpoint = box.endpoint;
         }
-
-        #performermerge-merge-modal {
-            display: none;
-            position: fixed;
-            z-index: 10001;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            overflow: auto;
-            background-color: rgba(0, 0, 0, 0.5);
+        if (box.endpoint === config.fansdbEndpoint || box.endpoint === "https://fansdb.xyz/graphql") {
+            config.fansdbApiKey = box.api_key;
         }
+    });
 
-        .performermerge-merge-modal-content {
-            background: rgba(0, 0, 0, 0.3);
-            margin: 5% auto;
-            padding: 20px;
-            border: 1px solid #888;
-            width: 80%;
-            max-width: 800px;
-            max-height: 80vh;
-            overflow-y: auto;
-        }
+    config.localApiKey = configData?.localApiKey ?? '';
 
-        .performermerge-merge-close {
-            color: red;
-            float: right;
-            font-size: 28px;
-            font-weight: bold;
-        }
+    // Function to get the friendly name for an endpoint
+    function getFriendlyName(endpoint) {
+        return config.stashBoxNames[endpoint] || endpoint;
+    }
 
-        .performermerge-merge-close:hover,
-        .performermerge-merge-close:focus {
-            color: red;
-            text-decoration: none;
-            cursor: pointer;
-        }
+    // Example usage in your function to display a friendly name dynamically
+    function displayEndpointNames() {
+        stashBoxes.forEach(box => {
+            console.log(`Endpoint: ${box.endpoint}, Friendly Name: ${getFriendlyName(box.endpoint)}`);
+        });
+    }
 
-        .performermerge-merge-header {
-            text-align: center;
-            font-size: 24px;
-            margin-bottom: 20px;
-        }
-
-        .performermerge-merge-search {
-            margin-bottom: 20px;
-        }
-
-        .performermerge-merge-search input {
-            width: 100%;
-            padding: 10px;
-            margin-bottom: 10px;
-            color: black;
-        }
-
-        .performermerge-merge-container {
-            display: flex;
-            justify-content: space-between;
-        }
-
-        .performermerge-merge-pane {
-            width: 48%;
-            background-color: rgba(0, 0, 0, 0.5);
-            padding: 10px;
-            border-radius: 8px;
-            border: 1px solid #ccc;
-        }
-
-        .performermerge-merge-pane img {
-            display: block;
-            margin: 0 auto 10px auto;
-            max-width: 100px;
-            max-height: 100px;
-            border-radius: 8px;
-        }
-
-        .performermerge-merge-pane .performermerge-performer-result {
-            padding: 8px;
-            margin: 5px 0;
-            background-color: rgba(0, 0, 0, 0.5);
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            cursor: pointer;
-            text-align: center;
-        }
-
-        .performermerge-merge-pane .performermerge-performer-result:hover {
-            background-color: green;
-        }
-
-        .performermerge-merge-button {
-            margin-top: 10px;
-            padding: 10px;
-            background-color: #333;
-            color: #fff;
-            border: none;
-            cursor: pointer;
-        }
-
-        .performermerge-merge-button:hover {
-            background-color: #444;
-        }
-
-        .performermerge-merge-actions {
-            text-align: center;
-            margin-top: 20px;
-        }
-
-        .performermerge-highlight {
-            background-color: #B03608;
-        }
-    `;
-    document.head.appendChild(style);
-
-    // Load Toastify library
-    const toastifyScript = document.createElement('script');
-    toastifyScript.src = "https://cdn.jsdelivr.net/npm/toastify-js@1.12.0/src/toastify.min.js";
-    document.head.appendChild(toastifyScript);
-    await new Promise(resolve => toastifyScript.onload = resolve);
+    displayEndpointNames(); // This will print out the dynamically generated friendly names
 
     // Debounce function to limit the rate of function calls
     function debounce(func, wait) {
@@ -403,7 +340,7 @@
         }
 
         try {
-            const response = await graphqlRequest(gqlQuery, variables, config.apiKey);
+            const response = await graphqlRequest(gqlQuery, variables);
             return response.data.findPerformers.performers;
         } catch (error) {
             console.error('Error searching performers:', error);
@@ -427,7 +364,7 @@
     // Function to select a performer for comparison
     async function selectPerformer(paneId, performer) {
         const pane = document.getElementById(paneId);
-        const stashIds = performer.stash_ids.map(id => `${friendlyEndpoints[id.endpoint] || id.endpoint}: ${id.stash_id}`).join(', ');
+        const stashIds = performer.stash_ids.map(id => `${getFriendlyName(id.endpoint)}: ${id.stash_id}`).join(', ');
 
         pane.innerHTML = `
             <img src="${performer.image_path}/image.jpg" alt="${performer.name}">
@@ -518,7 +455,7 @@
         const variables = { performer_id: [performerId] };
 
         try {
-            const response = await graphqlRequest(gqlQuery, variables, config.apiKey);
+            const response = await graphqlRequest(gqlQuery, variables);
             const galleryIds = response.data.findGalleries.galleries.map(gallery => gallery.id);
             console.log(`Galleries for ${paneId}:`, galleryIds);
             document.getElementById(paneId).dataset.galleryIds = JSON.stringify(galleryIds);
@@ -544,7 +481,7 @@
         const variables = { performer_id: [performerId] };
 
         try {
-            const response = await graphqlRequest(gqlQuery, variables, config.apiKey);
+            const response = await graphqlRequest(gqlQuery, variables);
             const sceneIds = response.data.findScenes.scenes.map(scene => scene.id);
             console.log(`Scenes for ${paneId}:`, sceneIds);
             document.getElementById(paneId).dataset.sceneIds = JSON.stringify(sceneIds);
@@ -692,7 +629,7 @@
             }
         `;
         const variables = { id: performerId };
-        const response = await graphqlRequest(gqlQuery, variables, config.apiKey);
+        const response = await graphqlRequest(gqlQuery, variables);
         const performer = response.data.findPerformer;
         const pane = document.querySelector(`[data-selected-performer-id="${performerId}"]`);
         if (pane) {
@@ -715,7 +652,7 @@
         console.log('GraphQL Mutation:', gqlMutation); // Log the mutation query
         console.log('Mutation Variables:', { input }); // Log the mutation variables
 
-        const response = await graphqlRequest(gqlMutation, { input }, config.apiKey);
+        const response = await graphqlRequest(gqlMutation, { input });
 
         console.log('GraphQL Response:', response); // Log the mutation response
 
@@ -736,7 +673,7 @@
         console.log('Delete Mutation:', gqlMutation); // Log the delete mutation query
         console.log('Delete Variables:', { input }); // Log the delete mutation variables
 
-        const response = await graphqlRequest(gqlMutation, { input }, config.apiKey);
+        const response = await graphqlRequest(gqlMutation, { input });
 
         console.log('Delete Response:', response); // Log the delete mutation response
 
@@ -758,7 +695,7 @@
 
         console.log('Updating gallery:', input); // Log the update data
 
-        const response = await graphqlRequest(gqlMutation, { input }, config.apiKey);
+        const response = await graphqlRequest(gqlMutation, { input });
 
         console.log('Gallery Update Response:', response); // Log the mutation response
 
@@ -780,7 +717,7 @@
 
         console.log('Updating scene:', input); // Log the update data
 
-        const response = await graphqlRequest(gqlMutation, { input }, config.apiKey);
+        const response = await graphqlRequest(gqlMutation, { input });
 
         console.log('Scene Update Response:', response); // Log the mutation response
 
@@ -790,22 +727,17 @@
     }
 
     // GraphQL request function
-    async function graphqlRequest(query, variables = {}, apiKey = '') {
-        const response = await fetch(apiUrl, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Apikey': apiKey
-            },
-            body: JSON.stringify({ query, variables })
-        });
-        return response.json();
-    }
+	async function graphqlRequest(query, variables = {}) {
+		const response = await fetch(config.serverUrl, { // Use dynamic URL
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json'
+			},
+			body: JSON.stringify({ query, variables })
+		});
+		return response.json();
+	}
 
-    const config = {
-        serverUrl: apiUrl,
-        apiKey: userConfig.apiKey
-    };
 
     // Function to show toast notifications
     function showToast(message, type = "success") {

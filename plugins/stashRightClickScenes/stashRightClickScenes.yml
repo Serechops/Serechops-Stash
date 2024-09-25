@@ -1,7 +1,9 @@
 name: Stash Right Click Scenes
 description: Adds a custom right-click menu to the scene cards to perform various quick tasks related to scenes.
-version: 1.0
+version: 1.1
 ui:
+  css: 
+    - stashRightClickScenes.css
   javascript:
     - stashRightClickScenes.js
   csp:

@@ -1,7 +1,9 @@
 name: Stash Right Click Performer Merge
 description: Adds a custom right-click menu to the  to perform various quick tasks related to settings.
-version: 1.0
+version: 1.1
 ui:
+  css: 
+    - stashRightClickPerformerMerge.css
   javascript:
     - stashRightClickPerformerMerge.js
   csp:

@@ -1,0 +1,85 @@
+@import url('https://cdn.jsdelivr.net/npm/toastify-js@1.12.0/src/toastify.min.css');
+@import url('https://unpkg.com/tabulator-tables@5.0.8/dist/css/tabulator_midnight.min.css');
+
+#scenes-popup {
+            position: absolute;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+            border: 1px solid #ccc;
+            z-index: 10001;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+            width: 500px;
+            max-height: 80%;
+            overflow-y: auto;
+        }
+        #scenes-popup h2 {
+            margin-top: 0;
+            cursor: move;
+        }
+        #scenes-popup form label {
+            display: block;
+            margin-top: 10px;
+        }
+        #scenes-popup form input, #scenes-popup form select {
+            width: 100%;
+            padding: 8px;
+            margin-top: 5px;
+            box-sizing: border-box;
+        }
+        #scenes-popup form button {
+            margin-top: 15px;
+            padding: 10px;
+            cursor: pointer;
+            background: rgba(0, 0, 0, 0);
+            color: #fff;
+        }
+        #scenes-popup input[type="text"], #scenes-popup select {
+            color: black;
+        }
+
+        #scenes-custom-menu {
+            background-color: #000;
+            background: rgba(0, 0, 0, 0.3);
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+            position: absolute;
+            border: 1px solid #ccc;
+            z-index: 10000;
+            padding: 10px;
+        }
+
+        #scenes-custom-menu a {
+            display: block;
+            margin-bottom: 5px;
+            color: white;
+        }
+
+        #playlist {
+            position: absolute;
+            top: 0;
+            right: -300px;
+            width: 300px;
+            height: 100%;
+            background: #333;
+            color: white;
+            overflow-y: auto;
+            transition: right 0.3s;
+            z-index: 10002;
+        }
+        #playlist.show {
+            right: 0;
+        }
+        #playlist ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        #playlist li {
+            padding: 10px;
+            cursor: pointer;
+            border-bottom: 1px solid #555;
+        }
+        #playlist li:hover {
+            background: #444;
+        }

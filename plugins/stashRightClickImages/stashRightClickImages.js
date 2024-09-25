@@ -1,28 +1,84 @@
-// User Configuration IIFE
-(function() {
-    /******************************************
-     * USER CONFIGURATION
-     ******************************************/
-    window.userConfig = {
-        scheme: 'http', // or 'https'
-        host: 'localhost', // your server IP or hostname
-        port: 9999, // your server port
-        apiKey: '' // your API key
-    };
-})();
-
 // Main script IIFE
 (async function() {
     'use strict';
 
-    // Build API URL
-    const apiUrl = `${window.userConfig.scheme}://${window.userConfig.host}:${window.userConfig.port}/graphql`;
-
-    // Server and API key configuration
+    // Configuration object with default values
     const config = {
-        serverUrl: apiUrl,
-        apiKey: window.userConfig.apiKey
+        serverUrl: `/graphql`, // Relative URL for local GraphQL endpoint
+        localApiKey: '', // Will be updated after fetching configuration
+        stashDBApiKey: '',
+        stashDBEndpoint: "https://stashdb.org/graphql",
+        tpdbApiKey: '',
+        tpdbEndpoint: '',
+        fansdbApiKey: '',
+        fansdbEndpoint: "https://fansdb.cc/graphql",
+        stashBoxNames: {} // This will map endpoints to user-friendly names dynamically
     };
+
+    // Fetch configuration for API keys and endpoints
+    async function fetchConfiguration() {
+        const configQuery = `
+            query Configuration {
+                configuration {
+                    general {
+                        stashBoxes {
+                            endpoint
+                            api_key
+                            name
+                        }
+                        apiKey
+                    }
+                }
+            }
+        `;
+        try {
+            const response = await fetch(config.serverUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ query: configQuery })
+            }).then(res => res.json());
+
+            if (response && response.data && response.data.configuration) {
+                return {
+                    stashBoxes: response.data.configuration.general.stashBoxes,
+                    localApiKey: response.data.configuration.general.apiKey,
+                };
+            } else {
+                console.error('Failed to fetch configuration');
+                return {
+                    stashBoxes: [],
+                    localApiKey: '',
+                };
+            }
+        } catch (error) {
+            console.error('Error fetching configuration:', error);
+            return {
+                stashBoxes: [],
+                localApiKey: '',
+            };
+        }
+    }
+
+    // Fetch the configuration and update config object
+    const configData = await fetchConfiguration();
+    const stashBoxes = configData.stashBoxes;
+
+    // Update configuration with API keys and endpoints, and create the friendly names dynamically
+    stashBoxes.forEach(box => {
+        config.stashBoxNames[box.endpoint] = box.name;
+        if (box.endpoint === config.stashDBEndpoint) {
+            config.stashDBApiKey = box.api_key;
+        }
+        if (box.endpoint.startsWith("https://theporndb.net/graphql")) {
+            config.tpdbApiKey = box.api_key;
+            config.tpdbEndpoint = box.endpoint;
+        }
+        if (box.endpoint === config.fansdbEndpoint || box.endpoint === "https://fansdb.xyz/graphql") {
+            config.fansdbApiKey = box.api_key;
+        }
+    });
+
+    config.localApiKey = configData?.localApiKey ?? '';
 
     // Dynamically load Toastify CSS
     const toastifyCSS = document.createElement('link');
@@ -56,85 +112,19 @@
         Toastify({
             text: message,
             duration: 3000,
-            gravity: "top", // `top` or `bottom`
-            position: "center", // `left`, `center` or `right`
+            gravity: "top",
+            position: "center",
             backgroundColor: type === "success" ? "green" : "red",
         }).showToast();
     }
 
-    // Custom CSS for the popup
-    const customCSS = `
-        #popup {
-            position: absolute;
-            background: rgba(0, 0, 0, 0.5);
-            backdrop-filter: blur(10px);
-            border: 1px solid #ccc;
-            z-index: 10001;
-            padding: 20px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
-            width: 500px;
-            max-height: 80%;
-            overflow-y: auto;
-        }
-        #popup h2 {
-            margin-top: 0;
-            cursor: move; /* Make the header cursor indicate that it's draggable */
-        }
-        #popup form label {
-            display: block;
-            margin-top: 10px;
-        }
-        #popup form input, #popup form select {
-            width: 100%;
-            padding: 8px;
-            margin-top: 5px;
-            box-sizing: border-box;
-        }
-        #popup form button {
-            margin-top: 15px;
-            padding: 10px;
-            cursor: pointer;
-            background: rgba(0, 0, 0, 0.5);
-            color: #fff;
-        }
-        #popup input[type="text"], #popup select {
-            color: black;
-        }
-
-        #custom-menu {
-            background-color: #000;
-            background: rgba(0, 0, 0, 0.6) !important;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
-            backdrop-filter: blur(10px) !important;
-            position: absolute;
-            border: 1px solid #ccc;
-            z-index: 10000;
-            padding: 10px;
-        }
-
-        #custom-menu a {
-            display: block;
-            margin-bottom: 5px;
-            color: white;
-        }
-
-        #popup form select {
-            color: white; /* Change performer text color to white */
-            background-color: black; /* Adjust background color if necessary */
-        }
-    `;
-
-    // Inject custom CSS into the document
-    const styleElement = document.createElement('style');
-    styleElement.innerHTML = customCSS;
-    document.head.appendChild(styleElement);
-
+    // GraphQL fetch function using dynamic API key
     const fetchGQL = async (query, variables = {}) =>
         fetch(config.serverUrl, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'ApiKey': config.apiKey
+                'ApiKey': config.localApiKey
             },
             body: JSON.stringify({ query, variables })
         }).then(res => res.json());
@@ -155,7 +145,7 @@
         menu.style.boxShadow = '0 0 10px rgba(0, 0, 0, 0.5)';
 
         const viewLink = document.createElement('a');
-        viewLink.href = `${window.userConfig.scheme}://${window.userConfig.host}:${window.userConfig.port}/images/${imageId}`;
+        viewLink.href = `/images/${imageId}`;
         viewLink.textContent = 'View Image';
         viewLink.style.display = 'block';
         viewLink.style.marginBottom = '5px';
@@ -210,8 +200,8 @@
         supportLink.href = 'https://www.patreon.com/serechops/membership';
         supportLink.textContent = 'Support';
         supportLink.style.display = 'block';
-        supportLink.style.marginTop = '10px'; // Adds some space above the support link
-        supportLink.style.color = '#FFD700'; // Optional: You can style the link differently if desired
+        supportLink.style.marginTop = '10px';
+        supportLink.style.color = '#FFD700';
         supportLink.target = '_blank'; // Opens the link in a new tab
         menu.appendChild(supportLink);
 
@@ -219,7 +209,6 @@
         currentMenu = menu;
         return menu;
     }
-
 
     // Function to show the custom menu
     function showCustomMenu(event, imageId) {
@@ -264,7 +253,7 @@
         console.log(`Creating Tabulator popup for ${type}`);
         const popup = document.createElement('div');
         popup.id = 'popup';
-        document.body.appendChild(popup); // Append first to get proper dimensions
+        document.body.appendChild(popup);
 
         const form = document.createElement('form');
         form.innerHTML = `
@@ -277,31 +266,9 @@
         popup.appendChild(form);
         currentPopup = popup;
 
-        // Add draggable functionality
-        let isDragging = false;
-        let dragOffsetX, dragOffsetY;
-
-        const header = form.querySelector('h2');
-        header.onmousedown = function(e) {
-            isDragging = true;
-            dragOffsetX = e.clientX - popup.offsetLeft;
-            dragOffsetY = e.clientY - popup.offsetTop;
-            document.onmousemove = function(e) {
-                if (isDragging) {
-                    popup.style.left = `${e.clientX - dragOffsetX}px`;
-                    popup.style.top = `${e.clientY - dragOffsetY}px`;
-                }
-            };
-            document.onmouseup = function() {
-                isDragging = false;
-                document.onmousemove = null;
-                document.onmouseup = null;
-            };
-        };
-
         const tableColumns = [
             { title: "ID", field: "id" },
-            { title: type === 'Scenes' ? 'Title' : 'Name', field: type === 'Scenes' ? 'title' : 'name' },
+            { title: type === 'Scenes' ? 'Title' : 'Name', field: type === 'Scenes' ? 'title' : 'name' }
         ];
 
         if (type === 'Performers') {
@@ -313,7 +280,7 @@
             height: "300px",
             placeholder: "No Data Available",
             selectable: true,
-            columns: tableColumns,
+            columns: tableColumns
         });
 
         async function fetchData(query) {
@@ -321,7 +288,6 @@
             table.setData(data);
         }
 
-        // Add input field for filtering
         const filterInput = document.getElementById(`${type.toLowerCase()}-search`);
         filterInput.addEventListener('input', debounce((e) => {
             const query = e.target.value;
@@ -345,7 +311,6 @@
             popup.remove();
         });
 
-        // Adjust popup position after content is set
         const rect = popup.getBoundingClientRect();
         const menuRect = currentMenu.getBoundingClientRect();
         const viewportWidth = window.innerWidth;
@@ -364,7 +329,7 @@
         }
     }
 
-	// Function to fetch tags matching a query
+    // Function to fetch tags matching a query
     async function fetchTags(query) {
         const queryText = `
             query FindTags($filter: String!) {
@@ -376,16 +341,8 @@
                 }
             }
         `;
-        const response = await fetch(config.serverUrl, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `ApiKey ${config.apiKey}`
-            },
-            body: JSON.stringify({ query: queryText, variables: { filter: query } })
-        });
-        const result = await response.json();
-        return result.data.findTags.tags;
+        const response = await fetchGQL(queryText, { filter: query });
+        return response.data.findTags.tags;
     }
 
     // Function to fetch performers matching a query
@@ -401,16 +358,8 @@
                 }
             }
         `;
-        const response = await fetch(config.serverUrl, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `ApiKey ${config.apiKey}`
-            },
-            body: JSON.stringify({ query: queryText, variables: { filter: query } })
-        });
-        const result = await response.json();
-        return result.data.findPerformers.performers;
+        const response = await fetchGQL(queryText, { filter: query });
+        return response.data.findPerformers.performers;
     }
 
     // Function to fetch scenes matching a query
@@ -425,21 +374,12 @@
                 }
             }
         `;
-        const response = await fetch(config.serverUrl, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `ApiKey ${config.apiKey}`
-            },
-            body: JSON.stringify({ query: queryText, variables: { filter: query } })
-        });
-        const result = await response.json();
-        return result.data.findScenes.scenes;
+        const response = await fetchGQL(queryText, { filter: query });
+        return response.data.findScenes.scenes;
     }
 
     // Function to update the image with selected tags using GraphQL
     async function updateImageWithTags(imageId, newTagIds) {
-        // First fetch existing tags
         const existingTagsQuery = `
             query FindImage {
                 findImage(id: ${imageId}) {
@@ -450,17 +390,8 @@
             }
         `;
 
-        const existingTagsResponse = await fetch(config.serverUrl, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `ApiKey ${config.apiKey}`
-            },
-            body: JSON.stringify({ query: existingTagsQuery })
-        });
-        const existingTagsResult = await existingTagsResponse.json();
-        const existingTagIds = existingTagsResult.data.findImage.tags.map(tag => tag.id);
-
+        const existingTagsResponse = await fetchGQL(existingTagsQuery);
+        const existingTagIds = existingTagsResponse.data.findImage.tags.map(tag => tag.id);
         const combinedTagIds = Array.from(new Set([...existingTagIds, ...newTagIds]));
 
         const mutationQuery = `
@@ -472,32 +403,19 @@
         `;
 
         try {
-            const response = await fetch(config.serverUrl, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `ApiKey ${config.apiKey}`
-                },
-                body: JSON.stringify({ query: mutationQuery })
-            });
-
-            const result = await response.json();
-            if (result.errors) {
-                console.error(result.errors);
+            const response = await fetchGQL(mutationQuery);
+            if (response.errors) {
                 showToast('Failed to update the image with tags', 'error');
             } else {
                 showToast('Image updated with tags successfully', 'success');
-                console.log(result.data.imageUpdate);
             }
         } catch (error) {
-            console.error(error);
             showToast('Failed to update the image with tags', 'error');
         }
     }
 
     // Function to update the image with selected performers using GraphQL
     async function updateImageWithPerformers(imageId, newPerformerIds) {
-        // First fetch existing performers
         const existingPerformersQuery = `
             query FindImage {
                 findImage(id: ${imageId}) {
@@ -508,17 +426,8 @@
             }
         `;
 
-        const existingPerformersResponse = await fetch(config.serverUrl, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `ApiKey ${config.apiKey}`
-            },
-            body: JSON.stringify({ query: existingPerformersQuery })
-        });
-        const existingPerformersResult = await existingPerformersResponse.json();
-        const existingPerformerIds = existingPerformersResult.data.findImage.performers.map(performer => performer.id);
-
+        const existingPerformersResponse = await fetchGQL(existingPerformersQuery);
+        const existingPerformerIds = existingPerformersResponse.data.findImage.performers.map(performer => performer.id);
         const combinedPerformerIds = Array.from(new Set([...existingPerformerIds, ...newPerformerIds]));
 
         const mutationQuery = `
@@ -530,25 +439,13 @@
         `;
 
         try {
-            const response = await fetch(config.serverUrl, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `ApiKey ${config.apiKey}`
-                },
-                body: JSON.stringify({ query: mutationQuery })
-            });
-
-            const result = await response.json();
-            if (result.errors) {
-                console.error(result.errors);
+            const response = await fetchGQL(mutationQuery);
+            if (response.errors) {
                 showToast('Failed to update the image with performers', 'error');
             } else {
                 showToast('Image updated with performers successfully', 'success');
-                console.log(result.data.imageUpdate);
             }
         } catch (error) {
-            console.error(error);
             showToast('Failed to update the image with performers', 'error');
         }
     }
@@ -557,7 +454,6 @@
     async function linkSceneToImage(imageId, selectedSceneIds) {
         for (let sceneId of selectedSceneIds) {
             try {
-                // Fetch scene title
                 const sceneQuery = `
                     query FindScene($id: ID!) {
                         findScene(id: $id) {
@@ -565,31 +461,16 @@
                         }
                     }
                 `;
+                const sceneResponse = await fetchGQL(sceneQuery, { id: sceneId });
+                const sceneTitle = sceneResponse.data.findScene.title;
 
-                const sceneResponse = await fetch(config.serverUrl, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `ApiKey ${config.apiKey}`
-                    },
-                    body: JSON.stringify({ query: sceneQuery, variables: { id: sceneId } }),
-                });
-
-                const sceneResult = await sceneResponse.json();
-                const sceneTitle = sceneResult.data.findScene.title;
-
-                // Create gallery named after the scene title
                 const galleryId = await createGallery(sceneTitle);
 
-                // Update image to associate with the gallery
                 await updateImage(imageId, galleryId);
-
-                // Update scene to associate with the gallery
                 await updateScene(sceneId, galleryId);
 
                 showToast(`Image gallery created for scene ${sceneTitle} successfully`, 'success');
             } catch (error) {
-                console.error('Error linking scene to image:', error);
                 showToast('Failed to link scene to image', 'error');
             }
         }
@@ -606,18 +487,9 @@
         `;
 
         try {
-            const response = await fetch(config.serverUrl, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `ApiKey ${config.apiKey}`
-                },
-                body: JSON.stringify({ query: mutation, variables: { input: { title: galleryTitle } } }),
-            });
-            const data = await response.json();
-            return data.data.galleryCreate.id;
+            const response = await fetchGQL(mutation, { input: { title: galleryTitle } });
+            return response.data.galleryCreate.id;
         } catch (error) {
-            console.error('Error creating gallery:', error);
             throw new Error('Error creating gallery');
         }
     }
@@ -633,18 +505,9 @@
         `;
 
         try {
-            const response = await fetch(config.serverUrl, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `ApiKey ${config.apiKey}`
-                },
-                body: JSON.stringify({ query: mutation, variables: { input: { id: imageId, gallery_ids: [galleryId] } } }),
-            });
-            const data = await response.json();
-            return data.data.imageUpdate.id;
+            const response = await fetchGQL(mutation, { input: { id: imageId, gallery_ids: [galleryId] } });
+            return response.data.imageUpdate.id;
         } catch (error) {
-            console.error('Error updating image:', error);
             throw new Error('Error updating image');
         }
     }
@@ -660,18 +523,9 @@
         `;
 
         try {
-            const response = await fetch(config.serverUrl, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `ApiKey ${config.apiKey}`
-                },
-                body: JSON.stringify({ query: mutation, variables: { input: { id: sceneId, gallery_ids: [galleryId] } } }),
-            });
-            const data = await response.json();
-            return data.data.sceneUpdate.id;
+            const response = await fetchGQL(mutation, { input: { id: sceneId, gallery_ids: [galleryId] } });
+            return response.data.sceneUpdate.id;
         } catch (error) {
-            console.error('Error updating scene:', error);
             throw new Error('Error updating scene');
         }
     }
@@ -679,7 +533,6 @@
     // Function to update performer image
     async function updatePerformerImage(imageId, menu) {
         try {
-            // Fetch the image URL and associated performers
             const imageQuery = `
                 query FindImage {
                     findImage(id: ${imageId}) {
@@ -702,7 +555,6 @@
                 return;
             }
 
-            // If there's only one performer, update the image directly
             if (performers.length === 1) {
                 const performer = performers[0];
                 const mutation = `
@@ -712,23 +564,13 @@
                         }
                     }
                 `;
-                const response = await fetch(config.serverUrl, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `ApiKey ${config.apiKey}`
-                    },
-                    body: JSON.stringify({ query: mutation })
-                });
-                const result = await response.json();
-                if (result.errors) {
-                    console.error(result.errors);
+                const response = await fetchGQL(mutation);
+                if (response.errors) {
                     showToast('Failed to update performer image', 'error');
                 } else {
                     showToast(`Performer image updated successfully for ${performer.name}`, 'success');
                 }
             } else {
-                // Show performers in a popup for selection if there are multiple performers
                 const selectedPerformer = await showPerformerSelectionPopup(performers, menu);
 
                 if (selectedPerformer) {
@@ -739,17 +581,8 @@
                             }
                         }
                     `;
-                    const response = await fetch(config.serverUrl, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': `ApiKey ${config.apiKey}`
-                        },
-                        body: JSON.stringify({ query: mutation })
-                    });
-                    const result = await response.json();
-                    if (result.errors) {
-                        console.error(result.errors);
+                    const response = await fetchGQL(mutation);
+                    if (response.errors) {
                         showToast('Failed to update performer image', 'error');
                     } else {
                         showToast(`Performer image updated successfully for ${selectedPerformer.name}`, 'success');
@@ -757,18 +590,16 @@
                 }
             }
         } catch (error) {
-            console.error('Error updating performer image:', error);
             showToast('Failed to update performer image', 'error');
         }
     }
-
 
     // Function to show performer selection popup
     async function showPerformerSelectionPopup(performers, menu) {
         return new Promise((resolve) => {
             const popup = document.createElement('div');
             popup.id = 'popup';
-            document.body.appendChild(popup); // Append first to get proper dimensions
+            document.body.appendChild(popup);
 
             const form = document.createElement('form');
             form.innerHTML = `
@@ -793,32 +624,9 @@
                 resolve(null);
             });
 
-            // Position the popup below the right-click menu
             const menuRect = menu.getBoundingClientRect();
             popup.style.top = `${menuRect.bottom}px`;
             popup.style.left = `${menuRect.left}px`;
-
-            // Add draggable functionality
-            let isDragging = false;
-            let dragOffsetX, dragOffsetY;
-
-            const header = form.querySelector('h2');
-            header.onmousedown = function(e) {
-                isDragging = true;
-                dragOffsetX = e.clientX - popup.offsetLeft;
-                dragOffsetY = e.clientY - popup.offsetTop;
-                document.onmousemove = function(e) {
-                    if (isDragging) {
-                        popup.style.left = `${e.clientX - dragOffsetX}px`;
-                        popup.style.top = `${e.clientY - dragOffsetY}px`;
-                    }
-                };
-                document.onmouseup = function() {
-                    isDragging = false;
-                    document.onmousemove = null;
-                    document.onmouseup = null;
-                };
-            };
         });
     }
 
@@ -837,4 +645,3 @@
     });
 
 })();
-

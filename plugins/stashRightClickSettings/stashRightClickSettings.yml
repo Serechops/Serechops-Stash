@@ -1,7 +1,9 @@
 name: Stash Right Click Settings
 description: Adds a custom right-click menu to the settings icon to perform various quick tasks related to settings.
-version: 1.0
+version: 1.1
 ui:
+  css: 
+    - stashRightClickSettings.css
   javascript:
     - stashRightClickSettings.js
   csp:
