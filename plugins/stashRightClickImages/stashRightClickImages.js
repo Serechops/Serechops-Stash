@@ -533,6 +533,7 @@
     // Function to update performer image
     async function updatePerformerImage(imageId, menu) {
         try {
+            // Fetch the image URL and associated performers
             const imageQuery = `
                 query FindImage {
                     findImage(id: ${imageId}) {
@@ -543,12 +544,26 @@
                             id
                             name
                         }
+                        galleries{
+							performers{
+                              id
+                              name
+                            }
+                        }
                     }
                 }
             `;
             const imageResponse = await fetchGQL(imageQuery);
             const imageUrl = imageResponse.data.findImage.paths.image;
-            const performers = imageResponse.data.findImage.performers;
+            const img_performers = imageResponse.data.findImage.performers;
+            const gal_performers = imageResponse.data.findImage.galleries[0].performers;
+            var performers = [];
+
+            if (img_performers.length !== 0) {
+                performers = img_performers;
+            } else if (gal_performers.length !== 0) {
+                performers = gal_performers;
+            }
 
             if (performers.length === 0) {
                 showToast('No performers linked to this image.', 'error');
