@@ -134,7 +134,7 @@
     let currentPopup = null;
 
     // Function to create the custom menu
-    function createCustomMenu(imageId) {
+    function createCustomMenu(imageId, galleries) {
         const menu = document.createElement('div');
         menu.id = 'custom-menu';
         menu.style.position = 'absolute';
@@ -195,6 +195,20 @@
         });
         menu.appendChild(updatePerformerImageLink);
 
+        // Conditionally show the "Set Gallery Cover Image..." option
+        if (galleries && galleries.length > 0) {
+            const setGalleryCoverLink = document.createElement('a');
+            setGalleryCoverLink.href = '#';
+            setGalleryCoverLink.textContent = 'Set Gallery Cover Image...';
+            setGalleryCoverLink.style.display = 'block';
+            setGalleryCoverLink.style.marginBottom = '5px';
+            setGalleryCoverLink.addEventListener('click', async function(e) {
+                e.preventDefault();
+                await setGalleryCoverImage(imageId, galleries[0].id, menu); // Use the first gallery for simplicity
+            });
+            menu.appendChild(setGalleryCoverLink);
+        }
+
         // Add Support link at the bottom of the menu with target="_blank"
         const supportLink = document.createElement('a');
         supportLink.href = 'https://www.patreon.com/serechops/membership';
@@ -211,14 +225,18 @@
     }
 
     // Function to show the custom menu
-    function showCustomMenu(event, imageId) {
+    async function showCustomMenu(event, imageId) {
         if (currentMenu) {
             currentMenu.remove();
         }
         if (currentPopup) {
             currentPopup.remove();
         }
-        const menu = createCustomMenu(imageId);
+
+        // Fetch galleries associated with the image
+        const galleries = await fetchImageGalleries(imageId);
+
+        const menu = createCustomMenu(imageId, galleries);
         menu.style.top = `${event.pageY}px`;
         menu.style.left = `${event.pageX}px`;
         event.preventDefault();
@@ -234,10 +252,17 @@
     }
 
     // Function to extract image ID from URL
-    function getImageIdFromUrl(url) {
-        const match = url.match(/images\/(\d+)/);
-        return match ? match[1] : null;
+function getImageIdFromUrl(url) {
+    const match = url.match(/images\/(\d+)/); // Update regex based on actual URL pattern
+    if (match) {
+        console.log('Extracted Image ID:', match[1]);
+        return match[1];
+    } else {
+        console.error('Failed to extract image ID from URL:', url);
+        return null;
     }
+}
+
 
     // Debounce function to limit the rate at which a function can fire
     function debounce(func, wait) {
@@ -512,6 +537,56 @@
         }
     }
 
+    // Function to fetch galleries linked to the image
+    async function fetchImageGalleries(imageId) {
+        const query = `
+            query FindImage($id: ID!) {
+                findImage(id: $id) {
+                    galleries {
+                        id
+                        title
+                    }
+                }
+            }
+        `;
+        const response = await fetchGQL(query, { id: imageId });
+        return response.data.findImage.galleries;
+    }
+
+    // Function to set the gallery cover image
+async function setGalleryCoverImage(imageId, galleryId, menu) {
+    console.log('Setting gallery cover image...');
+    console.log('Image ID:', imageId);
+    console.log('Gallery ID:', galleryId);
+
+    const mutation = `
+        mutation SetGalleryCover($gallery_id: ID!, $cover_image_id: ID!) {
+            setGalleryCover(input: { gallery_id: $gallery_id, cover_image_id: $cover_image_id })
+        }
+    `;
+    
+    try {
+        const response = await fetchGQL(mutation, {
+            gallery_id: galleryId,
+            cover_image_id: imageId
+        });
+
+        // Check if the response returns true (mutation successful)
+        if (response.errors) {
+            console.error('GraphQL Errors:', response.errors);
+            showToast('Failed to set gallery cover image', 'error');
+        } else {
+            console.log('Gallery cover image set successfully');
+            showToast('Gallery cover image set successfully', 'success');
+        }
+    } catch (error) {
+        console.error('Failed to set gallery cover image:', error);
+        showToast('Failed to set gallery cover image', 'error');
+    }
+}
+
+
+
     // Function to update a scene with a gallery ID
     async function updateScene(sceneId, galleryId) {
         const mutation = `
@@ -544,10 +619,10 @@
                             id
                             name
                         }
-                        galleries{
-							performers{
-                              id
-                              name
+                        galleries {
+                            performers {
+                                id
+                                name
                             }
                         }
                     }
@@ -556,14 +631,8 @@
             const imageResponse = await fetchGQL(imageQuery);
             const imageUrl = imageResponse.data.findImage.paths.image;
             const img_performers = imageResponse.data.findImage.performers;
-            const gal_performers = imageResponse.data.findImage.galleries[0].performers;
-            var performers = [];
-
-            if (img_performers.length !== 0) {
-                performers = img_performers;
-            } else if (gal_performers.length !== 0) {
-                performers = gal_performers;
-            }
+            const gal_performers = imageResponse.data.findImage.galleries[0]?.performers || [];
+            let performers = img_performers.length ? img_performers : gal_performers;
 
             if (performers.length === 0) {
                 showToast('No performers linked to this image.', 'error');
@@ -587,7 +656,6 @@
                 }
             } else {
                 const selectedPerformer = await showPerformerSelectionPopup(performers, menu);
-
                 if (selectedPerformer) {
                     const mutation = `
                         mutation PerformerUpdate {
@@ -646,17 +714,20 @@
     }
 
     // Add event listener to .image-card elements
-    document.addEventListener('contextmenu', function(event) {
-        const imageCard = event.target.closest('.image-card');
-        if (imageCard) {
-            const linkElement = imageCard.querySelector('.image-card-link');
-            if (linkElement) {
-                const imageId = getImageIdFromUrl(linkElement.href);
-                if (imageId) {
-                    showCustomMenu(event, imageId);
-                }
+document.addEventListener('contextmenu', function(event) {
+    // Prevent the default browser right-click context menu
+    event.preventDefault();
+
+    const imageCard = event.target.closest('.image-card');
+    if (imageCard) {
+        const linkElement = imageCard.querySelector('.image-card-link');
+        if (linkElement) {
+            const imageId = getImageIdFromUrl(linkElement.href);
+            if (imageId) {
+                showCustomMenu(event, imageId);
             }
         }
-    });
+    }
+});
 
 })();
