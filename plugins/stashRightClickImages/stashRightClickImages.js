@@ -715,11 +715,13 @@ async function setGalleryCoverImage(imageId, galleryId, menu) {
 
     // Add event listener to .image-card elements
 document.addEventListener('contextmenu', function(event) {
-    // Prevent the default browser right-click context menu
-    event.preventDefault();
-
     const imageCard = event.target.closest('.image-card');
+    
+    // Check if the right-click is on an image card element
     if (imageCard) {
+        // Prevent the default browser right-click context menu
+        event.preventDefault();
+
         const linkElement = imageCard.querySelector('.image-card-link');
         if (linkElement) {
             const imageId = getImageIdFromUrl(linkElement.href);
@@ -727,7 +729,12 @@ document.addEventListener('contextmenu', function(event) {
                 showCustomMenu(event, imageId);
             }
         }
+    } 
+    // If it's not an image-card element, let the default context menu appear
+    else {
+        return; // Allow default right-click behavior for other elements
     }
 });
+
 
 })();
