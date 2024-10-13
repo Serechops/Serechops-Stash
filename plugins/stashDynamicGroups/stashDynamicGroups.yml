@@ -1,0 +1,18 @@
+name: Stash Dynamic Groups
+description: Designate dynamic groups that can be populated simply by assigning a tag.
+version: 1.0
+url: https://github.com/Serechops/Serechops-Stash
+exec:
+  - python
+  - "{pluginDir}/stashDynamicGroups.py"
+interface: raw
+hooks:
+  - name: Add to Dynamic Group
+    description: Adds tagged media to designated dynamic group.
+    triggeredBy:
+      - Scene.Update.Post
+settings:
+  SetGroupTagRelationship:
+    displayName: Set Group-Tag Relationship
+    description: Set the group-tag relationship eg. 330:6 or in a comma separated list - 330:6, 331:7, etc.
+    type: STRING
