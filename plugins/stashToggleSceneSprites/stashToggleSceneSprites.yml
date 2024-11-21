@@ -1,0 +1,6 @@
+name: Stash Toggle Scene Sprites
+description: Toggles scene sprites to replace static preview image of all scenes on the current index page.
+version: 0.1
+ui:
+  javascript:
+    - stashToggleSceneSprites.js
