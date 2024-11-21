@@ -1,4 +1,4 @@
-# Stash Scenes Sprite Toggle Plugin
+# Stash Toggle Scene Sprites
 
 This button allows users to toggle between the preview image and the sprite (contact sheet) for all visible scenes on the page.
 
