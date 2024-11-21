@@ -6,4 +6,4 @@ This button allows users to toggle between the preview image and the sprite (con
 
 ## Features
 
-- **Mass Sprite Toggle**: Adds the `Toggle Sprites` button to the pagination controls on the `/scenes` page to toggle sprites for all scenes at once.
+- **Mass Sprite Toggle**: Adds the `Toggle Sprites` button next to the scene size slider controls on the `scenes`, `performer scenes`, `studio scenes`, and `tag scenes` pages to toggle sprites for all scenes at once.
