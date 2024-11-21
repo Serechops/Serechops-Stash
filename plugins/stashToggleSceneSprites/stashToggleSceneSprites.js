@@ -1,17 +1,20 @@
 function ensureMassToggleButton() {
-    const paginationContainer = document.querySelector('.pagination.btn-group');
-    if (!paginationContainer || document.getElementById('mass-toggle-button')) return;
+    // Locate the toolbar where the button should be added
+    const toolbar = document.querySelector('.filtered-list-toolbar.btn-toolbar');
+    if (!toolbar || document.getElementById('mass-toggle-button')) return;
 
+    // Create the "Toggle All Sprites" button
     const button = document.createElement('button');
     button.id = 'mass-toggle-button';
     button.innerText = 'Toggle Sprites';
     button.title = 'Toggle sprites for all scenes on this page';
     button.type = 'button';
-    button.className = 'btn btn-secondary';
-    button.style.marginLeft = '5px'; // Add spacing to match pagination buttons
+    button.className = 'btn btn-secondary ml-2'; // Match existing button styling
 
-    paginationContainer.appendChild(button);
+    // Append the button to the toolbar
+    toolbar.appendChild(button);
 
+    // Add functionality to toggle all sprites
     button.addEventListener('click', () => {
         const sceneCards = document.querySelectorAll('.scene-card');
         sceneCards.forEach((card) => {
@@ -22,7 +25,7 @@ function ensureMassToggleButton() {
     });
 }
 
-// Add toggle sprite functionality to scene cards
+// Add toggle sprite functionality to each scene card
 function addToggleSpriteLogicToSceneCards() {
     const sceneCards = document.querySelectorAll('.scene-card');
     sceneCards.forEach((card) => {
@@ -52,10 +55,23 @@ function addToggleSpriteLogicToSceneCards() {
     });
 }
 
-// Check if the current page is a scenes page
+// Check if the current page is a scenes page or a scenes-related page
 function isScenesPage() {
-    return window.location.pathname.startsWith('/scenes');
+    const path = window.location.pathname;
+
+    // Match the main /scenes page
+    if (path.startsWith('/scenes')) return true;
+
+    // Match scenes under studios, performers, or tags
+    const validPaths = [
+        /^\/studios\/\d+\/scenes/, // /studios/{id}/scenes
+        /^\/performers\/\d+\/scenes/, // /performers/{id}/scenes
+        /^\/tags\/\d+\/scenes/, // /tags/{id}/scenes
+    ];
+
+    return validPaths.some((regex) => regex.test(path));
 }
+
 
 // Extract the scene ID from the URL
 function extractSceneId(href) {
