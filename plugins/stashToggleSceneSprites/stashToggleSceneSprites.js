@@ -6,10 +6,18 @@ function ensureMassToggleButton() {
     // Create the "Toggle All Sprites" button
     const button = document.createElement('button');
     button.id = 'mass-toggle-button';
-    button.innerText = 'Toggle Sprites';
-    button.title = 'Toggle sprites for all scenes on this page';
     button.type = 'button';
-    button.className = 'btn btn-secondary ml-2'; // Match existing button styling
+    button.className = 'btn btn-secondary mb-2'; // Match existing button styling
+	button.style.marginLeft = '8px';
+
+    // Add the custom SVG icon to the button
+    button.innerHTML = `
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512" class="svg-inline--fa fa-icon" aria-hidden="true" focusable="false" role="img">
+            <path fill="currentColor" d="M137.4 502.6c12.5 12.5 32.8 12.5 45.3 0l96-96c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192 402.7 192 288l352 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-96 0 0-114.7 41.4 41.4c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3l-96-96c-12.5-12.5-32.8-12.5-45.3 0l-96 96c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L384 109.3 384 224l-192 0-64 0-96 0c-17.7 0-32 14.3-32 32s14.3 32 32 32l96 0 0 114.7L86.6 361.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l96 96zM128 192l64 0 0-128c0-17.7-14.3-32-32-32s-32 14.3-32 32l0 128zM448 320l-64 0 0 128c0 17.7 14.3 32 32 32s32-14.3 32-32l0-128z"></path>
+        </svg>
+    `;
+
+    button.title = 'Toggle sprites for all scenes on this page';
 
     // Append the button to the toolbar
     toolbar.appendChild(button);
@@ -24,6 +32,7 @@ function ensureMassToggleButton() {
         });
     });
 }
+
 
 // Add toggle sprite functionality to each scene card
 function addToggleSpriteLogicToSceneCards() {
