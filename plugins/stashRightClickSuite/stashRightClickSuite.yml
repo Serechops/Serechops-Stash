@@ -1,0 +1,11 @@
+name: stashRightClickSuite
+description: Meta-package installer for the Stash Right-Click Suite tools.
+# requires: stashRIghtClickGalleries
+# requires: stashRightClickImages
+# requires: stashRightClickPerformerMerge
+# requires: stashRightClickPerformers
+# requires: stashRightClickScenes
+# requires: stashRightClickSettings
+# requires: stashRightClickTags
+version: 0
+url: https://github.com/Serechops/Serechops-Stash
