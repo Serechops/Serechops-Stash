@@ -1,6 +1,6 @@
 # image2Scene
 
-This script is designed to link images to galleries ti scenes dynamically. It includes an autocomplete search feature for scenes, and the ability to create and update galleries based on image data.
+This script is designed to link images to galleries to scenes dynamically. It includes an autocomplete search feature for scenes, and the ability to create and update galleries based on image data.
 
 ## Features
 
