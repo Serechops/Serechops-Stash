@@ -1,11 +1,11 @@
 // ==UserScript==
 // @name         Expand Parent Posts Inline with iFrame
 // @namespace    https://discourse.stashapp.cc/
-// @version      0.1
+// @version      0.2
 // @description  Expand parent posts and display sub-posts inline underneath the parent post with an interactive iFrame on Discourse forums.
 // @author       Serechops
 // @downloadURL  https://github.com/Serechops/Serechops-Stash/raw/main/Stash Discourse Userscripts/expandPostsIframe.user.js
-// @updateURL  https://github.com/Serechops/Serechops-Stash/raw/main/Stash Discourse Userscripts/expandPostsIframe.user.js
+// @updateURL    https://github.com/Serechops/Serechops-Stash/raw/main/Stash Discourse Userscripts/expandPostsIframe.user.js
 // @match        https://discourse.stashapp.cc/*
 // @grant        none
 // ==/UserScript==
@@ -92,7 +92,21 @@
         }
     }
 
-    // Initialize the script
-    addExpandButtons();
-    observeContent();
+    // Initialize the script after DOM content is fully loaded
+    function init() {
+        const checkInterval = setInterval(() => {
+            const topicList = document.querySelector('.topic-list-body');
+            if (topicList) {
+                addExpandButtons();
+                observeContent();
+                clearInterval(checkInterval); // Ensure this only runs once
+            }
+        }, 100); // Check every 100ms
+    }
+
+    if (document.readyState === 'loading') {
+        window.addEventListener('DOMContentLoaded', init);
+    } else {
+        init();
+    }
 })();
