@@ -1,6 +1,6 @@
 name: Stash Right Click Suite
 description: Meta-package installer for the Stash Right-Click Suite tools.
-# requires: stashRIghtClickGalleries
+# requires: stashRightClickGalleries
 # requires: stashRightClickImages
 # requires: stashRightClickPerformerMerge
 # requires: stashRightClickPerformers
