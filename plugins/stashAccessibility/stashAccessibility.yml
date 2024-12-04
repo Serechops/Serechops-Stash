@@ -1,0 +1,6 @@
+name: Stash Accessibility
+description: Adds an Accessibility button in the top right navbar that offers various accessibility features.
+version: 1.0
+ui:
+  javascript:
+    - stashAccessibility.js
