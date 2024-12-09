@@ -8,16 +8,16 @@
         "Description": "Primary performer (not character) is between 18 and 20."
     },
     {
-        "Tag": "180",
-        "Description": "Virtual reality scenes with a 180 field of vision."
+        "Tag": "180°",
+        "Description": "Virtual reality scenes with a 180° field of vision."
     },
     {
         "Tag": "1800s",
         "Description": "Inspired by the history and culture of the 19th century."
     },
     {
-        "Tag": "190",
-        "Description": "Virtual reality scenes with a 190 field of vision."
+        "Tag": "190°",
+        "Description": "Virtual reality scenes with a 190° field of vision."
     },
     {
         "Tag": "1920s",
@@ -56,12 +56,12 @@
         "Description": "Primary performer (not character) is in their 20s."
     },
     {
-        "Tag": "200",
-        "Description": "Virtual reality scenes with a 200 field of vision."
+        "Tag": "200°",
+        "Description": "Virtual reality scenes with a 200° field of vision."
     },
     {
-        "Tag": "220",
-        "Description": "Virtual reality scenes with a 220 field of vision."
+        "Tag": "220°",
+        "Description": "Virtual reality scenes with a 220° field of vision."
     },
     {
         "Tag": "2D Available",
@@ -76,8 +76,8 @@
         "Description": "Scenes offered at 30 frames per second."
     },
     {
-        "Tag": "360",
-        "Description": "Virtual reality scenes with a 360 field of vision."
+        "Tag": "360°",
+        "Description": "Virtual reality scenes with a 360° field of vision."
     },
     {
         "Tag": "3D Available",
@@ -96,8 +96,8 @@
         "Description": "Primary performer (not character) is in their 40s."
     },
     {
-        "Tag": "4:3",
-        "Description": "3 Aspect Ratio:Footage shot in a 4:3 (1.33:1) aspect ratio."
+        "Tag": "4:3 Aspect Ratio",
+        "Description": "Footage shot in a 4:3 (1.33:1) aspect ratio."
     },
     {
         "Tag": "4K Available",
@@ -264,7 +264,7 @@
         "Description": "Character presented as part of the Amish church, known for shunning modern culture and technology."
     },
     {
-        "Tag": "Anal",
+        "Tag": "Anal Sex",
         "Description": "Anal penetrative sex."
     },
     {
@@ -274,10 +274,6 @@
     {
         "Tag": "Anal Bulldog",
         "Description": "Penetrative anal sex while standing above a receiving performer that is on their knees"
-    },
-    {
-        "Tag": "Anal Condom",
-        "Description": "Condom inserted into anus. Often attached to clothing such as pants or catsuits"
     },
     {
         "Tag": "Anal Cowgirl",
@@ -512,7 +508,7 @@
         "Description": "Performers with broadly east Asian racial backgrounds, particularly Japanese, Chinese, Korean, etc."
     },
     {
-        "Tag": "Asian Male White Woman",
+        "Tag": "Asian on White",
         "Description": "White women having sex with Asian Male(s)"
     },
     {
@@ -840,7 +836,7 @@
         "Description": "At least some of the action takes place on or in a bathtub."
     },
     {
-        "Tag": "BBC",
+        "Tag": "Big Black Cock (BBC)",
         "Description": "Performers of broadly African heritage with particularly large penises."
     },
     {
@@ -1428,8 +1424,8 @@
         "Description": "Female character presented as a professional, often working in an office."
     },
     {
-        "Tag": "Busty Fetish",
-        "Description": "Significant focus on a performer's breasts."
+        "Tag": "Breast Fetish",
+        "Description": "Featuring a significant focus on a performer's breasts."
     },
     {
         "Tag": "Butterfly Gag",
@@ -1448,7 +1444,7 @@
         "Description": "Small toy with a wide base that is inserted anally."
     },
     {
-        "Tag": "BWC",
+        "Tag": "Big White Cock (BWC)",
         "Description": "Performers of broadly European heritage with particularly large penises. Big White Cock"
     },
     {
@@ -1474,10 +1470,6 @@
     {
         "Tag": "Camping",
         "Description": "At least some of the action takes place outdoors, typically at a campsite, field, or forest, with one or more tents."
-    },
-    {
-        "Tag": "CamSoda",
-        "Description": "A live streaming webcam platform"
     },
     {
         "Tag": "Canadian",
@@ -1628,7 +1620,7 @@
         "Description": "Character presented as a professional cook."
     },
     {
-        "Tag": "Chemical play",
+        "Tag": "Chemical Play",
         "Description": "The use of chemical substances, for instance chili peppers, tabasco, Bengay or ginger, to create various sensations during a scene"
     },
     {
@@ -1642,10 +1634,6 @@
     {
         "Tag": "Chest Harness",
         "Description": "A harness on the performer's chest."
-    },
-    {
-        "Tag": "Chicken Wings Bondage",
-        "Description": "Arms behind back with elbows slightly bent - so they look like a chicken with its wings tied back about to be absolutely roasted. Another form of it is when the two arms folded separately, like the legs in the frogtie position."
     },
     {
         "Tag": "Chinese",
@@ -2592,8 +2580,8 @@
         "Description": "Vaginal penetrative sex from two performers simultaneously."
     },
     {
-        "Tag": "Double Vaginal Penetration in Air",
-        "Description": "A female performer having double vaginal penetrative sex while being carried"
+        "Tag": "Stand and Carry (DVP)",
+        "Description": "A female performer having double vaginal penetrative sex while being carried by the givers"
     },
     {
         "Tag": "Dovefucking",
@@ -2668,8 +2656,8 @@
         "Description": "At least some of the action takes place in a dungeon, often built for BDSM purposes."
     },
     {
-        "Tag": "Dungeon Furniture",
-        "Description": "At least some of the action takes place on special structures designed for BDSM."
+        "Tag": "Bondage Furniture",
+        "Description": "Furniture specifically used for bondage activities."
     },
     {
         "Tag": "Dutch",
@@ -2788,16 +2776,16 @@
         "Description": "Engaging in some sexual activity for others to see, whether or not their audience is consenting or even interested."
     },
     {
-        "Tag": "Experienced (3040)",
-        "Description": "Character presented as a little older, a mix of youth and experience. Implied age (of character not performer) 3040."
+        "Tag": "Experienced (30–40)",
+        "Description": "Character presented as a little older, a mix of youth and experience. Implied age (of character not performer) 30–40."
     },
     {
-        "Tag": "Experienced Man (3040)",
-        "Description": "Male character presented as a little older, a mix of youth and experience. Implied age (of character not performer) 3040."
+        "Tag": "Experienced Man (30–40)",
+        "Description": "Male character presented as a little older, a mix of youth and experience. Implied age (of character not performer) 30–40."
     },
     {
-        "Tag": "Experienced Woman (3040)",
-        "Description": "Female character presented as a little older, a mix of youth and experience. Implied age (of character not performer) 3040."
+        "Tag": "Experienced Woman (30–40)",
+        "Description": "Female character presented as a little older, a mix of youth and experience. Implied age (of character not performer) 30–40."
     },
     {
         "Tag": "Exploitation",
@@ -2812,8 +2800,8 @@
         "Description": "Performers looking directly into the camera for a significant amount of time."
     },
     {
-        "Tag": "Facedildo",
-        "Description": "Dildo with Gag to be inserted into a performer's mouth, or worn on the chin or face otherwise."
+        "Tag": "Face Dildo",
+        "Description": "Dildo worn on a performers face to be used on or by another performer."
     },
     {
         "Tag": "Face Down",
@@ -2944,7 +2932,7 @@
         "Description": "A production that focuses on a single actress."
     },
     {
-        "Tag": "Feet in Face Handjob",
+        "Tag": "Feet in Face During Handjob",
         "Description": "Using hands to pleasure another performer's penis while also placing feet in front of or on the receiving performers face"
     },
     {
@@ -2958,10 +2946,6 @@
     {
         "Tag": "Female Doctor",
         "Description": "Female character who is presented as a medical doctor."
-    },
-    {
-        "Tag": "Female Fucks Male",
-        "Description": "Female performer sexually penetrates a male performer."
     },
     {
         "Tag": "Female Handler",
@@ -2980,7 +2964,7 @@
         "Description": "Female or transfemme performer observes, but does not participate in, sexual acts for a significant portion of the scene."
     },
     {
-        "Tag": "Female POV",
+        "Tag": "Female - POV",
         "Description": "Presented at least partially from the perspective of a female performer."
     },
     {
@@ -3376,7 +3360,7 @@
         "Description": "Long pole with a sex toy attached to the end."
     },
     {
-        "Tag": "Full Body Harness",
+        "Tag": "Full-Body Harness",
         "Description": "A harness on the performer's full torso, sometimes on the hips and legs as well."
     },
     {
@@ -3684,8 +3668,8 @@
         "Description": "Chair with supports for spread legs"
     },
     {
-        "Tag": "Hair Band",
-        "Description": "A horseshoe-shaped accessory worn in the hair to hold hair away from the face or eyes"
+        "Tag": "Headband",
+        "Description": "An elastic or horseshoe-shaped loop worn around the forehead to hold hair away from the face and/or eyes."
     },
     {
         "Tag": "Hair Brush Spanking",
@@ -3832,7 +3816,7 @@
         "Description": "Scenes offered in HD resolutions."
     },
     {
-        "Tag": "Head Band",
+        "Tag": "Headband",
         "Description": "An elastic loop worn around the forehead to hold hair away from the face or eyes"
     },
     {
@@ -3868,8 +3852,8 @@
         "Description": "Sandals with a raised heel."
     },
     {
-        "Tag": "High Heels",
-        "Description": "Shoes with a raised heel."
+        "Tag": "Woman's Heels",
+        "Description": "Woman's shoes with a raised heel."
     },
     {
         "Tag": "High School",
@@ -4040,7 +4024,7 @@
         "Description": "Various toys designed to strike a performer."
     },
     {
-        "Tag": "Implied creampie",
+        "Tag": "Implied Creampie",
         "Description": "When the creampie isn't actually seen from the angle, but obviously fake face expressions, moaning, a cut, then fake, or no cum in the vagina"
     },
     {
@@ -4100,7 +4084,7 @@
         "Description": "Activity in front of a window, potentially where visible to others"
     },
     {
-        "Tag": "In-Laws",
+        "Tag": "In Laws",
         "Description": "Characters in scene are in-laws"
     },
     {
@@ -4152,7 +4136,7 @@
         "Description": "Handheld version of an automated penetrating machine."
     },
     {
-        "Tag": "Jacuzzi",
+        "Tag": "Hot Tub",
         "Description": "At least some of the action takes place in a hot tub or jacuzzi, with or without the underwater jets turned on."
     },
     {
@@ -4196,10 +4180,6 @@
         "Description": "Character seemingly held against their will by another."
     },
     {
-        "Tag": "Kikkou Shibari",
-        "Description": "Kikkou shibari is the tortoise shell tie. Its so called because the pattern created resembles that found on the Japanese tortoise."
-    },
-    {
         "Tag": "Kimono",
         "Description": "A long, loose traditional Japanese robe with wide sleeves, tied with a sash. Worn on formal occasions."
     },
@@ -4216,7 +4196,7 @@
         "Description": "Performers kissing each other on the lips for some time."
     },
     {
-        "Tag": "Kissing POV",
+        "Tag": "Kissing - POV",
         "Description": "Virtual Reality scene filmed from the point of view of one of the performers while kissing"
     },
     {
@@ -4304,8 +4284,8 @@
         "Description": "Line attached to a performer in some way to control their movements, often using a collar or harness."
     },
     {
-        "Tag": "Leather Belt",
-        "Description": "Using a leather belt to restrain a performer."
+        "Tag": "Leather Belt Bondage",
+        "Description": "Using leather belts to restrain a performer."
     },
     {
         "Tag": "Leather Bondage",
@@ -4398,10 +4378,6 @@
     {
         "Tag": "Lip Piercing",
         "Description": "Performers with at least one visible piercing in their lips."
-    },
-    {
-        "Tag": "Lips Gag",
-        "Description": "A gag in the form of lips."
     },
     {
         "Tag": "Lipstick Fetish",
@@ -4516,7 +4492,7 @@
         "Description": "Male or transmasc performer observers, but does not participate in, sexual acts for a significant portion of the scene."
     },
     {
-        "Tag": "Male POV",
+        "Tag": "Male - POV",
         "Description": "Presented at least partially from the perspective of a male performer."
     },
     {
@@ -4652,16 +4628,16 @@
         "Description": "Various metallic devices used to restrain a performer."
     },
     {
-        "Tag": "Middle-aged (4060)",
-        "Description": "Character presented as generally older, but not quite retirement age. Implied age (of character not performer) 4060."
+        "Tag": "Middle-aged (40–60)",
+        "Description": "Character presented as generally older, but not quite retirement age. Implied age (of character not performer) 40–60."
     },
     {
-        "Tag": "Middle-aged Man (4060)",
-        "Description": "Male character presented as generally older, but not quite retirement age. Implied age (of character not performer) 4060."
+        "Tag": "Middle-aged Man (40–60)",
+        "Description": "Male character presented as generally older, but not quite retirement age. Implied age (of character not performer) 40–60."
     },
     {
-        "Tag": "Middle-aged Woman (4060)",
-        "Description": "Female character presented as generally older, but not quite retirement age. Implied age (of character not performer) 4060."
+        "Tag": "Middle-aged Woman (40–60)",
+        "Description": "Female character presented as generally older, but not quite retirement age. Implied age (of character not performer) 40–60."
     },
     {
         "Tag": "Middle Ages",
@@ -4764,7 +4740,7 @@
         "Description": "having sex in the missionary position from Male's Point Of View"
     },
     {
-        "Tag": "Mixed POV",
+        "Tag": "Mixed - POV",
         "Description": "Scene that switches between first and third person point of views"
     },
     {
@@ -4828,7 +4804,7 @@
         "Description": "Character is biological mother to scene partner"
     },
     {
-        "Tag": "Mother-In-Law",
+        "Tag": "Mother In Law",
         "Description": "Character presented as mother-in-law to a scene partner"
     },
     {
@@ -4960,7 +4936,7 @@
         "Description": "Men's facial hair on the upper lip"
     },
     {
-        "Tag": "Muzzle",
+        "Tag": "Muzzle Gag",
         "Description": "A gag, that doesn't enter the performers mouth"
     },
     {
@@ -5088,8 +5064,8 @@
         "Description": "Virtual Reality scene not filmed in the point of view of one of the performers."
     },
     {
-        "Tag": "No Panties",
-        "Description": "A performer going without their underwear, i.e without their panties."
+        "Tag": "No Underwear",
+        "Description": "A performer going without their underwear, i.e without their underpants or panties."
     },
     {
         "Tag": "Northern Guillotine",
@@ -5204,7 +5180,7 @@
         "Description": "Covers the torso and crotch in a single piece of tight-fitting material, often as sportswear, swimwear, underwear, or a casual top."
     },
     {
-        "Tag": "Onesan",
+        "Tag": "Onēsan",
         "Description": "Young woman playing a dominant older sister type, not necessarily a family member."
     },
     {
@@ -5228,7 +5204,7 @@
         "Description": "Orally pleasuring another performer."
     },
     {
-        "Tag": "Oral Train",
+        "Tag": "Train (Oral Sex)",
         "Description": "At least three performers have oral sex in a chain."
     },
     {
@@ -5784,7 +5760,7 @@
         "Description": "Various kinds of clamps affixed to a performer's labia."
     },
     {
-        "Tag": "Pussy Creampie",
+        "Tag": "Vaginal Creampie",
         "Description": "Vaginal penetrative sex to completion without pulling out."
     },
     {
@@ -5908,7 +5884,7 @@
         "Description": "Using force, threats of violence, or physical intimidation to coerce another character into sexual acts."
     },
     {
-        "Tag": "Real Ass",
+        "Tag": "Natural Ass",
         "Description": "Unaltered by surgical augmentation."
     },
     {
@@ -6084,7 +6060,7 @@
         "Description": "Ring-shaped gag inserted into a performer's mouth."
     },
     {
-        "Tag": "Ring light",
+        "Tag": "Ring Light",
         "Description": "Scene is lit primarily by a ring light around the camera lens, which gives it a distinctive frontal lighting pattern."
     },
     {
@@ -6132,8 +6108,8 @@
         "Description": "Characters who are living with their scene partner, but are not in a committed relationship with each other."
     },
     {
-        "Tag": "Rope",
-        "Description": "Using rope to restrain a performer."
+        "Tag": "Shibari",
+        "Description": "Bondage involving the use of rope to restrict movement, wrap, bind or tie a performer."
     },
     {
         "Tag": "Rope Harness",
@@ -6484,7 +6460,7 @@
         "Description": "Voyeuristic image of the side view of a person's blouse, usually point of view at same height as the cleavage."
     },
     {
-        "Tag": "Side Boob",
+        "Tag": "Sideboob",
         "Description": "The outer curve of a breast when revealed by clothing cut low under the arms"
     },
     {
@@ -6652,11 +6628,7 @@
         "Description": "Performer is shown smoking."
     },
     {
-        "Tag": "Smooth",
-        "Description": "Generic term for all smooth tags."
-    },
-    {
-        "Tag": "Smooth Arms",
+        "Tag": "Shaved Arms",
         "Description": "Performers with very little hair on their arms."
     },
     {
@@ -6730,10 +6702,6 @@
     {
         "Tag": "Son",
         "Description": "Character is biological son to scene partner."
-    },
-    {
-        "Tag": "Soulsnatch",
-        "Description": "When receiving a blowjob and you ejaculate, they intentionally keep sucking while the penis is sensitive."
     },
     {
         "Tag": "Sounding",
@@ -6872,11 +6840,11 @@
         "Description": "Penetrative sex while standing up, lifting the receiver."
     },
     {
-        "Tag": "Stand and Carry Double Penetration",
+        "Tag": "Stand and Carry (DP)",
         "Description": "A female performer having vaginal and anal penetrative sex simultaneously while being carried by the givers"
     },
     {
-        "Tag": "Stand & Blow",
+        "Tag": "Stand and Blow",
         "Description": "A performer orally pleasuring a penis in a kneeling position, while the other performer is in a standing position"
     },
     {
@@ -6888,7 +6856,7 @@
         "Description": "Penetrative sex while standing up, from behind."
     },
     {
-        "Tag": "Standing Double Penetration",
+        "Tag": "Standing (DP)",
         "Description": "A female performer having vaginal and anal penetrative sex simultaneously while standing up"
     },
     {
@@ -7124,7 +7092,7 @@
         "Description": "Lying in the sun for some time, while at least partially undressed."
     },
     {
-        "Tag": "Sun Lit",
+        "Tag": "Sunlit",
         "Description": "Scene is lit primarily by natural sunlight."
     },
     {
@@ -7276,15 +7244,15 @@
         "Description": "Teasing with the intent to heighten sexual frustration."
     },
     {
-        "Tag": "Teen (1822)",
-        "Description": "Character presented as very young, close to high school or college age. Implied age (of character not performer) 1822."
+        "Tag": "Teen (18–22)",
+        "Description": "Character presented as very young, close to high school or college age. Implied age (of character not performer) 18–22."
     },
     {
-        "Tag": "Teen Boy (1822)",
-        "Description": "Male character presented as very young, close to high school or college age. Implied age (of character not performer) 1822."
+        "Tag": "Teen Boy (18–22)",
+        "Description": "Male character presented as very young, close to high school or college age. Implied age (of character not performer) 18–22."
     },
     {
-        "Tag": "Teen Girl (1822)",
+        "Tag": "Teen Girl (18–22)",
         "Description": "Female character presented as very young, close to high school or college age. Implied age (of character not performer) 1822."
     },
     {
@@ -7312,10 +7280,6 @@
         "Description": "At least some of the action takes place on a terrace."
     },
     {
-        "Tag": "Tethered",
-        "Description": "Performer is tethered to a fix point with a long rope, chain, lead or leash."
-    },
-    {
         "Tag": "Thai",
         "Description": "Scene features Thai performer(s)"
     },
@@ -7332,7 +7296,7 @@
         "Description": "Laying on stomach with the soles of feet raised and showing behind"
     },
     {
-        "Tag": "The Rabbit",
+        "Tag": "Rabbit Vibrator",
         "Description": "Two-pronged vibrator, with a larger end for penetration and a smaller end for clitoral stimulation."
     },
     {
@@ -7528,8 +7492,8 @@
         "Description": "A gag with head harness."
     },
     {
-        "Tag": "Train Fuck",
-        "Description": "Sex act where performer fucks and get fucked at the same time"
+        "Tag": "Train (Penetration Chain)",
+        "Description": "Group sex act where one performer is simultaneously the receiver and giver of penetrative sex."
     },
     {
         "Tag": "Training",
@@ -7572,7 +7536,7 @@
         "Description": "Scenes that feature trans performers, either alone or with scene partners."
     },
     {
-        "Tag": "Trans POV",
+        "Tag": "Trans - POV",
         "Description": "Presented at least partially from the perspective of a trans performer."
     },
     {
@@ -7856,7 +7820,7 @@
         "Description": "Scene where the primary or sole focus is on dirty talking into camera. Common examples include JOI, Humiliation, Roleplay"
     },
     {
-        "Tag": "Vertical video",
+        "Tag": "Vertical Video",
         "Description": "Scene in an upright video format, e. g. shot with a cellphone"
     },
     {
@@ -7868,8 +7832,8 @@
         "Description": "Various types of handheld, vibrating sex toys."
     },
     {
-        "Tag": "Viennese Oyster",
-        "Description": "Performer has their feet crossed behind their head while being penetrated"
+        "Tag": "Legs Behind Head Missionary",
+        "Description": "Receiving performer's legs or feet are are behind their head"
     },
     {
         "Tag": "Vietnamese",
@@ -8148,16 +8112,16 @@
         "Description": "Features stretches and poses typical of yoga."
     },
     {
-        "Tag": "Young (2230)",
-        "Description": "Character presented as generally young, but no longer around college age. Implied age (of character not performer) 2230."
+        "Tag": "Young (22–30)",
+        "Description": "Character presented as generally young, but no longer around college age. Implied age (of character not performer) 22–30."
     },
     {
-        "Tag": "Young Man (2230)",
-        "Description": "Male presented as generally young, but no longer around college age. Implied age (of character not performer) 2230."
+        "Tag": "Young Man (22–30)",
+        "Description": "Male presented as generally young, but no longer around college age. Implied age (of character not performer) 22–30."
     },
     {
-        "Tag": "Young Woman (2230)",
-        "Description": "Female character presented as generally young, but no longer around college age. Implied age (of character not performer) 2230."
+        "Tag": "Young Woman (22–30)",
+        "Description": "Female character presented as generally young, but no longer around college age. Implied age (of character not performer) 22–30."
     },
     {
         "Tag": "Zentai",
