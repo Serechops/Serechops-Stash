@@ -8,16 +8,16 @@
         "Description": "Primary performer (not character) is between 18 and 20."
     },
     {
-        "Tag": "180",
-        "Description": "Virtual reality scenes with a 180 field of vision."
+        "Tag": "180°",
+        "Description": "Virtual reality scenes with a 180° field of vision."
     },
     {
         "Tag": "1800s",
         "Description": "Inspired by the history and culture of the 19th century."
     },
     {
-        "Tag": "190",
-        "Description": "Virtual reality scenes with a 190 field of vision."
+        "Tag": "190°",
+        "Description": "Virtual reality scenes with a 190° field of vision."
     },
     {
         "Tag": "1920s",
@@ -56,12 +56,12 @@
         "Description": "Primary performer (not character) is in their 20s."
     },
     {
-        "Tag": "200",
-        "Description": "Virtual reality scenes with a 200 field of vision."
+        "Tag": "200°",
+        "Description": "Virtual reality scenes with a 200° field of vision."
     },
     {
-        "Tag": "220",
-        "Description": "Virtual reality scenes with a 220 field of vision."
+        "Tag": "220°",
+        "Description": "Virtual reality scenes with a 220° field of vision."
     },
     {
         "Tag": "2D Available",
