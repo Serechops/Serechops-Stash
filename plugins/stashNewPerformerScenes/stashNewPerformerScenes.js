@@ -17,8 +17,7 @@
     const config = {
         baseURL: window.location.origin,
         localEndpoint: `${window.location.origin}/graphql`,
-        stashDBEndpoint: 'https://stashdb.org/graphql',
-        stashDBApiKey: null,
+        stashBoxes: [], // Array to hold all external stashBoxes excluding ThePornDB
         apiKey: localStorage.getItem('apiKey') || null,
         defaultDateRange: storedDateRange ? parseInt(storedDateRange, 10) : 7,
     };
@@ -70,34 +69,35 @@
     /**
      * GraphQL Query Functions
      */
-    const gqlHeaders = (endpoint) => {
+    const gqlHeaders = (endpoint, apiKey) => {
         const headers = { 'Content-Type': 'application/json' };
-        if (endpoint === config.localEndpoint && config.apiKey) {
-            headers['Authorization'] = `Bearer ${config.apiKey}`;
-        } else if (endpoint === config.stashDBEndpoint && config.stashDBApiKey) {
-            // Use Apikey header since that worked in Postman
-            headers['Apikey'] = config.stashDBApiKey;
+        if (apiKey) {
+            headers['Apikey'] = apiKey; // Use Apikey header for authenticated requests
         }
         return headers;
     };
 
-    const performGraphQLQuery = async (endpoint, query, variables = {}) => {
+    const performGraphQLQuery = async (endpoint, query, variables = {}, apiKey = null) => {
         console.log(`Performing GraphQL Query to: ${endpoint}`);
         console.log(`Query: ${query.trim()}`);
         console.log(`Variables: ${JSON.stringify(variables, null, 2)}`);
 
-        if (endpoint === config.stashDBEndpoint) {
-            console.log(`Using StashDB API key: ${config.stashDBApiKey}`);
+        if (apiKey) {
+            console.log(`Using API key for ${endpoint}: ${apiKey}`);
         }
 
         try {
             const response = await fetch(endpoint, {
                 method: 'POST',
-                headers: gqlHeaders(endpoint),
+                headers: gqlHeaders(endpoint, apiKey),
                 body: JSON.stringify({ query, variables }),
             });
             const data = await response.json();
             console.log("Full response from GraphQL:", JSON.stringify(data, null, 2));
+            if (data.errors) {
+                console.error(`GraphQL Errors at ${endpoint}:`, data.errors);
+                return null;
+            }
             return data?.data || null;
         } catch (error) {
             console.error(`GraphQL Query Error at ${endpoint}:`, error);
@@ -106,9 +106,10 @@
     };
 
     /**
-     * Retrieve StashDB API Key from Local Configuration
+     * Retrieve All External StashBoxes from Configuration
+     * Excluding ThePornDB
      */
-    const getStashDBApiKey = async () => {
+    const getAllStashBoxes = async () => {
         const query = `
             query Configuration {
                 configuration {
@@ -122,20 +123,39 @@
                 }
             }
         `;
-        const result = await performGraphQLQuery(config.localEndpoint, query);
-        const stashDB = result?.configuration?.general?.stashBoxes?.find(
-            (box) => box.endpoint === config.stashDBEndpoint
+        const result = await performGraphQLQuery(config.localEndpoint, query, {}, config.apiKey);
+        if (!result?.configuration?.general?.stashBoxes) {
+            console.warn("No stashBoxes found in the configuration.");
+            return;
+        }
+
+        // Filter out ThePornDB
+        const filteredStashBoxes = result.configuration.general.stashBoxes.filter(box => {
+            return box.endpoint !== 'https://theporndb.net/graphql';
+        });
+
+        config.stashBoxes = filteredStashBoxes;
+        console.log("External StashBoxes retrieved (excluding ThePornDB):", config.stashBoxes);
+    };
+
+    /**
+     * Retrieve StashDB API Key from Local Configuration
+     * Preserved for backward compatibility
+     */
+    const getStashDBApiKey = async () => {
+        const stashDBBox = config.stashBoxes.find(
+            (box) => box.endpoint === 'https://stashdb.org/graphql'
         );
-        if (stashDB) {
-            config.stashDBApiKey = stashDB.api_key;
+        if (stashDBBox) {
+            config.stashDBApiKey = stashDBBox.api_key;
             console.log("StashDB API key retrieved successfully:", config.stashDBApiKey);
         } else {
-            console.warn("StashDB API key not found in local Stash configuration");
+            console.warn("StashDB API key not found in external StashBoxes configuration");
         }
     };
 
     /**
-     * Batch Retrieve StashDB IDs for Multiple Performers
+     * Retrieve Stash IDs for Multiple Performers from Local Endpoint
      */
     const getPerformerStashIDs = async (performerIds) => {
         if (performerIds.length === 0) return {};
@@ -143,7 +163,7 @@
         // Construct a GraphQL query with aliases for each performer
         const aliases = performerIds.map((id, index) => `performer${index}`);
         const query = `
-            query BatchFindPerformers {
+            query FindPerformers {
                 ${aliases.map((alias, index) => `
                     ${alias}: findPerformer(id: "${performerIds[index]}") {
                         stash_ids {
@@ -155,61 +175,102 @@
             }
         `;
 
-        const result = await performGraphQLQuery(config.localEndpoint, query);
+        const result = await performGraphQLQuery(config.localEndpoint, query, {}, config.apiKey);
+        if (!result) {
+            console.warn("Failed to retrieve stash_ids for performers.");
+            return {};
+        }
+
         const performerStashMap = {};
 
         aliases.forEach((alias, index) => {
-            const stashId = result?.[alias]?.stash_ids?.find(
-                (id) => id.endpoint === config.stashDBEndpoint
-            )?.stash_id;
-            performerStashMap[performerIds[index]] = stashId;
+            const stashIds = result?.[alias]?.stash_ids || [];
+            stashIds.forEach(idObj => {
+                // Exclude ThePornDB explicitly
+                if (idObj.endpoint === 'https://theporndb.net/graphql') return;
+
+                if (!performerStashMap[performerIds[index]]) {
+                    performerStashMap[performerIds[index]] = {};
+                }
+                performerStashMap[performerIds[index]][idObj.endpoint] = idObj.stash_id;
+            });
         });
 
-        return performerStashMap;
+        console.log("Performer to StashID map:", JSON.stringify(performerStashMap, null, 2));
+        return performerStashMap; // { performerId: { endpoint1: stash_id1, endpoint2: stash_id2, ... }, ... }
     };
 
     /**
-     * Batch Retrieve New Releases for Multiple StashIDs
+     * Retrieve New Releases (Scenes) for Multiple StashIDs from External Endpoints
      */
-    const getNewReleasesForStashIDs = async (stashIds) => {
-        if (stashIds.length === 0) return {};
+    const getNewReleasesForStashIDs = async (performerStashMap) => {
+        const stashScenesMap = {}; // { endpoint: { stash_id: scenes[] } }
 
-        // Construct a GraphQL query with aliases for each stashId
-        const aliases = stashIds.map((id, index) => `stash${index}`);
-        const query = `
-            query BatchFindPerformers {
-                ${aliases.map((alias, index) => `
-                    ${alias}: findPerformer(id: "${stashIds[index]}") {
-                        scenes {
-                            id
-                            title
-                            release_date
-                            images {
-                                url
-                                width
-                                height
+        // Iterate through each external stashBox
+        for (const stashBox of config.stashBoxes) {
+            const { endpoint, api_key, name } = stashBox;
+            if (!api_key) {
+                console.warn(`Skipping stashBox ${name} (${endpoint}) due to missing API key.`);
+                continue;
+            }
+
+            // Collect all stash_ids for this endpoint
+            const stashIds = [];
+            Object.values(performerStashMap).forEach(stashObj => {
+                if (stashObj[endpoint]) {
+                    stashIds.push(stashObj[endpoint]);
+                }
+            });
+
+            if (stashIds.length === 0) continue;
+
+            // Construct a GraphQL query with aliases for each stashId
+            const aliases = stashIds.map((id, index) => `stash${index}`);
+            const query = `
+                query FindPerformers {
+                    ${aliases.map((alias, index) => `
+                        ${alias}: findPerformer(id: "${stashIds[index]}") {
+                            scenes {
+                                id
+                                title
+                                release_date
+                                images {
+                                    url
+                                    width
+                                    height
+                                }
                             }
                         }
-                    }
-                `).join('\n')}
+                    `).join('\n')}
+                }
+            `;
+
+            const result = await performGraphQLQuery(endpoint, query, {}, api_key);
+            if (!result) {
+                console.warn(`Failed to retrieve scenes from ${name} (${endpoint}).`);
+                continue;
             }
-        `;
 
-        const result = await performGraphQLQuery(config.stashDBEndpoint, query);
-        const stashScenesMap = {};
+            aliases.forEach((alias, index) => {
+                const stashId = stashIds[index];
+                const scenes = result?.[alias]?.scenes || [];
 
-        aliases.forEach((alias, index) => {
-            const scenes = result?.[alias]?.scenes || [];
-            stashScenesMap[stashIds[index]] = scenes;
-        });
+                if (!stashScenesMap[endpoint]) {
+                    stashScenesMap[endpoint] = {};
+                }
+                stashScenesMap[endpoint][stashId] = scenes;
+            });
 
-        return stashScenesMap;
+            console.log(`New Releases from ${name} (${endpoint}):`, JSON.stringify(stashScenesMap[endpoint], null, 2));
+        }
+
+        return stashScenesMap; // { endpoint: { stash_id: scenes[] }, ... }
     };
 
-		/**
-	* Create a Popout for Scene Previews
-	*/
-	const createScenePreviewPopout = (newReleases, referenceElement) => {
+    /**
+     * Create a Popout for Scene Previews Aggregated from Multiple StashBoxes
+     */
+	const createScenePreviewPopout = (stashScenesMap, referenceElement) => {
 		// Remove any existing popout
 		const existingPopout = document.getElementById('scene-preview-popout');
 		if (existingPopout) {
@@ -237,52 +298,83 @@
 		header.style.marginTop = '0';
 		popout.appendChild(header);
 	
-		// Add scene cards with hyperlinks
-		newReleases.forEach(scene => {
-			const sceneLink = document.createElement('a');
-			sceneLink.href = `https://stashdb.org/scenes/${scene.id}`;
-			sceneLink.target = '_blank';
-			sceneLink.rel = 'noopener noreferrer';
-			sceneLink.style.textDecoration = 'none'; // Remove underline
-			sceneLink.style.color = 'inherit'; // Inherit text color
+		// Iterate through each endpoint in the stashScenesMap
+		Object.entries(stashScenesMap).forEach(([endpoint, stashData]) => {
+			// Add a subheader for each source
+			const sourceHeader = document.createElement('h5');
+			const source = config.stashBoxes.find((ep) => ep.endpoint === endpoint);
+			sourceHeader.textContent = source ? source.name : endpoint;
+			sourceHeader.style.marginTop = '10px';
+			sourceHeader.style.marginBottom = '5px';
+			sourceHeader.style.fontSize = '16px';
+			sourceHeader.style.borderBottom = '1px solid #444';
+			popout.appendChild(sourceHeader);
 	
-			const sceneCard = document.createElement('div');
-			sceneCard.style.display = 'flex';
-			sceneCard.style.marginBottom = '10px';
-			sceneCard.style.borderBottom = '1px solid #444';
-			sceneCard.style.paddingBottom = '10px';
+			// Iterate through each stash_id's scenes
+			Object.entries(stashData).forEach(([stashId, scenes]) => {
+				if (!Array.isArray(scenes)) {
+					console.warn(`Expected scenes to be an array but got:`, scenes);
 	
-			const img = document.createElement('img');
-			img.src = scene.images[0]?.url || '';
-			img.alt = scene.title;
-			img.style.width = '60px';
-			img.style.height = '60px';
-			img.style.objectFit = 'cover';
-			img.style.borderRadius = '4px';
-			img.style.marginRight = '10px';
+					// If scenes is an object, wrap it in an array
+					if (scenes && typeof scenes === 'object') {
+						scenes = [scenes];
+					} else {
+						return; // Skip invalid scenes data
+					}
+				}
 	
-			const info = document.createElement('div');
-			info.style.display = 'flex';
-			info.style.flexDirection = 'column';
-			info.style.justifyContent = 'center';
+				scenes.forEach((scene) => {
+					if (!scene || typeof scene !== 'object') {
+						console.warn(`Invalid scene data:`, scene);
+						return;
+					}
 	
-			const title = document.createElement('span');
-			title.textContent = scene.title;
-			title.style.fontWeight = 'bold';
-			title.style.fontSize = '14px';
-			title.style.color = '#fff';
+					const sceneLink = document.createElement('a');
+					sceneLink.href = generateSceneUrl(endpoint, scene.id); // Generate URL dynamically
+					sceneLink.target = '_blank';
+					sceneLink.rel = 'noopener noreferrer';
+					sceneLink.style.textDecoration = 'none'; // Remove underline
+					sceneLink.style.color = 'inherit'; // Inherit text color
 	
-			const date = document.createElement('span');
-			date.textContent = `Released on: ${scene.release_date}`;
-			date.style.fontSize = '12px';
-			date.style.color = '#ccc';
+					const sceneCard = document.createElement('div');
+					sceneCard.style.display = 'flex';
+					sceneCard.style.marginBottom = '10px';
+					sceneCard.style.borderBottom = '1px solid #444';
+					sceneCard.style.paddingBottom = '10px';
 	
-			info.appendChild(title);
-			info.appendChild(date);
-			sceneCard.appendChild(img);
-			sceneCard.appendChild(info);
-			sceneLink.appendChild(sceneCard);
-			popout.appendChild(sceneLink);
+					const img = document.createElement('img');
+					img.src = scene.images?.[0]?.url || '';
+					img.alt = scene.title || 'Scene Preview';
+					img.style.width = '60px';
+					img.style.height = '60px';
+					img.style.objectFit = 'cover';
+					img.style.borderRadius = '4px';
+					img.style.marginRight = '10px';
+	
+					const info = document.createElement('div');
+					info.style.display = 'flex';
+					info.style.flexDirection = 'column';
+					info.style.justifyContent = 'center';
+	
+					const title = document.createElement('span');
+					title.textContent = scene.title || 'Untitled Scene';
+					title.style.fontWeight = 'bold';
+					title.style.fontSize = '14px';
+					title.style.color = '#fff';
+	
+					const date = document.createElement('span');
+					date.textContent = `Released on: ${scene.release_date || 'Unknown'}`;
+					date.style.fontSize = '12px';
+					date.style.color = '#ccc';
+	
+					info.appendChild(title);
+					info.appendChild(date);
+					sceneCard.appendChild(img);
+					sceneCard.appendChild(info);
+					sceneLink.appendChild(sceneCard);
+					popout.appendChild(sceneLink);
+				});
+			});
 		});
 	
 		document.body.appendChild(popout);
@@ -295,7 +387,7 @@
 		// Show the popout
 		popout.style.display = 'block';
 	
-		// Event listeners to manage the modal visibility
+		// Event listeners to manage the popout visibility
 		let hideTimeout = null;
 	
 		const hidePopout = () => {
@@ -319,11 +411,24 @@
 	
 		return popout;
 	};
+	
+	/**
+	* Generate Scene URL Based on Endpoint
+	*/
+	const generateSceneUrl = (endpoint, stashId) => {
+		if (endpoint.includes('pmvstash')) {
+			return `https://pmvstash.org/scenes/${stashId}`;
+		} else if (endpoint.includes('fansdb')) {
+			return `https://fansdb.cc/scenes/${stashId}`;
+		} else {
+			return `https://stashdb.org/scenes/${stashId}`;
+		}
+	};
 
     /**
      * Add New Release Icon Positioned on the Lower Left Corner of the Performer Card Image
      */
-    const addNewReleaseIcon = (card, stashId, newReleases) => {
+    const addNewReleaseIcon = (card, stashMap, stashScenesMap) => {
         // Check if the bell icon already exists to prevent duplicates
         if (card.querySelector('.new-release-bell-icon')) {
             console.log("Bell icon already exists in this card. Skipping adding another.");
@@ -332,8 +437,10 @@
 
         // Create the wrapper div with a class and unique ID
         const iconWrapper = document.createElement('div');
+        // Create a unique identifier based on all stash IDs
+        const uniqueId = Object.values(stashMap).join('-');
         iconWrapper.className = 'new-release-bell-icon-wrapper';
-        iconWrapper.id = `new-release-bell-wrapper-${stashId}`;
+        iconWrapper.id = `new-release-bell-wrapper-${uniqueId}`;
 
         // Style the wrapper div for bottom-left placement
         iconWrapper.style.position = 'absolute';
@@ -344,12 +451,15 @@
 
         // Create the <a> element with class and ID
         const iconContainer = document.createElement('a');
-        iconContainer.href = `https://stashdb.org/performers/${stashId}`;
+        // Construct the href by taking the first endpoint and stash_id
+        const firstEndpoint = Object.keys(stashMap)[0];
+        const firstStashId = stashMap[firstEndpoint];
+        iconContainer.href = `${firstEndpoint}/performers/${firstStashId}`;
         iconContainer.target = '_blank';
         iconContainer.rel = 'noopener noreferrer';
-        iconContainer.title = 'New Release Available on StashDB!';
+        iconContainer.title = 'New Release Available!';
         iconContainer.className = 'new-release-bell-icon';
-        iconContainer.id = `new-release-bell-${stashId}`;
+        iconContainer.id = `new-release-bell-${firstStashId}`;
 
         // Bell Icon SVG
         iconContainer.innerHTML = `
@@ -389,10 +499,9 @@
             // Attach hover event listeners to the icon to show popout
             iconContainer.addEventListener('mouseenter', () => {
                 console.log("Mouse entered bell icon. Creating popout.");
-                createScenePreviewPopout(newReleases, iconContainer);
+                createScenePreviewPopout(stashScenesMap, iconContainer);
             });
 
-            // Optionally, hide the popout on mouse leave from the icon
             // Note: The popout itself handles outside clicks to hide
         } else {
             console.warn("Could not find .thumbnail-section in the performer card.");
@@ -405,7 +514,7 @@
     const processedPerformers = new Set();
 
     /**
-     * Process Performer Cards with Batch Queries
+     * Process Performer Cards with Batch Queries Across All StashBoxes
      */
     const processPerformerCards = debounce(async () => {
         console.log("processPerformerCards() called");
@@ -439,40 +548,68 @@
 
         console.log(`Processing ${performerIds.length} new performers.`);
 
-        // Batch query to get stashIds for all performerIds
+        // Batch query to get stashIds for all performerIds across all stashBoxes
         const performerStashMap = await getPerformerStashIDs(performerIds);
-        console.log("Performer to StashID map:", performerStashMap);
+        console.log("Performer to StashID map:", JSON.stringify(performerStashMap, null, 2));
 
-        // Filter out performers without stashId
-        const validPerformers = performerIds.filter(id => performerStashMap[id]);
+        // Collect all stashIds across different endpoints
+        const stashIds = [];
+        Object.values(performerStashMap).forEach(stashObj => {
+            Object.values(stashObj).forEach(stash_id => {
+                stashIds.push(stash_id);
+            });
+        });
 
-        if (validPerformers.length === 0) {
-            console.log("No valid stashIds found for the new performers.");
+        if (stashIds.length === 0) {
+            console.log("No stashIds found for the new performers.");
             return;
         }
 
-        console.log(`Valid performers with stashIds: ${validPerformers.length}`);
+        console.log(`Fetching new releases for ${stashIds.length} stashIds.`);
 
-        // Collect all stashIds
-        const stashIds = validPerformers.map(id => performerStashMap[id]);
-
-        // Batch query to get new releases for all stashIds
-        const stashScenesMap = await getNewReleasesForStashIDs(stashIds);
-        console.log("StashID to Scenes map:", stashScenesMap);
+        // Batch query to get new releases from all associated stashBoxes
+        const stashScenesMap = await getNewReleasesForStashIDs(performerStashMap);
+        console.log("StashID to Scenes map:", JSON.stringify(stashScenesMap, null, 2));
 
         // Iterate through each performer and update the card if there are new releases
-        validPerformers.forEach(performerId => {
-            const stashId = performerStashMap[performerId];
-            const newReleases = stashScenesMap[stashId] || [];
+        for (const performerId of performerIds) {
+            const stashMap = performerStashMap[performerId];
+            if (!stashMap) continue;
 
-            // Filter new releases based on the date range
+            // Collect all stashIds across different endpoints for this performer
+            const individualStashIds = Object.values(stashMap);
+            if (individualStashIds.length === 0) continue;
+
+            // Initialize per-performer stashScenesMap
+            const performerStashScenesMap = {};
+
+            // Aggregate scenes per endpoint
+            Object.entries(stashScenesMap).forEach(([endpoint, stashData]) => {
+                Object.entries(stashData).forEach(([stashId, scenes]) => {
+                    if (individualStashIds.includes(stashId)) {
+                        if (!performerStashScenesMap[endpoint]) {
+                            performerStashScenesMap[endpoint] = [];
+                        }
+                        performerStashScenesMap[endpoint].push(...scenes);
+                    }
+                });
+            });
+
+            // Filter scenes by date
             const cutoffDate = new Date();
             cutoffDate.setDate(cutoffDate.getDate() - config.defaultDateRange);
-            const filteredReleases = newReleases.filter(scene => new Date(scene.release_date) > cutoffDate);
+            const filteredStashScenesMap = {};
 
-            console.log(`Performer ID: ${performerId}, StashID: ${stashId}, New Releases: ${filteredReleases.length}`);
+            Object.entries(performerStashScenesMap).forEach(([endpoint, scenes]) => {
+                const filteredScenes = scenes.filter(scene => new Date(scene.release_date) > cutoffDate);
+                if (filteredScenes.length > 0) {
+                    filteredStashScenesMap[endpoint] = filteredScenes;
+                }
+            });
 
-            if (filteredReleases.length > 0) {
+            console.log(`Performer ID: ${performerId}, New Releases: ${Object.keys(filteredStashScenesMap).length}`);
+
+            if (Object.keys(filteredStashScenesMap).length > 0) {
                 // Find the corresponding card
                 const card = Array.from(performerCards).find(card => {
                     const performerHref = card.querySelector('a')?.getAttribute('href');
@@ -481,13 +618,13 @@
                 });
 
                 if (card) {
-                    addNewReleaseIcon(card, stashId, filteredReleases);
+                    addNewReleaseIcon(card, stashMap, filteredStashScenesMap);
                 }
             }
 
             // Mark performer as processed
             processedPerformers.add(performerId);
-        });
+        }
     }, 300); // Debounce delay of 300ms
 
     /**
@@ -700,7 +837,8 @@
     /**
      * Initial Setup
      */
-    await getStashDBApiKey();
+    await getAllStashBoxes(); // Retrieve all external stashBoxes excluding ThePornDB
+    await getStashDBApiKey();  // Retrieve StashDB API key specifically
     initializeNavbarObserver();
     initializePageChangeListener();
 

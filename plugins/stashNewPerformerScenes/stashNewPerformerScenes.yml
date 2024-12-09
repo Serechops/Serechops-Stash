@@ -1,10 +1,12 @@
 name: Stash New Performer Scenes Icon
 description: Adds a custom icon in the performer card should they have a new scene released within the specified date range from the navbar button.
-version: 1.1
+version: 1.2
 ui:
   javascript:
     - stashNewPerformerScenes.js
   csp:
       connect-src:
       - https://stashdb.org/graphql
+      - https://fansdb.cc/graphql
+      - https://pmvstash.org/graphql
     
