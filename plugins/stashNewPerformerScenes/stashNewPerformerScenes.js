@@ -46,7 +46,7 @@
             subtree: true
         });
 
-        // Function to stop observing
+        // Function to stop observing if needed in the future
         function stopObserving() {
             observer.disconnect();
         }
@@ -209,7 +209,7 @@
 		/**
 	* Create a Popout for Scene Previews
 	*/
-	const createScenePreviewPopout = (newReleases, referenceElement, setIsHoveringPopout) => {
+	const createScenePreviewPopout = (newReleases, referenceElement) => {
 		// Remove any existing popout
 		const existingPopout = document.getElementById('scene-preview-popout');
 		if (existingPopout) {
@@ -295,59 +295,67 @@
 		// Show the popout
 		popout.style.display = 'block';
 	
-		// Add event listeners to manage the modal visibility
+		// Event listeners to manage the modal visibility
 		let hideTimeout = null;
+	
+		const hidePopout = () => {
+			popout.style.display = 'none';
+			popout.remove();
+		};
 	
 		const handleMouseEnter = () => {
 			clearTimeout(hideTimeout);
-			setIsHoveringPopout(true);
 		};
 	
 		const handleMouseLeave = () => {
-			hideTimeout = setTimeout(() => {
-				setIsHoveringPopout(false);
-				popout.style.display = 'none';
-				document.body.removeEventListener('click', handleOutsideClick);
-				popout.remove();
-			}, 200); // 200ms delay before hiding
+			hideTimeout = setTimeout(hidePopout, 200); // 200ms delay before hiding
 		};
 	
-		const handleOutsideClick = (event) => {
-			if (!popout.contains(event.target) && !referenceElement.contains(event.target)) {
-				setIsHoveringPopout(false);
-				popout.style.display = 'none';
-				document.body.removeEventListener('click', handleOutsideClick);
-				popout.remove();
-			}
-		};
-	
+		// Attach mouseenter and mouseleave listeners to both popout and reference element
 		popout.addEventListener('mouseenter', handleMouseEnter);
 		popout.addEventListener('mouseleave', handleMouseLeave);
-		document.body.addEventListener('click', handleOutsideClick);
+		referenceElement.addEventListener('mouseenter', handleMouseEnter);
+		referenceElement.addEventListener('mouseleave', handleMouseLeave);
 	
 		return popout;
 	};
 
     /**
-     * Add New Release Icon Positioned on the Right Edge with Hover Preview
+     * Add New Release Icon Positioned on the Lower Left Corner of the Performer Card Image
      */
     const addNewReleaseIcon = (card, stashId, newReleases) => {
-        if (card.querySelector('.fa-bell')) {
+        // Check if the bell icon already exists to prevent duplicates
+        if (card.querySelector('.new-release-bell-icon')) {
             console.log("Bell icon already exists in this card. Skipping adding another.");
             return;
         }
 
+        // Create the wrapper div with a class and unique ID
+        const iconWrapper = document.createElement('div');
+        iconWrapper.className = 'new-release-bell-icon-wrapper';
+        iconWrapper.id = `new-release-bell-wrapper-${stashId}`;
+
+        // Style the wrapper div for bottom-left placement
+        iconWrapper.style.position = 'absolute';
+        iconWrapper.style.bottom = '10px'; // Align to the bottom edge
+        iconWrapper.style.left = '10px';   // Align to the left edge
+        iconWrapper.style.zIndex = '10';    // Ensure it appears above other elements
+        iconWrapper.style.cursor = 'pointer'; // Indicate interactivity
+
+        // Create the <a> element with class and ID
         const iconContainer = document.createElement('a');
         iconContainer.href = `https://stashdb.org/performers/${stashId}`;
         iconContainer.target = '_blank';
         iconContainer.rel = 'noopener noreferrer';
         iconContainer.title = 'New Release Available on StashDB!';
+        iconContainer.className = 'new-release-bell-icon';
+        iconContainer.id = `new-release-bell-${stashId}`;
 
         // Bell Icon SVG
         iconContainer.innerHTML = `
             <svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="bell" 
                  class="svg-inline--fa fa-bell fa-icon" role="img" xmlns="http://www.w3.org/2000/svg" 
-                 viewBox="0 0 448 512" style="color: gold; width: 18px; height: 18px;">
+                 viewBox="0 0 448 512" style="color: gold; width: 24px; height: 24px;">
               <path fill="currentColor" d="M224 512c35.3 0 63.9-28.6 63.9-63.9H160.1c0 35.3 
                  28.6 63.9 63.9 63.9zm215.9-149.3c-19.2-20.9-55.5-52.5-55.5-154.7 
                  0-77.7-54.5-139.3-127.9-155.2V32c0-17.7-14.3-32-32-32s-32 
@@ -357,57 +365,37 @@
             </svg>
         `;
 
-        // Create the wrapper for the icon and handle events
-        const iconWrapper = document.createElement('div');
-        iconWrapper.style.position = 'absolute';
-        iconWrapper.style.top = '10px'; // Adjust as needed for your card design
-        iconWrapper.style.right = '10px'; // Align to the right edge
-        iconWrapper.style.zIndex = '10'; // Ensure it is above other elements
-        iconWrapper.style.cursor = 'pointer'; // Indicate interactivity
-
+        // Append the icon to the wrapper
         iconWrapper.appendChild(iconContainer);
 
-        // State variables to track hover state
-        let isHoveringIcon = false;
-        let isHoveringPopout = false;
-        let hideTimeoutIcon = null;
-        let hideTimeoutPopout = null;
+        // Find the thumbnail section of the card to append the icon
+        const thumbnailSection = card.querySelector('.thumbnail-section');
+        if (thumbnailSection) {
+            console.log("Found .thumbnail-section:", thumbnailSection);
 
-        // Function to set isHoveringPopout (passed to popout)
-        const setIsHoveringPopout = (state) => {
-            isHoveringPopout = state;
-        };
-
-        // Event listeners to show/hide the preview
-        iconWrapper.addEventListener('mouseenter', () => {
-            isHoveringIcon = true;
-            if (hideTimeoutIcon) {
-                clearTimeout(hideTimeoutIcon);
-                hideTimeoutIcon = null;
+            // Ensure the thumbnail section is relatively positioned
+            const computedStyle = window.getComputedStyle(thumbnailSection);
+            if (computedStyle.position === 'static') {
+                thumbnailSection.style.position = 'relative';
+                console.log(".thumbnail-section was static, set to relative.");
+            } else {
+                console.log(".thumbnail-section already has position:", computedStyle.position);
             }
-            if (newReleases.length > 0) {
-                createScenePreviewPopout(newReleases, iconContainer, setIsHoveringPopout);
-            }
-        });
 
-        iconWrapper.addEventListener('mouseleave', () => {
-            isHoveringIcon = false;
-            hideTimeoutIcon = setTimeout(() => {
-                if (!isHoveringPopout) {
-                    const popout = document.getElementById('scene-preview-popout');
-                    if (popout) {
-                        popout.style.display = 'none';
-                        popout.remove();
-                    }
-                }
-            }, 200); // 200ms delay before hiding
-        });
+            // Append the iconWrapper to the thumbnailSection
+            thumbnailSection.appendChild(iconWrapper);
+            console.log("Bell icon wrapper appended to .thumbnail-section.");
 
-        // Ensure the card's parent container is set to `position: relative` for proper positioning
-        const cardSection = card.querySelector('.card-section');
-        if (cardSection) {
-            cardSection.style.position = 'relative';
-            cardSection.appendChild(iconWrapper);
+            // Attach hover event listeners to the icon to show popout
+            iconContainer.addEventListener('mouseenter', () => {
+                console.log("Mouse entered bell icon. Creating popout.");
+                createScenePreviewPopout(newReleases, iconContainer);
+            });
+
+            // Optionally, hide the popout on mouse leave from the icon
+            // Note: The popout itself handles outside clicks to hide
+        } else {
+            console.warn("Could not find .thumbnail-section in the performer card.");
         }
     };
 
@@ -453,6 +441,7 @@
 
         // Batch query to get stashIds for all performerIds
         const performerStashMap = await getPerformerStashIDs(performerIds);
+        console.log("Performer to StashID map:", performerStashMap);
 
         // Filter out performers without stashId
         const validPerformers = performerIds.filter(id => performerStashMap[id]);
@@ -462,11 +451,14 @@
             return;
         }
 
+        console.log(`Valid performers with stashIds: ${validPerformers.length}`);
+
         // Collect all stashIds
         const stashIds = validPerformers.map(id => performerStashMap[id]);
 
         // Batch query to get new releases for all stashIds
         const stashScenesMap = await getNewReleasesForStashIDs(stashIds);
+        console.log("StashID to Scenes map:", stashScenesMap);
 
         // Iterate through each performer and update the card if there are new releases
         validPerformers.forEach(performerId => {
@@ -514,6 +506,8 @@
         modalBackdrop.style.alignItems = 'center';
         modalBackdrop.style.zIndex = '10000'; // Higher z-index to overlay everything
         modalBackdrop.style.visibility = 'hidden';
+        modalBackdrop.style.opacity = '0';
+        modalBackdrop.style.transition = 'opacity 0.3s ease';
 
         const modal = document.createElement('div');
         modal.style.backgroundColor = '#1e1e1e';
@@ -523,6 +517,7 @@
         modal.style.width = '300px';
         modal.style.maxWidth = '90%';
         modal.style.boxShadow = '0 0 10px rgba(0,0,0,0.3)';
+        modal.style.position = 'relative';
 
         const header = document.createElement('h2');
         header.textContent = 'Set New Release Date Range';
@@ -559,8 +554,36 @@
         modalBackdrop.appendChild(modal);
         document.body.appendChild(modalBackdrop);
 
-        const showModal = () => { modalBackdrop.style.visibility = 'visible'; };
-        const hideModal = () => { modalBackdrop.style.visibility = 'hidden'; };
+        // Show and hide functions with fade-in/out
+        const showModal = () => { 
+            modalBackdrop.style.visibility = 'visible';
+            requestAnimationFrame(() => {
+                modalBackdrop.style.opacity = '1';
+            });
+        };
+        const hideModal = () => { 
+            modalBackdrop.style.opacity = '0';
+            modalBackdrop.addEventListener('transitionend', () => {
+                if (modalBackdrop.style.opacity === '0') {
+                    modalBackdrop.style.visibility = 'hidden';
+                }
+            }, { once: true });
+        };
+
+        // Close modal when clicking outside the modal content
+        modalBackdrop.addEventListener('click', (event) => {
+            if (event.target === modalBackdrop) {
+                hideModal();
+            }
+        });
+
+        // Close modal when pressing the 'Escape' key
+        const handleEscape = (event) => {
+            if (event.key === 'Escape') {
+                hideModal();
+            }
+        };
+        document.addEventListener('keydown', handleEscape);
 
         closeBtn.addEventListener('click', hideModal);
         saveBtn.addEventListener('click', () => {
@@ -585,7 +608,10 @@
      */
     const addNavbarIcon = (modalInstance) => {
         const parent = document.querySelector('.navbar-buttons');
-        if (!parent) return;
+        if (!parent) {
+            console.warn("Navbar buttons container not found.");
+            return;
+        }
 
         // Create the FA icon button
         const iconBtn = document.createElement('button');
@@ -606,7 +632,15 @@
             <svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="calendar-day" 
                  class="svg-inline--fa fa-calendar-day fa-icon" role="img" xmlns="http://www.w3.org/2000/svg" 
                  viewBox="0 0 448 512" style="width: 20px; height: 20px; color: white;">
-              <path fill="currentColor" d="M124 0c13.3 0 24 10.7 24 24v24h152V24c0-13.3 10.7-24 24-24s24 10.7 24 24v24h40c35.3 0 64 28.7 64 64v352c0 35.3-28.7 64-64 64H40c-35.3 0-64-28.7-64-64V112c0-35.3 28.7-64 64-64h40V24c0-13.3 10.7-24 24-24zm312 128H12v320c0 8.8 7.2 16 16 16h392c8.8 0 16-7.2 16-16V128zm-80 96c13.3 0 24 10.7 24 24v112c0 13.3-10.7 24-24 24H92c-13.3 0-24-10.7-24-24V248c0-13.3 10.7-24 24-24h264z"/>
+              <path fill="currentColor" d="M124 0c13.3 0 24 10.7 24 24v24h152V24c0-13.3 10.7-24 24-24s24 
+              10.7 24 24v24h40c35.3 0 64 28.7 64 64v352c0 35.3-28.7 
+              64-64 64H40c-35.3 0-64-28.7-64-64V112c0-35.3 28.7-64 
+              64-64h40V24c0-13.3 10.7-24 24-24zm312 
+              128H12v320c0 8.8 7.2 16 16 16h392c8.8 0 
+              16-7.2 16-16V128zm-80 96c13.3 0 24 10.7 
+              24 24v112c0 13.3-10.7 24-24 24H92c-13.3 
+              0-24-10.7-24-24V248c0-13.3 10.7-24 
+              24-24h264z"/>
             </svg>
         `;
 
@@ -617,6 +651,7 @@
 
         // Append the icon button to the navbar
         parent.appendChild(iconBtn);
+        console.log("Navbar icon added successfully.");
     };
 
     /**
@@ -630,7 +665,7 @@
                 console.log(".navbar-buttons found, disconnecting observer and adding FA icon.");
                 observer.disconnect();
                 const modalInstance = createModal();
-                addNavbarIcon(modalInstance); // Use the new FA icon function
+                addNavbarIcon(modalInstance);
             } else {
                 console.log(".navbar-buttons not found yet...");
             }
