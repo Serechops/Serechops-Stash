@@ -7308,10 +7308,6 @@
         "Description": "At least some of the action takes place on a terrace."
     },
     {
-        "Tag": "Tethered",
-        "Description": "Performer is tethered to a fix point with a long rope, chain, lead or leash."
-    },
-    {
         "Tag": "Thai",
         "Description": "Scene features Thai performer(s)"
     },
