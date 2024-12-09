@@ -1,0 +1,10 @@
+name: Stash New Performer Scenes Icon
+description: Adds a custom icon in the performer card should they have a new scene released within the specified date range from the navbar button.
+version: 1.0
+ui:
+  javascript:
+    - stashNewPerformerScenes.js
+  csp:
+      connect-src:
+      - https://stashdb.org/graphql
+    
