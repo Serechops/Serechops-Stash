@@ -7,6 +7,9 @@
     }
     window.newReleaseTrackerPluginLoaded = true;
 
+    console.log("New Release Tracker Plugin started");
+    console.log("Current page path:", window.location.pathname);
+
     /**
      * CONFIGURATION
      */
@@ -79,6 +82,9 @@
     };
 
     const performGraphQLQuery = async (endpoint, query, variables = {}) => {
+        console.log(`Performing GraphQL Query to: ${endpoint}`);
+        console.log(`Query: ${query.trim()}`);
+        console.log(`Variables: ${JSON.stringify(variables, null, 2)}`);
 
         if (endpoint === config.stashDBEndpoint) {
             console.log(`Using StashDB API key: ${config.stashDBApiKey}`);
@@ -91,6 +97,7 @@
                 body: JSON.stringify({ query, variables }),
             });
             const data = await response.json();
+            console.log("Full response from GraphQL:", JSON.stringify(data, null, 2));
             return data?.data || null;
         } catch (error) {
             console.error(`GraphQL Query Error at ${endpoint}:`, error);
@@ -138,7 +145,7 @@
         const query = `
             query BatchFindPerformers {
                 ${aliases.map((alias, index) => `
-                    ${alias}: findPerformer(id: ${performerIds[index]}) {
+                    ${alias}: findPerformer(id: "${performerIds[index]}") {
                         stash_ids {
                             endpoint
                             stash_id
@@ -177,6 +184,11 @@
                             id
                             title
                             release_date
+                            images {
+                                url
+                                width
+                                height
+                            }
                         }
                     }
                 `).join('\n')}
@@ -194,10 +206,132 @@
         return stashScenesMap;
     };
 
+		/**
+	* Create a Popout for Scene Previews
+	*/
+	const createScenePreviewPopout = (newReleases, referenceElement, setIsHoveringPopout) => {
+		// Remove any existing popout
+		const existingPopout = document.getElementById('scene-preview-popout');
+		if (existingPopout) {
+			existingPopout.remove();
+		}
+	
+		// Create the popout container
+		const popout = document.createElement('div');
+		popout.id = 'scene-preview-popout';
+		popout.style.position = 'absolute';
+		popout.style.backgroundColor = '#2c2c2c';
+		popout.style.color = '#fff';
+		popout.style.padding = '10px';
+		popout.style.borderRadius = '8px';
+		popout.style.boxShadow = '0 4px 8px rgba(0, 0, 0, 0.2)';
+		popout.style.zIndex = '10000'; // Ensure it's on top
+		popout.style.width = '300px';
+		popout.style.maxHeight = '400px';
+		popout.style.overflowY = 'auto';
+		popout.style.display = 'none'; // Hidden by default
+	
+		// Add a header
+		const header = document.createElement('h4');
+		header.textContent = 'New Releases';
+		header.style.marginTop = '0';
+		popout.appendChild(header);
+	
+		// Add scene cards with hyperlinks
+		newReleases.forEach(scene => {
+			const sceneLink = document.createElement('a');
+			sceneLink.href = `https://stashdb.org/scenes/${scene.id}`;
+			sceneLink.target = '_blank';
+			sceneLink.rel = 'noopener noreferrer';
+			sceneLink.style.textDecoration = 'none'; // Remove underline
+			sceneLink.style.color = 'inherit'; // Inherit text color
+	
+			const sceneCard = document.createElement('div');
+			sceneCard.style.display = 'flex';
+			sceneCard.style.marginBottom = '10px';
+			sceneCard.style.borderBottom = '1px solid #444';
+			sceneCard.style.paddingBottom = '10px';
+	
+			const img = document.createElement('img');
+			img.src = scene.images[0]?.url || '';
+			img.alt = scene.title;
+			img.style.width = '60px';
+			img.style.height = '60px';
+			img.style.objectFit = 'cover';
+			img.style.borderRadius = '4px';
+			img.style.marginRight = '10px';
+	
+			const info = document.createElement('div');
+			info.style.display = 'flex';
+			info.style.flexDirection = 'column';
+			info.style.justifyContent = 'center';
+	
+			const title = document.createElement('span');
+			title.textContent = scene.title;
+			title.style.fontWeight = 'bold';
+			title.style.fontSize = '14px';
+			title.style.color = '#fff';
+	
+			const date = document.createElement('span');
+			date.textContent = `Released on: ${scene.release_date}`;
+			date.style.fontSize = '12px';
+			date.style.color = '#ccc';
+	
+			info.appendChild(title);
+			info.appendChild(date);
+			sceneCard.appendChild(img);
+			sceneCard.appendChild(info);
+			sceneLink.appendChild(sceneCard);
+			popout.appendChild(sceneLink);
+		});
+	
+		document.body.appendChild(popout);
+	
+		// Position the popout relative to the reference element (bell icon)
+		const rect = referenceElement.getBoundingClientRect();
+		popout.style.top = `${rect.bottom + window.scrollY + 10}px`; // 10px below the icon
+		popout.style.left = `${rect.left + window.scrollX}px`; // Align to the left of the icon
+	
+		// Show the popout
+		popout.style.display = 'block';
+	
+		// Add event listeners to manage the modal visibility
+		let hideTimeout = null;
+	
+		const handleMouseEnter = () => {
+			clearTimeout(hideTimeout);
+			setIsHoveringPopout(true);
+		};
+	
+		const handleMouseLeave = () => {
+			hideTimeout = setTimeout(() => {
+				setIsHoveringPopout(false);
+				popout.style.display = 'none';
+				document.body.removeEventListener('click', handleOutsideClick);
+				popout.remove();
+			}, 200); // 200ms delay before hiding
+		};
+	
+		const handleOutsideClick = (event) => {
+			if (!popout.contains(event.target) && !referenceElement.contains(event.target)) {
+				setIsHoveringPopout(false);
+				popout.style.display = 'none';
+				document.body.removeEventListener('click', handleOutsideClick);
+				popout.remove();
+			}
+		};
+	
+		popout.addEventListener('mouseenter', handleMouseEnter);
+		popout.addEventListener('mouseleave', handleMouseLeave);
+		document.body.addEventListener('click', handleOutsideClick);
+	
+		return popout;
+	};
+
     /**
-     * Add New Release Icon Positioned on the Right Edge
+     * Add New Release Icon Positioned on the Right Edge with Hover Preview
      */
-    const addNewReleaseIcon = (card, stashId) => {
+    const addNewReleaseIcon = (card, stashId, newReleases) => {
         if (card.querySelector('.fa-bell')) {
             console.log("Bell icon already exists in this card. Skipping adding another.");
             return;
@@ -209,10 +343,11 @@
         iconContainer.rel = 'noopener noreferrer';
         iconContainer.title = 'New Release Available on StashDB!';
 
+        // Bell Icon SVG
         iconContainer.innerHTML = `
             <svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="bell" 
                  class="svg-inline--fa fa-bell fa-icon" role="img" xmlns="http://www.w3.org/2000/svg" 
-                 viewBox="0 0 448 512" style="color: white; width: 18px; height: 18px;">
+                 viewBox="0 0 448 512" style="color: gold; width: 18px; height: 18px;">
               <path fill="currentColor" d="M224 512c35.3 0 63.9-28.6 63.9-63.9H160.1c0 35.3 
                  28.6 63.9 63.9 63.9zm215.9-149.3c-19.2-20.9-55.5-52.5-55.5-154.7 
                  0-77.7-54.5-139.3-127.9-155.2V32c0-17.7-14.3-32-32-32s-32 
@@ -222,14 +357,51 @@
             </svg>
         `;
 
-        // Add a custom container to position the icon
+        // Create the wrapper for the icon and handle events
         const iconWrapper = document.createElement('div');
         iconWrapper.style.position = 'absolute';
         iconWrapper.style.top = '10px'; // Adjust as needed for your card design
         iconWrapper.style.right = '10px'; // Align to the right edge
         iconWrapper.style.zIndex = '10'; // Ensure it is above other elements
+        iconWrapper.style.cursor = 'pointer'; // Indicate interactivity
 
         iconWrapper.appendChild(iconContainer);
+
+        // State variables to track hover state
+        let isHoveringIcon = false;
+        let isHoveringPopout = false;
+        let hideTimeoutIcon = null;
+        let hideTimeoutPopout = null;
+
+        // Function to set isHoveringPopout (passed to popout)
+        const setIsHoveringPopout = (state) => {
+            isHoveringPopout = state;
+        };
+
+        // Event listeners to show/hide the preview
+        iconWrapper.addEventListener('mouseenter', () => {
+            isHoveringIcon = true;
+            if (hideTimeoutIcon) {
+                clearTimeout(hideTimeoutIcon);
+                hideTimeoutIcon = null;
+            }
+            if (newReleases.length > 0) {
+                createScenePreviewPopout(newReleases, iconContainer, setIsHoveringPopout);
+            }
+        });
+
+        iconWrapper.addEventListener('mouseleave', () => {
+            isHoveringIcon = false;
+            hideTimeoutIcon = setTimeout(() => {
+                if (!isHoveringPopout) {
+                    const popout = document.getElementById('scene-preview-popout');
+                    if (popout) {
+                        popout.style.display = 'none';
+                        popout.remove();
+                    }
+                }
+            }, 200); // 200ms delay before hiding
+        });
 
         // Ensure the card's parent container is set to `position: relative` for proper positioning
         const cardSection = card.querySelector('.card-section');
@@ -306,6 +478,8 @@
             cutoffDate.setDate(cutoffDate.getDate() - config.defaultDateRange);
             const filteredReleases = newReleases.filter(scene => new Date(scene.release_date) > cutoffDate);
 
+            console.log(`Performer ID: ${performerId}, StashID: ${stashId}, New Releases: ${filteredReleases.length}`);
+
             if (filteredReleases.length > 0) {
                 // Find the corresponding card
                 const card = Array.from(performerCards).find(card => {
@@ -315,7 +489,7 @@
                 });
 
                 if (card) {
-                    addNewReleaseIcon(card, stashId);
+                    addNewReleaseIcon(card, stashId, filteredReleases);
                 }
             }
 
@@ -338,7 +512,7 @@
         modalBackdrop.style.display = 'flex';
         modalBackdrop.style.justifyContent = 'center';
         modalBackdrop.style.alignItems = 'center';
-        modalBackdrop.style.zIndex = '9999';
+        modalBackdrop.style.zIndex = '10000'; // Higher z-index to overlay everything
         modalBackdrop.style.visibility = 'hidden';
 
         const modal = document.createElement('div');
@@ -449,11 +623,11 @@
      * Initialize Navbar Observer
      */
     const initializeNavbarObserver = () => {
-        
+        console.log("Initializing navbar observer...");
         const observer = new MutationObserver(() => {
             const navbarButtons = document.querySelector('.navbar-buttons');
             if (navbarButtons) {
-                
+                console.log(".navbar-buttons found, disconnecting observer and adding FA icon.");
                 observer.disconnect();
                 const modalInstance = createModal();
                 addNavbarIcon(modalInstance); // Use the new FA icon function
@@ -469,7 +643,7 @@
      * Initialize Page Change Listener using PluginApi.Event
      */
     const initializePageChangeListener = () => {
-        
+        console.log("Initializing page change listener...");
 
         // Listen for page changes
         PluginApi.Event.addEventListener("stash:location", () => {
