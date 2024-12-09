@@ -1,0 +1,6 @@
+name: Stash UI Plugin Example
+description: An attempt to simplify the process of building UI plugins.
+version: 0.1
+ui:
+  javascript:
+    - stashUIPluginExample.js
