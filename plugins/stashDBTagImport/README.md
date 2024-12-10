@@ -12,7 +12,3 @@ Import over 2k curated Tags with Descriptions from StashDB into your Stash to ha
 
 Run the `Import StashDB Tags` plugin task in `Settings > Tasks > Plugin Tasks` to import over 2,000 curated Tags with descriptions from StashDB.
 
-## Configuration
-
-- `graphql_url`: URL of the GraphQL endpoint. Update this variable to match your endpoint. Default: `http://localhost:9999/graphql`
-
