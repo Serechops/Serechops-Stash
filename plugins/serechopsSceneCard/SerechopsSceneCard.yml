@@ -1,0 +1,11 @@
+name: SerechopsSceneCard
+description: Adds a custom scene card via the Plugin API.
+url: https://github.com/Serechops/Serechops-Stash
+version: 1.0
+ui:
+  javascript:
+  - SerechopsSceneCard.js
+  css:
+  - SerechopsSceneCard.css
+
+

@@ -1,0 +1,719 @@
+@font-face {
+  font-family: "Poppins";
+  font-style: normal;
+  font-weight: 300;
+  font-display: swap;
+  src: url("/plugin/components/fonts/poppins-300.woff2") format("woff2");
+}
+/* Root variables for consistent theming */
+:root {
+  --accent-color: #3c91e6;
+  --text-primary: #e5e5e5;
+  --text-muted: #ccc;
+  --bg-primary: #141418;
+  --bg-hover: #1a1d23;
+  --tag-bg: #444;
+  --tag-bg-hover: #555;
+  --max-title-width: 300px;
+  --max-studio-width: 120px;
+  /* New Variables for Popover */
+  --popover-bg: #2c2f33;
+  --popover-text: #ffffff;
+  --popover-border: #141418;
+  --popover-shadow: 0 4px 14px #141418;
+  --badge-font-size: 10px;
+  /* Flex Gap for Popover Content */
+  --popover-flex-gap: 4px;
+  /* Additional Colors */
+  --badge-green: green;
+  --badge-blue: blue;
+  --badge-bronze-gradient: linear-gradient(135deg, #cd7f32, #a77044);
+  --badge-silver-gradient: linear-gradient(135deg, #c0c0c0, #a9a9a9);
+  --badge-ruby-gradient: linear-gradient(135deg, #e0115f, #a40032);
+  --badge-emerald-gradient: linear-gradient(135deg, #50c878, #2e8b57);
+  --badge-gold-gradient: linear-gradient(135deg, #ffd700, #b8860b);
+}
+
+/* ------------------------------
+   Scene Card Base Styles
+-------------------------------- */
+.scene-card {
+  font-family: "Poppins", sans-serif;
+  position: relative;
+  background: var(--bg-primary);
+  border-radius: 12px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  color: var(--text-primary);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.6);
+  border: none;
+  text-align: left;
+}
+
+.scene-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
+}
+
+/* Hide unwanted elements from original Stash UI */
+.scene-card .rating-banner,
+.scene-card .card-controls,
+.scene-card .studio-overlay,
+.scene-card .tag-count,
+.scene-card .performer-count,
+.scene-card .other-copies,
+.scene-card .card-popovers,
+.scene-card hr,
+.scene-card .card-section-title,
+.scene-card .scene-specs-overlay,
+.scene-card .scene-interactive-speed-overlay {
+  display: none !important;
+}
+
+/* Hide hover scrubber and progress bar */
+.progress-bar,
+.hover-scrubber,
+.hover-scrubber-indicator {
+  display: none !important;
+}
+
+.scene-card .video-section {
+  position: relative;
+}
+
+.scene-card-content {
+  overflow: visible;
+}
+
+/* ------------------------------
+   Scene Titles
+-------------------------------- */
+.scene-title-wrapper {
+  display: flex;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.scene-title {
+  color: #ffffff;
+  text-decoration: none;
+  flex: 1;
+  font-size: 16px;
+  font-weight: 600;
+  max-width: var(--max-title-width);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-top: 5px;
+}
+
+.popover-content-container .scene-title {
+  margin-left: 10px;
+}
+
+.custom-popover .scene-title {
+  margin-left: 10px;
+}
+
+/* ------------------------------
+   Performers
+-------------------------------- */
+.scene-card .performers {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  position: relative;
+}
+
+.scene-card .performer-tag {
+  display: inline-block;
+  padding: 1px 8px; /* Increased horizontal padding for better click area */
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #fff;
+  text-decoration: none;
+  background: var(--tag-bg);
+  transition: background 0.3s ease, transform 0.3s ease, border 0.3s ease;
+  cursor: pointer;
+  border: 1px solid transparent;
+  margin-bottom: 5px;
+}
+
+.scene-card .performer-tag:hover {
+  background: var(--tag-bg-hover);
+  border: 1px solid var(--accent-color);
+  transform: scale(1.05);
+}
+
+/* Gender-based colors */
+.scene-card .performer-tag.FEMALE,
+.scene-card .performer-tag.TRANSGENDER_FEMALE {
+  background: #e64a8d;
+}
+
+.scene-card .performer-tag.MALE,
+.scene-card .performer-tag.TRANSGENDER_MALE {
+  background: #3c91e6;
+}
+
+.scene-card .performer-tag.INTERSEX,
+.scene-card .performer-tag.NONBINARY {
+  background: #9e58d2;
+}
+
+.performer-tag-wrapper {
+  position: relative;
+  display: inline-block;
+  overflow: visible;
+}
+
+.performer-hover-image {
+  width: 120px;
+  height: 180px;
+  border-radius: 10px;
+  object-fit: cover;
+  border: 1px solid #ddd;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+}
+
+/* ------------------------------
+   Footer & Studio/Views/Date
+-------------------------------- */
+.footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+  color: var(--text-muted);
+  border-top: 1px solid #2c2f34;
+  padding-top: 8px;
+  margin-top: auto;
+  gap: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.footer .studio {
+  flex: 1;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  text-align: left;
+  position: relative;
+  max-width: var(--max-studio-width);
+}
+
+.footer .studio::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 20px;
+  background: linear-gradient(to left, var(--bg-hover) 0%, transparent 100%);
+  pointer-events: none;
+}
+
+.footer .studio:hover::before {
+  content: attr(data-full-text);
+  position: absolute;
+  left: 0;
+  top: -110%;
+  background: var(--bg-hover);
+  padding: 4px 8px;
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  white-space: nowrap;
+  color: #fff;
+  z-index: 10;
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.footer .studio:hover::before {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.footer .studio a {
+  color: var(--text-muted);
+  text-decoration: none;
+}
+
+.footer .studio a:hover {
+  color: var(--accent-color);
+  text-decoration: underline;
+}
+
+.footer .views {
+  flex: 0 0 auto;
+  text-align: center;
+  color: var(--text-muted);
+}
+
+.footer .date {
+  flex: 1;
+  text-align: right;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: var(--text-muted);
+}
+
+/* ------------------------------
+   Badges
+-------------------------------- */
+.badge {
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: var(--badge-font-size);
+  font-weight: bold;
+  color: white;
+  text-align: center;
+  margin-right: 6px;
+  display: inline-flex; /* Ensures badges align properly */
+  align-items: center;
+}
+
+.badge.green {
+  background-color: #4caf50; /* Updated to a specific green shade */
+}
+
+.badge.blue {
+  background-color: #2196f3; /* Updated to a specific blue shade */
+}
+
+.badge.bronze {
+  background: var(--badge-bronze-gradient);
+}
+
+.badge.silver {
+  background: var(--badge-silver-gradient);
+}
+
+.badge.ruby {
+  background: var(--badge-ruby-gradient);
+}
+
+.badge.emerald {
+  background: var(--badge-emerald-gradient);
+}
+
+.badge.gold {
+  background: var(--badge-gold-gradient);
+}
+
+/* Badge colors for rating system */
+.badge-elite {
+  background: linear-gradient(90deg, #ffd700, #ff8c00);
+  color: #fff;
+}
+
+.badge-superb {
+  background: linear-gradient(90deg, #4caf50, #8bc34a);
+  color: #fff;
+}
+
+.badge-great {
+  background: linear-gradient(90deg, #2196f3, #03a9f4);
+  color: #fff;
+}
+
+.badge-decent {
+  background: linear-gradient(90deg, #9c27b0, #673ab7);
+  color: #fff;
+}
+
+.badge-awful {
+  background: linear-gradient(90deg, #f44336, #e91e63);
+  color: #fff;
+}
+
+.badge-metallic {
+  background-color: #b0c4de; /* LightSteelBlue */
+}
+
+/* ------------------------------
+   Tag Chips & More Indicator
+-------------------------------- */
+.tag-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.tag-chip-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.tag-chip {
+  background-color: #444;
+  color: #fff;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+  text-transform: capitalize;
+  white-space: nowrap;
+  text-decoration: none;
+  transition: background-color 0.3s ease, transform 0.3s ease;
+  display: inline-flex; /* Ensures proper alignment */
+  align-items: center;
+}
+
+.tag-chip:hover {
+  background-color: #555;
+  transform: scale(1.05);
+  text-decoration: none;
+}
+
+/* More indicator for tags/performers */
+.more-indicator {
+  display: inline-block;
+  padding: 2px 6px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #fff;
+  background-color: #444;
+  border-radius: 12px;
+  text-decoration: none;
+  margin-left: 6px;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.3s ease;
+}
+
+.more-indicator:hover {
+  background-color: #555;
+  transform: scale(1.05);
+}
+
+/* ------------------------------
+   More List Popover
+-------------------------------- */
+.more-list-popover {
+  background-color: var(--popover-bg);
+  color: var(--popover-text);
+  border: 1px solid var(--popover-border);
+  border-radius: 8px;
+  padding: 12px; /* Increased padding for better spacing */
+  box-shadow: var(--popover-shadow);
+  max-width: 250px;
+  max-height: 400px; /* Increased max-height for more content */
+  overflow-y: auto;
+  font-size: 12px;
+}
+
+.more-list-popover-title {
+  margin-top: 0;
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 2px;
+  text-align: center; /* Centered title for better aesthetics */
+}
+
+.more-list-popover-search {
+  width: 100%;
+  padding: 6px 8px; /* Increased padding for better usability */
+  margin-bottom: 12px; /* Increased margin for separation */
+  border: 1px solid #555;
+  border-radius: 4px;
+  background-color: #333;
+  color: #fff;
+  box-sizing: border-box; /* Ensures padding doesn't affect width */
+}
+
+.more-list-popover-search::placeholder {
+  color: #aaa;
+}
+
+.more-list-scroll {
+  display: flex;
+  flex-direction: column;
+  gap: 6px; /* Added gap for spacing between tag chips */
+}
+
+.no-results {
+  color: #aaa;
+  text-align: center;
+  font-size: 12px;
+  padding: 8px;
+}
+
+/* ------------------------------
+   Resolution Row
+-------------------------------- */
+.tag-resolution-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 10px;
+}
+
+/* ------------------------------
+   Combined Popover & Recommendations
+-------------------------------- */
+.custom-popover {
+  background-color: var(--popover-bg);
+  color: var(--popover-text);
+  border: 1px solid var(--popover-border);
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: var(--popover-shadow);
+  width: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--popover-flex-gap);
+  align-items: flex-start;
+}
+
+.popover-content-container {
+  display: flex;
+  flex-direction: row;
+  gap: var(--popover-flex-gap);
+  width: 100%;
+}
+
+.popover-flex-container {
+  display: flex;
+  flex-direction: row;
+  gap: var(--popover-flex-gap);
+  align-items: flex-start;
+  width: 100%;
+}
+
+.recommendation-popover {
+  display: flex;
+  flex-direction: column;
+  gap: 2px; /* Increased gap for better spacing */
+}
+
+.recommended-scene-item {
+  display: flex;
+  align-items: center;
+  gap: 4px; /* Increased gap for better spacing */
+  padding: 6px;
+  border-radius: 8px;
+  background-color: var(--bg-hover);
+  transition: background-color 0.3s ease;
+  width: 100%;
+  margin-left: 5px;
+  margin-top: 2px;
+  margin-bottom: 2px;
+}
+
+.related-scenes-popover .recommended-scene-item {
+  display: flex;
+  align-items: center;
+  gap: 4px; /* Increased gap for better spacing */
+  padding: 6px;
+  border-radius: 8px;
+  background-color: var(--bg-hover);
+  transition: background-color 0.3s ease;
+  width: 100%;
+  margin-left: 5px;
+  margin-top: 2px;
+  margin-bottom: 2px;
+}
+
+.recommended-scene-item:hover {
+  background-color: var(--bg-primary);
+}
+
+.scene-link {
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+  color: inherit;
+}
+
+.scene-thumbnail-wrapper {
+  position: relative;
+  width: 100px;
+  height: 60px;
+  flex-shrink: 0;
+}
+
+.scene-thumbnail {
+  width: 100%;
+  height: 100%;
+  border-radius: 8px;
+  object-fit: cover;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  transition: opacity 0.3s ease;
+}
+
+.video-thumbnail {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 8px;
+  object-fit: cover;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.recommended-scene-item:hover .video-thumbnail {
+  opacity: 1;
+}
+
+.scene-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.popover-title {
+  margin-left: 10px !important;
+}
+
+.popover-divider {
+  margin: 0 0 2px 0;
+  border: 1px dashed white;
+  margin-left: 10px;
+  margin-bottom: 4px;
+}
+
+/* ------------------------------
+   Action Buttons Styles
+-------------------------------- */
+.scene-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.action-button {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 16px;
+  transition: color 0.3s ease, transform 0.3s ease;
+}
+
+.action-button:hover {
+  color: var(--accent-color);
+  transform: scale(1.1);
+}
+
+.favorite-button.favorited {
+  color: #e74c3c; /* Red color when favorited */
+}
+
+.favorite-button.favorited .fas.fa-heart {
+  color: #e74c3c;
+}
+
+/* ------------------------------
+   TagChipWithPopover Specific Styles
+-------------------------------- */
+.tag-chip-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.tag-chip {
+  background-color: #444;
+  color: #fff;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+  text-transform: capitalize;
+  white-space: nowrap;
+  text-decoration: none;
+  transition: background-color 0.3s ease, transform 0.3s ease;
+  display: inline-flex; /* Ensures proper alignment */
+  align-items: center;
+}
+
+.tag-chip:hover {
+  background-color: #555;
+  transform: scale(1.05);
+  text-decoration: none;
+}
+
+/* ------------------------------
+   MoreListPopover Enhancements
+-------------------------------- */
+/* Ensures popover appears above other elements */
+.popover {
+  z-index: 1000;
+}
+
+/* Scrollbar Styling */
+.more-list-popover-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.more-list-popover-content::-webkit-scrollbar-track {
+  background: #2c2f33;
+}
+
+.more-list-popover-content::-webkit-scrollbar-thumb {
+  background: #555;
+  border-radius: 4px;
+}
+
+.more-list-popover-content::-webkit-scrollbar-thumb:hover {
+  background: #777;
+}
+
+/* ------------------------------
+   Responsive Design Enhancements
+-------------------------------- */
+@media (max-width: 768px) {
+  .custom-popover {
+    width: 90vw;
+    max-width: 90vw;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+  .popover-flex-container {
+    flex-direction: column;
+    align-items: center;
+  }
+  .performer-hover-image {
+    width: 60px;
+    height: 90px;
+  }
+  .popover-content-container {
+    flex-direction: column;
+    align-items: center;
+  }
+  .recommended-scene-item {
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+  }
+  .scene-title {
+    text-align: center;
+    margin-left: 0;
+  }
+  .popover-title {
+    font-size: 16px;
+    margin-left: 10px !important;
+  }
+  .popover-divider {
+    margin: 0 0 2px 0;
+  }
+  .tag-details p {
+    margin: 0;
+    font-size: 14px;
+  }
+}
+
+/*# sourceMappingURL=testReact.css.map */
