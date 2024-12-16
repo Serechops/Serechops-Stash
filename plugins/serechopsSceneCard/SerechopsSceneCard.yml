@@ -1,12 +1,14 @@
 name: SerechopsSceneCard
 description: Adds a custom scene card via the Plugin API.
 url: https://github.com/Serechops/Serechops-Stash
-version: 1.5
+version: 1.6
 ui:
   javascript:
     - SerechopsSceneCard.js
   css:
     - SerechopsSceneCard.css
+  assets:
+    /: .
 settings:
   Badges:
     displayName: Enable Badges
@@ -47,4 +49,8 @@ settings:
   ShowHoverScrubberIndicator:
     displayName: Show Hover Scrubber Indicator
     description: Show the Hover Scrubber Indicator.
+    type: BOOLEAN
+  CustomStudioOverlay:
+    displayName: Custom Studio Overlay
+    description: Move the studio overlay down into the card section.
     type: BOOLEAN
