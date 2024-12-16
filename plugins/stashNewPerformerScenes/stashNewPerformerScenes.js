@@ -454,7 +454,7 @@
         // Construct the href by taking the first endpoint and stash_id
         const firstEndpoint = Object.keys(stashMap)[0];
         const firstStashId = stashMap[firstEndpoint];
-        iconContainer.href = `${firstEndpoint}/performers/${firstStashId}`;
+        iconContainer.href = `${firstEndpoint.replace('/graphql', '')}/performers/${firstStashId}`;
         iconContainer.target = '_blank';
         iconContainer.rel = 'noopener noreferrer';
         iconContainer.title = 'New Release Available!';
