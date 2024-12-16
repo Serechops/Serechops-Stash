@@ -599,4 +599,4 @@
     // 9. Remove 'SceneCard.Popovers' if not needed
     patch.instead('SceneCard.Popovers', () => null);
 })();
-//# sourceMappingURL=serechopsSceneCard.js.map
+//# sourceMappingURL=SerechopsSceneCard.js.map
