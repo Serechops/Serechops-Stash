@@ -19,7 +19,7 @@ function customizeDonateButton() {
 
         // Create a new link element for the custom support button
         const customDonateLink = document.createElement('a');
-        customDonateLink.href = 'https://www.patreon.com/serechops/membership';
+        customDonateLink.href = 'https://www.patreon.com/creat1veb1te/membership';
         customDonateLink.setAttribute('target', '_blank');
         customDonateLink.classList.add('nav-utility', 'nav-link');
 
