@@ -4,9 +4,9 @@ url: https://github.com/Serechops/Serechops-Stash
 version: 1.3
 ui:
   javascript:
-  - serechopsSceneCard.js
+  - SerechopsSceneCard.js
   css:
-  - serechopsSceneCard.css
+  - SerechopsSceneCard.css
 settings:
   Badges:
       displayName: Badges
