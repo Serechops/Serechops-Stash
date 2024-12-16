@@ -48,10 +48,10 @@
     }
   `;
     const DEFAULT_CONFIG = {
-        enablePerformerList: true,
-        enableTagChips: true,
-        enableBadges: true,
-        enableFooter: true,
+        enablePerformerList: false,
+        enableTagChips: false,
+        enableBadges: false,
+        enableFooter: false,
     };
     // 3. Create Context for Configuration
     const SceneCardConfigContext = createContext(DEFAULT_CONFIG);
