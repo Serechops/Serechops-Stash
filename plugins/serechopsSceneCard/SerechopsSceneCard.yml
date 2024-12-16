@@ -1,7 +1,7 @@
 name: SerechopsSceneCard
 description: Adds a custom scene card via the Plugin API.
 url: https://github.com/Serechops/Serechops-Stash
-version: 1.4
+version: 1.5
 ui:
   javascript:
     - SerechopsSceneCard.js
@@ -9,18 +9,42 @@ ui:
     - SerechopsSceneCard.css
 settings:
   Badges:
-    displayName: Badges
+    displayName: Enable Badges
     description: Show badges on the custom scene cards.
     type: BOOLEAN
   EnableFooter:
-    displayName: EnableFooter
+    displayName: Enable Footer
     description: Show the custom scene card footer.
     type: BOOLEAN
   EnablePerformerList:
-    displayName: EnablePerformerList
-    description: Show the custom performer list.
+    displayName: Enable Custom Performer Chips
+    description: Show the custom performer chips.
     type: BOOLEAN
   EnableTagChips:
-    displayName: EnableTagChips
+    displayName: Enable Tag Chips
     description: Show the custom tag chips.
+    type: BOOLEAN
+  ShowStudioOverlay:
+    displayName: Show Studio Overlay
+    description: Show the studio logo.
+    type: BOOLEAN
+  ShowSceneSpecsOverlay:
+    displayName: Show Scene Specs Overlay
+    description: Show the scene specs.
+    type: BOOLEAN
+  ShowSceneInteractiveSpeedOverlay:
+    displayName: Show Scene Interactive Speed Overlay
+    description: Show the Scene Interactive Speed Overlay.
+    type: BOOLEAN
+  ShowProgressBar:
+    displayName: Show Progress Bar
+    description: Show the Progress Bar.
+    type: BOOLEAN
+  ShowHoverScrubber:
+    displayName: Show Hover Scrubber
+    description: Show the Hover Scrubber.
+    type: BOOLEAN
+  ShowHoverScrubberIndicator:
+    displayName: Show Hover Scrubber Indicator
+    description: Show the Hover Scrubber Indicator.
     type: BOOLEAN

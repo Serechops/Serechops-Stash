@@ -52,6 +52,13 @@
         enableTagChips: false,
         enableBadges: false,
         enableFooter: false,
+        // New Configuration Defaults
+        showStudioOverlay: false,
+        showSceneSpecsOverlay: false,
+        showSceneInteractiveSpeedOverlay: false,
+        showProgressBar: false,
+        showHoverScrubber: false,
+        showHoverScrubberIndicator: false,
     };
     // 3. Create Context for Configuration
     const SceneCardConfigContext = createContext(DEFAULT_CONFIG);
@@ -70,7 +77,7 @@
         }
       `;
             const fetchConfig = async () => {
-                var _a, _b, _c, _d, _e, _f;
+                var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m;
                 try {
                     const graphqlEndpoint = `${window.location.origin}/graphql`;
                     const response = await fetch(graphqlEndpoint, {
@@ -89,6 +96,13 @@
                         enableTagChips: (_d = sceneCardPluginConfig['EnableTagChips']) !== null && _d !== void 0 ? _d : DEFAULT_CONFIG.enableTagChips,
                         enableBadges: (_e = sceneCardPluginConfig['Badges']) !== null && _e !== void 0 ? _e : DEFAULT_CONFIG.enableBadges,
                         enableFooter: (_f = sceneCardPluginConfig['EnableFooter']) !== null && _f !== void 0 ? _f : DEFAULT_CONFIG.enableFooter,
+                        // Map new configuration fields
+                        showStudioOverlay: (_g = sceneCardPluginConfig['ShowStudioOverlay']) !== null && _g !== void 0 ? _g : DEFAULT_CONFIG.showStudioOverlay,
+                        showSceneSpecsOverlay: (_h = sceneCardPluginConfig['ShowSceneSpecsOverlay']) !== null && _h !== void 0 ? _h : DEFAULT_CONFIG.showSceneSpecsOverlay,
+                        showSceneInteractiveSpeedOverlay: (_j = sceneCardPluginConfig['ShowSceneInteractiveSpeedOverlay']) !== null && _j !== void 0 ? _j : DEFAULT_CONFIG.showSceneInteractiveSpeedOverlay,
+                        showProgressBar: (_k = sceneCardPluginConfig['ShowProgressBar']) !== null && _k !== void 0 ? _k : DEFAULT_CONFIG.showProgressBar,
+                        showHoverScrubber: (_l = sceneCardPluginConfig['ShowHoverScrubber']) !== null && _l !== void 0 ? _l : DEFAULT_CONFIG.showHoverScrubber,
+                        showHoverScrubberIndicator: (_m = sceneCardPluginConfig['ShowHoverScrubberIndicator']) !== null && _m !== void 0 ? _m : DEFAULT_CONFIG.showHoverScrubberIndicator,
                     };
                     setConfig({
                         ...DEFAULT_CONFIG,
@@ -578,6 +592,43 @@
                 ? [{ label: resolutionBadge.label, color: resolutionBadge.color }]
                 : []),
         ];
+        // 6.10.a. Inject Dynamic CSS Based on Configuration
+        useEffect(() => {
+            const styleId = 'serechops-plugin-scene-card-overrides';
+            let styleElement = document.getElementById(styleId);
+            if (!styleElement) {
+                styleElement = document.createElement('style');
+                styleElement.id = styleId;
+                document.head.appendChild(styleElement);
+            }
+            let css = '';
+            if (config.showStudioOverlay) {
+                css += `.scene-card .studio-overlay { display: block !important; }`;
+            }
+            if (config.showSceneSpecsOverlay) {
+                css += `.scene-card .scene-specs-overlay { display: block !important; }`;
+            }
+            if (config.showSceneInteractiveSpeedOverlay) {
+                css += `.scene-card .scene-interactive-speed-overlay { display: block !important; }`;
+            }
+            if (config.showProgressBar) {
+                css += `.progress-bar { display: block !important; }`;
+            }
+            if (config.showHoverScrubber) {
+                css += `.hover-scrubber { display: block !important; }`;
+            }
+            if (config.showHoverScrubberIndicator) {
+                css += `.hover-scrubber-indicator { display: block !important; }`;
+            }
+            styleElement.innerHTML = css;
+        }, [
+            config.showStudioOverlay,
+            config.showSceneSpecsOverlay,
+            config.showSceneInteractiveSpeedOverlay,
+            config.showProgressBar,
+            config.showHoverScrubber,
+            config.showHoverScrubberIndicator,
+        ]);
         return (React.createElement("div", { className: "scene-card-content" },
             config.enableBadges && (React.createElement("div", { className: "badges" }, badges.map((badge, index) => (React.createElement("span", { key: index, className: `badge ${badge.color}` }, badge.label))))),
             React.createElement("div", { className: "scene-title-wrapper" },
