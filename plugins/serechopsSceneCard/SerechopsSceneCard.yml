@@ -1,11 +1,11 @@
-name: SerechopsSceneCard
-description: Adds a custom scene card via the Plugin API.
-url: https://github.com/Serechops/Serechops-Stash
+name: Test React
+description: Adds a React component
+url: https://github.com/stashapp/CommunityScripts
 version: 1.0
 ui:
   javascript:
-  - SerechopsSceneCard.js
+  - testReact.js
   css:
-  - SerechopsSceneCard.css
+  - testReact.css
 
 

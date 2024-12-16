@@ -2,12 +2,12 @@
 (function () {
     const PluginApi = window.PluginApi;
     const React = PluginApi.React;
-    const { useState, useEffect, useRef } = React;
+    const { useState, useEffect, useRef, createContext, useContext } = React;
     const { patch } = PluginApi;
     const { Overlay, Popover, PopoverContent } = PluginApi.libraries.Bootstrap;
     const { Link } = PluginApi.libraries.ReactRouterDOM;
     const { FormattedDate } = PluginApi.libraries.Intl;
-    // 1. Define Queries
+    // 1. Define GraphQL Queries
     const FIND_PERFORMER_QUERY = `
     query FindPerformer($id: ID!) {
       findPerformer(id: $id) {
@@ -47,6 +47,80 @@
       }
     }
   `;
+    const DEFAULT_CONFIG = {
+        enablePerformerList: true,
+        enableTagChips: true,
+        enableBadges: true,
+        enableFooter: true,
+    };
+    // 3. Create Context for Configuration
+    const SceneCardConfigContext = createContext(DEFAULT_CONFIG);
+    // 4. Provider Component to Fetch and Provide Configuration
+    const SceneCardConfigProvider = ({ children, }) => {
+        const [config, setConfig] = useState(DEFAULT_CONFIG);
+        const [loading, setLoading] = useState(true);
+        const [error, setError] = useState(null);
+        useEffect(() => {
+            let isMounted = true;
+            const FETCH_CONFIG_QUERY = `
+        query Configuration {
+          configuration {
+            plugins
+          }
+        }
+      `;
+            const fetchConfig = async () => {
+                var _a, _b, _c, _d, _e, _f;
+                try {
+                    const graphqlEndpoint = `${window.location.origin}/graphql`;
+                    const response = await fetch(graphqlEndpoint, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ query: FETCH_CONFIG_QUERY }),
+                    });
+                    const result = await response.json();
+                    if (!isMounted)
+                        return;
+                    const plugins = ((_b = (_a = result === null || result === void 0 ? void 0 : result.data) === null || _a === void 0 ? void 0 : _a.configuration) === null || _b === void 0 ? void 0 : _b.plugins) || {};
+                    const sceneCardPluginConfig = plugins['SerechopsSceneCard'] || {};
+                    // Map configuration fields to match SceneCardConfig interface
+                    const mappedConfig = {
+                        enablePerformerList: (_c = sceneCardPluginConfig['EnablePerformerList']) !== null && _c !== void 0 ? _c : DEFAULT_CONFIG.enablePerformerList,
+                        enableTagChips: (_d = sceneCardPluginConfig['EnableTagChips']) !== null && _d !== void 0 ? _d : DEFAULT_CONFIG.enableTagChips,
+                        enableBadges: (_e = sceneCardPluginConfig['Badges']) !== null && _e !== void 0 ? _e : DEFAULT_CONFIG.enableBadges,
+                        enableFooter: (_f = sceneCardPluginConfig['EnableFooter']) !== null && _f !== void 0 ? _f : DEFAULT_CONFIG.enableFooter,
+                    };
+                    setConfig({
+                        ...DEFAULT_CONFIG,
+                        ...mappedConfig,
+                    });
+                    setLoading(false);
+                }
+                catch (err) {
+                    console.error('Error fetching SceneCard configuration:', err);
+                    if (isMounted) {
+                        setError('Failed to load configuration.');
+                        setLoading(false);
+                    }
+                }
+            };
+            fetchConfig();
+            return () => {
+                isMounted = false;
+            };
+        }, []);
+        if (loading) {
+            // Optionally, render a loader or nothing while loading
+            return null;
+        }
+        if (error) {
+            // Optionally, render an error message or fallback UI
+            return null;
+        }
+        return (React.createElement(SceneCardConfigContext.Provider, { value: config }, children));
+    };
+    // 5. Custom Hook to Access Configuration
+    const useSceneCardConfig = () => useContext(SceneCardConfigContext);
     const Footer = ({ date, views, studio }) => {
         return (React.createElement("div", { className: "footer" },
             React.createElement("span", { className: "studio" }, studio && (React.createElement(Link, { to: `/studios/${studio.id}`, onMouseDown: (e) => e.stopPropagation() }, studio.name))),
@@ -224,7 +298,7 @@
             React.createElement("hr", { className: "popover-divider" }),
             scenes && scenes.map((sc) => React.createElement(SceneItem, { key: sc.id, scene: sc }))));
     };
-    const MoreListPopover = ({ items, show, target, onHide, title, }) => {
+    const MoreListPopover = ({ items, show, target, onHide, title, renderItem, noItemsMessage = 'No items found.', }) => {
         const popoverRef = useRef(null);
         const [searchTerm, setSearchTerm] = useState('');
         const hideTimeoutRef = useRef(null);
@@ -265,8 +339,8 @@
                     React.createElement("div", { className: "popover-flex-container" },
                         React.createElement("div", { style: { width: '100%' } },
                             React.createElement("h4", { className: "popover-title" }, title),
-                            React.createElement("input", { type: "text", className: "more-list-popover-search", placeholder: "Search tags...", value: searchTerm, onChange: (e) => setSearchTerm(e.target.value), onMouseDown: (e) => e.stopPropagation() }),
-                            React.createElement("div", { className: "more-list-scroll" }, filteredItems.length > 0 ? (filteredItems.map((item) => (React.createElement(TagChipWithPopover, { key: item.id, tag: item })))) : (React.createElement("div", { className: "no-results" }, "No tags found.")))))))));
+                            React.createElement("input", { type: "text", className: "more-list-popover-search", placeholder: "Search...", value: searchTerm, onChange: (e) => setSearchTerm(e.target.value), onMouseDown: (e) => e.stopPropagation() }),
+                            React.createElement("div", { className: "more-list-scroll" }, filteredItems.length > 0 ? (filteredItems.map((item) => renderItem(item))) : (React.createElement("div", { className: "no-results" }, noItemsMessage)))))))));
     };
     const PerformerTag = ({ performer, currentSceneId, }) => {
         const imageSrc = performer.image_path || '/ui/images/icon_person.svg';
@@ -379,7 +453,7 @@
             setMoreTarget(e.currentTarget);
             setShowMore(true);
         };
-        const handleMouseLeave = (e) => {
+        const handleMouseLeave = () => {
             setShowMore(false);
         };
         return (React.createElement("div", { className: "tag-chips-container", ref: containerRef, onMouseLeave: handleMouseLeave },
@@ -389,7 +463,7 @@
                     "+",
                     tags.length - 2,
                     " more"))),
-            hasMore && (React.createElement(MoreListPopover, { items: moreItems, show: showMore, target: moreTarget, onHide: () => setShowMore(false), title: "All Tags" }))));
+            hasMore && (React.createElement(MoreListPopover, { items: moreItems, show: showMore, target: moreTarget, onHide: () => setShowMore(false), title: "All Tags", renderItem: (tag) => React.createElement(TagChipWithPopover, { key: tag.id, tag: tag }), noItemsMessage: "No tags found." }))));
     };
     const PerformerList = ({ performers, currentSceneId, }) => {
         const [showMore, setShowMore] = useState(false);
@@ -397,26 +471,24 @@
         const hasMore = performers.length > 2;
         const displayed = performers.slice(0, 2);
         const moreItems = performers.slice(2); // Remaining performers
-        const containerRef = useRef(null);
         const handleMouseEnter = (e) => {
             setMoreTarget(e.currentTarget);
             setShowMore(true);
         };
-        const handleMouseLeave = (e) => {
-            setShowMore(false);
-        };
-        return (React.createElement("div", { className: "performers-container", ref: containerRef, onMouseLeave: handleMouseLeave },
+        // Removed handleMouseLeave from here
+        return (React.createElement("div", { className: "performers-container" },
             React.createElement("div", { className: "performers" },
                 displayed.map((performer) => (React.createElement(PerformerTag, { performer: performer, key: performer.id, currentSceneId: currentSceneId }))),
                 hasMore && (React.createElement("span", { className: "more-indicator", onMouseEnter: handleMouseEnter },
                     "+",
                     performers.length - 2,
                     " more"))),
-            hasMore && (React.createElement(MoreListPopover, { items: moreItems.map((p) => ({ id: p.id, name: p.name })), show: showMore, target: moreTarget, onHide: () => setShowMore(false), title: "All Performers" }))));
+            hasMore && (React.createElement(MoreListPopover, { items: moreItems, show: showMore, target: moreTarget, onHide: () => setShowMore(false), title: "All Performers", renderItem: (performer) => (React.createElement(PerformerTag, { performer: performer, key: performer.id, currentSceneId: currentSceneId })), noItemsMessage: "No performers found." }))));
     };
-    // 2.10. SceneCardDetails Component
+    // 6.10. SceneCardDetails Component (Updated with Config)
     const SceneCardDetails = ({ scene }) => {
         var _a, _b;
+        const config = useSceneCardConfig();
         const tags = scene.tags
             ? scene.tags.map((tag) => ({ id: tag.id, name: tag.name }))
             : [];
@@ -491,27 +563,40 @@
         }
         const isPopular = scene.play_count && scene.play_count >= 10 ? true : false;
         const badges = [
-            ...(isNew ? [{ label: 'New', color: 'green' }] : []),
-            ...(isPopular ? [{ label: 'Popular', color: 'blue' }] : []),
-            ...(ratingBadge ? [ratingBadge] : []),
-            ...(resolutionBadge && highestHeight >= 720
+            ...(config.enableBadges
+                ? isNew
+                    ? [{ label: 'New', color: 'green' }]
+                    : []
+                : []),
+            ...(config.enableBadges
+                ? isPopular
+                    ? [{ label: 'Popular', color: 'blue' }]
+                    : []
+                : []),
+            ...(config.enableBadges && ratingBadge ? [ratingBadge] : []),
+            ...(config.enableBadges && resolutionBadge && highestHeight >= 720
                 ? [{ label: resolutionBadge.label, color: resolutionBadge.color }]
                 : []),
         ];
         return (React.createElement("div", { className: "scene-card-content" },
-            React.createElement("div", { className: "badges" }, badges.map((badge, index) => (React.createElement("span", { key: index, className: `badge ${badge.color}` }, badge.label)))),
+            config.enableBadges && (React.createElement("div", { className: "badges" }, badges.map((badge, index) => (React.createElement("span", { key: index, className: `badge ${badge.color}` }, badge.label))))),
             React.createElement("div", { className: "scene-title-wrapper" },
                 React.createElement(Link, { className: "scene-title", to: `/scenes/${scene.id}`, "data-full-text": scene.title, onMouseDown: (e) => e.stopPropagation() }, scene.title || 'Untitled Scene')),
-            React.createElement(PerformerList, { performers: scene.performers || [], currentSceneId: scene.id }),
-            React.createElement(Footer, { date: ((_b = scene.date) === null || _b === void 0 ? void 0 : _b.toString()) || '', views: scene.play_count || 0, studio: scene.studio || { id: '', name: 'Unknown Studio' } }),
-            React.createElement("div", { className: "tag-resolution-row" },
-                React.createElement(TagChips, { tags: tags }))));
+            config.enablePerformerList && (React.createElement(PerformerList, { performers: scene.performers || [], currentSceneId: scene.id })),
+            config.enableFooter && (React.createElement(Footer, { date: ((_b = scene.date) === null || _b === void 0 ? void 0 : _b.toString()) || '', views: scene.play_count || 0, studio: scene.studio || { id: '', name: 'Unknown Studio' } })),
+            config.enableTagChips && (React.createElement("div", { className: "tag-resolution-row" },
+                React.createElement(TagChips, { tags: tags })))));
     };
-    // 2.11. Patch the 'SceneCard.Details' component
+    // 7. Wrap SceneCardDetails with Configuration Provider
+    const WrappedSceneCardDetails = (props) => {
+        return (React.createElement(SceneCardConfigProvider, null,
+            React.createElement(SceneCardDetails, { scene: props.scene })));
+    };
+    // 8. Patch the 'SceneCard.Details' component with the Wrapped Component
     patch.instead('SceneCard.Details', (props) => {
-        return React.createElement(SceneCardDetails, { scene: props.scene });
+        return React.createElement(WrappedSceneCardDetails, { ...props });
     });
-    // 2.12. Remove 'SceneCard.Popovers' if not needed
+    // 9. Remove 'SceneCard.Popovers' if not needed
     patch.instead('SceneCard.Popovers', () => null);
 })();
-//# sourceMappingURL=testReact.js.map
+//# sourceMappingURL=serechopsSceneCard.js.map

@@ -59,7 +59,6 @@
 
 /* Hide unwanted elements from original Stash UI */
 .scene-card .rating-banner,
-.scene-card .card-controls,
 .scene-card .studio-overlay,
 .scene-card .tag-count,
 .scene-card .performer-count,
@@ -170,6 +169,42 @@
   overflow: visible;
 }
 
+.performer-tag-wrapper .performer-tag.FEMALE,
+.performer-tag-wrapper .performer-tag.TRANSGENDER_FEMALE {
+  background: #e64a8d;
+}
+
+.performer-tag-wrapper .performer-tag.MALE,
+.performer-tag-wrapper .performer-tag.TRANSGENDER_MALE {
+  background: #3c91e6;
+}
+
+.performer-tag-wrapper .performer-tag.INTERSEX,
+.performer-tag-wrapper .performer-tag.NONBINARY {
+  background: #9e58d2;
+}
+
+.performer-tag-wrapper .performer-tag {
+  display: inline-block;
+  padding: 1px 8px; /* Increased horizontal padding for better click area */
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #fff;
+  text-decoration: none;
+  background: var(--tag-bg);
+  transition: background 0.3s ease, transform 0.3s ease, border 0.3s ease;
+  cursor: pointer;
+  border: 1px solid transparent;
+  margin-bottom: 5px;
+}
+
+.performer-tag-wrapper .performer-tag:hover {
+  background: var(--tag-bg-hover);
+  border: 1px solid var(--accent-color);
+  transform: scale(1.05);
+}
+
 .performer-hover-image {
   width: 120px;
   height: 180px;
@@ -267,7 +302,7 @@
 /* ------------------------------
    Badges
 -------------------------------- */
-.scene-card .badge {
+.badge {
   padding: 4px 12px;
   border-radius: 20px;
   font-size: var(--badge-font-size);
@@ -716,4 +751,4 @@
   }
 }
 
-/*# sourceMappingURL=testReact.css.map */
+/*# sourceMappingURL=serechopsSceneCard.css.map */
