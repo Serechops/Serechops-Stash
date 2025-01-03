@@ -44,8 +44,18 @@
 
     // Apply styles to tags
     const applyTagStyles = (tagElement) => {
-        const tagName = tagElement.textContent.trim();
+        const div = tagElement.querySelector("a > div") ?? false;
+        var tagName;
+        if (div) {
+            tagName = div.childNodes[0].textContent.trim();
+        } else {
+            tagName = tagElement.innerText.trim();
+        }
         console.log(`Processing tag: "${tagName}"`);
+
+        // selects the bar and tree icon in parent tagElements (found in the tag page)
+        const verticalLine = tagElement.querySelector("span > span") ?? false;
+        const svg = tagElement.querySelector("path") ?? false;
 
         // Check regex templates first
         for (let template of storedRegexTemplates) {
@@ -63,6 +73,10 @@
                     Object.entries(cssTemplate).forEach(([key, value]) => {
                         tagElement.style[key] = value;
                     });
+                    if (verticalLine) {
+                        verticalLine.style.color = tagElement.style.color;
+                        svg.style.color = tagElement.style.color;
+                    }
                     return; // Style applied
                 } else {
                     console.warn(`CSS template "${template.cssTemplateName}" not found`);
@@ -77,13 +91,17 @@
             tagElement.style.color = "#FFFFFF";
             tagElement.style.borderRadius = "5px";
             tagElement.style.padding = "2px 6px";
+            if (verticalLine) {
+                verticalLine.style.color = tagElement.style.color;
+                svg.style.color = tagElement.style.color;
+            }
         }
     };
 
     // Colorize tags in the DOM
     const colorizeTags = () => {
         requestAnimationFrame(() => {
-            document.querySelectorAll(".react-select__multi-value__label, .tag-item").forEach(tag => {
+            document.querySelectorAll(".react-select__multi-value__label, .tag-item, .wall-tag").forEach(tag => { // added wall-tag from marker walls for completeness
                 applyTagStyles(tag);
             });
         });
