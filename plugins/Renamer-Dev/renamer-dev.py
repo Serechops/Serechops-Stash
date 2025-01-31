@@ -146,6 +146,48 @@ def move_associated_files(directory, new_directory, filename_base, dry_run, scen
                 if scene_id:
                     ext_log.info(f"Moved associated file", extra={"original_path": str(item), "new_path": str(new_associated_file), "scene_id": scene_id})
 
+def get_unique_path(target_path):
+    """Generate a unique path if target already exists by adding a number suffix."""
+    if not target_path.exists():
+        return target_path
+    
+    directory = target_path.parent
+    name = target_path.stem
+    extension = target_path.suffix
+    counter = 1
+    
+    while True:
+        new_path = directory / f"{name} ({counter}){extension}"
+        if not new_path.exists():
+            return new_path
+        counter += 1
+
+def safe_file_operation(source_path, target_path, operation='move', dry_run=False):
+    """Safely perform file operations with collision handling."""
+    if not source_path.exists():
+        logger.error(f"Source file not found: {source_path}")
+        return None
+        
+    unique_target = get_unique_path(target_path)
+    
+    if unique_target != target_path:
+        logger.info(f"File already exists at {target_path}, using {unique_target} instead")
+    
+    if dry_run:
+        logger.info(f"Dry run: Would {operation} '{source_path}' to '{unique_target}'")
+        return unique_target
+        
+    try:
+        if operation == 'move':
+            shutil.move(str(source_path), str(unique_target))
+        else:  # rename
+            source_path.rename(unique_target)
+        logger.info(f"Successfully {operation}d file to '{unique_target}'")
+        return unique_target
+    except Exception as e:
+        logger.error(f"Failed to {operation} file: {str(e)}")
+        return None
+
 def process_files(scene, new_filename, move, rename, dry_run):
     original_path = Path(scene['file_path'])
     new_path = calculate_new_path(original_path, new_filename)
@@ -154,7 +196,7 @@ def process_files(scene, new_filename, move, rename, dry_run):
     new_filename_base = new_path.stem
     new_directory = new_path.parent
 
-    # Check if the file is already in the target directory
+    # Check if the file is already in the correct location
     if original_path.parent == new_path.parent:
         if dry_run:
             logger.info(f"Dry run: File '{original_path}' is already in the correct directory.")
@@ -162,29 +204,24 @@ def process_files(scene, new_filename, move, rename, dry_run):
             logger.info(f"File '{original_path}' is already in the correct directory.")
         move = False
 
-    # Check if the filename already matches the new filename
-    if original_path.name == new_path.name:
-        if dry_run:
-            logger.info(f"Dry run: File '{original_path}' already has the correct filename.")
-        else:
-            logger.info(f"File '{original_path}' already has the correct filename.")
-        rename = False
-
     if rename:
         rename_associated_files(directory, filename_base, new_filename_base, dry_run)
 
-    if dry_run:
-        logger.info(f"Dry run: Would {'move' if move else 'rename'} main file to '{new_path}'")
-    else:
-        if move:
-            shutil.move(str(original_path), str(new_path))
-            logger.info(f"Moved main file to '{new_path}'")
-            ext_log.info(f"Moved main file", extra={"original_path": str(original_path), "new_path": str(new_path)})
+    if move:
+        new_path = safe_file_operation(original_path, new_path, 'move', dry_run)
+        if new_path and not dry_run:
+            ext_log.info(f"Moved main file", extra={
+                "original_path": str(original_path), 
+                "new_path": str(new_path)
+            })
             move_associated_files(directory, new_directory, filename_base, dry_run)
-        elif rename:
-            original_path.rename(new_path)
-            logger.info(f"Renamed main file to '{new_path}'")
-            ext_log.info(f"Renamed main file", extra={"original_path": str(original_path), "new_path": str(new_path)})
+    elif rename:
+        new_path = safe_file_operation(original_path, new_path, 'rename', dry_run)
+        if new_path and not dry_run:
+            ext_log.info(f"Renamed main file", extra={
+                "original_path": str(original_path), 
+                "new_path": str(new_path)
+            })
 
     if not move:
         move_associated_files(directory, new_directory, filename_base, dry_run)
@@ -255,6 +292,7 @@ def move_or_rename_files(scene, new_filename, move, rename, dry_run):
 
     scene_id = scene.get('id', 'Unknown')
     results = []
+    action = None  # Initialize action variable
 
     if not scene.get('title'):
         logger.info(f"Skipping scene {scene_id} due to missing title.")
@@ -267,6 +305,12 @@ def move_or_rename_files(scene, new_filename, move, rename, dry_run):
 
     for file_info in scene.get('files', []):
         original_path = Path(file_info['path'])
+        
+        # Verify file exists before proceeding
+        if not original_path.exists():
+            logger.error(f"Source file not found: {original_path}")
+            continue
+
         current_stash = next((stash for stash in fetch_stash_directories() if original_path.is_relative_to(stash)), None)
 
         if not current_stash:
@@ -278,60 +322,61 @@ def move_or_rename_files(scene, new_filename, move, rename, dry_run):
             target_directory = tag_path / studio_name if tag_path else current_stash / studio_name
             new_path = target_directory / (new_filename + original_path.suffix)
 
-            if original_path.parent == new_path.parent:
-                if dry_run:
-                    logger.info(f"Dry run: File '{original_path}' is already in the correct directory.")
-                else:
-                    logger.info(f"File '{original_path}' is already in the correct directory.")
-                move = False
-
-            if original_path.name == new_path.name:
-                if dry_run:
-                    logger.info(f"Dry run: File '{original_path}' already has the correct filename.")
-                else:
-                    logger.info(f"File '{original_path}' already has the correct filename.")
-                rename = False
-
-            if dry_run:
-                logger.info(f"Dry run: Would {'move' if move else 'rename'} file: {original_path} -> {new_path}")
-                move_associated_files(original_path.parent, target_directory, original_path.stem, dry_run, scene_id)
-                continue
-
-            if not original_path.exists():
-                ext_log.error("File not found", extra={"file_path": str(original_path), "scene_id": scene_id})
-                continue
-
+            # Create target directory if it doesn't exist
             target_directory.mkdir(parents=True, exist_ok=True)
 
-            if move:
-                shutil.move(str(original_path), str(new_path))
-                action = "Moved"
-                if scene_id != 'Unknown':
-                    ext_log.info(f"Moved main file", extra={"original_path": str(original_path), "new_path": str(new_path), "scene_id": scene_id})
-                move_associated_files(original_path.parent, target_directory, original_path.stem, dry_run, scene_id)
-            elif rename:
-                original_path.rename(new_path)
-                action = "Renamed"
-                if scene_id != 'Unknown':
-                    ext_log.info(f"Renamed main file", extra={"original_path": str(original_path), "new_path": str(new_path), "scene_id": scene_id})
-
-            logger.info(f"{action} file from '{original_path}' to '{new_path}'.")
-            results.append({"action": action, "original_path": str(original_path), "new_path": str(new_path), "scene_id": scene_id})
-
-        if rename and not move:
-            new_path = original_path.parent / (new_filename + original_path.suffix)
-
-            if original_path.name != new_path.name:
-                if dry_run:
-                    logger.info(f"Dry run: Would rename main file from '{original_path}' to '{new_path}'")
-                else:
-                    original_path.rename(new_path)
-                    logger.info(f"Renamed main file from '{original_path}' to '{new_path}'")
-                    if scene_id != 'Unknown':
-                        ext_log.info(f"Renamed main file", extra={"original_path": str(original_path), "new_path": str(new_path), "scene_id": scene_id})
-                rename_associated_files(original_path.parent, original_path.stem, new_path.stem, dry_run, scene_id)
-            else:
+            # Check if already in correct location
+            if original_path.parent == new_path.parent:
+                logger.info(f"File '{original_path}' is already in the correct directory.")
+                move = False
+            
+            # Check if filename already correct
+            if original_path.name == new_path.name:
                 logger.info(f"File '{original_path}' already has the correct filename.")
+                rename = False
+
+            if not (move or rename):
+                continue
+
+            if dry_run:
+                action = "move" if move else "rename"
+                logger.info(f"Dry run: Would {action} file: {original_path} -> {new_path}")
+                continue
+
+            try:
+                if move:
+                    new_path = safe_file_operation(original_path, new_path, 'move', dry_run)
+                    if new_path:
+                        action = "Moved"
+                        if scene_id != 'Unknown':
+                            ext_log.info(f"Moved main file", extra={
+                                "original_path": str(original_path), 
+                                "new_path": str(new_path), 
+                                "scene_id": scene_id
+                            })
+                        move_associated_files(original_path.parent, target_directory, original_path.stem, dry_run, scene_id)
+                elif rename:
+                    new_path = safe_file_operation(original_path, new_path, 'rename', dry_run)
+                    if new_path:
+                        action = "Renamed"
+                        if scene_id != 'Unknown':
+                            ext_log.info(f"Renamed main file", extra={
+                                "original_path": str(original_path), 
+                                "new_path": str(new_path), 
+                                "scene_id": scene_id
+                            })
+
+                if action and new_path:  # Only log if action was successful
+                    logger.info(f"{action} file from '{original_path}' to '{new_path}'.")
+                    results.append({
+                        "action": action,
+                        "original_path": str(original_path),
+                        "new_path": str(new_path),
+                        "scene_id": scene_id
+                    })
+
+            except Exception as e:
+                logger.error(f"Failed to {move and 'move' or 'rename'} file: {str(e)}")
 
     return results
 
