@@ -1,0 +1,6 @@
+name: Stash Download Scenes
+description: An easy method to directly download the stream of any Stash scene.
+version: 1.0
+ui:
+  javascript:
+    - stashDownloadScene.js
