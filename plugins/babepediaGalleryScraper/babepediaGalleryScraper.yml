@@ -1,0 +1,17 @@
+name: BabePedia Gallery Scraper
+description: Scans your Performer Gallery for any BabePedia URLs and scrapes the related galleries for that performer.
+version: 1.0
+exec:
+  - python
+  - "{pluginDir}/babepediaGalleryScraper.py"
+interface: raw
+tasks:
+  - name: Start BabePedia Gallery Scraper.
+    description: Starts the BabePedia Gallery Scraper.
+    defaultArgs:
+      mode: main
+settings:
+  Download Path:
+      displayName: Download Path
+      description: Set your download path for the BabePedia performer galleries here.
+      type: STRING
