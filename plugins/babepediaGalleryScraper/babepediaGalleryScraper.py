@@ -26,7 +26,16 @@ HEADERS = {
 }
 
 def get_babepedia_url_from_stash(performer_urls):
-    """Return the first Babepedia URL if present."""
+    """
+    Returns the first Babepedia performer URL if present; otherwise None.
+    Example usage:
+      performer_urls = [
+          "https://dbnaked.com/models/A/Abella-Danger",
+          "https://www.babepedia.com/babe/Abella_Danger",
+          ...
+      ]
+      => returns "https://www.babepedia.com/babe/Abella_Danger"
+    """
     for url in performer_urls:
         if "babepedia.com/babe/" in url.lower():
             return url
@@ -34,8 +43,10 @@ def get_babepedia_url_from_stash(performer_urls):
 
 def make_babepedia_slug(full_url_or_name: str) -> str:
     """
-    Extract the part after '/babe/' or fallback to underscores.
-    E.g. "Abella Danger" -> "Abella_Danger"
+    Extract the part after '/babe/' if it’s a full Babepedia URL,
+    otherwise convert spaces => underscores.
+    E.g. "Abella Danger" => "Abella_Danger"
+         "https://www.babepedia.com/babe/Abella_Danger" => "Abella_Danger"
     """
     if "babepedia.com/babe/" in full_url_or_name.lower():
         slug_part = full_url_or_name.split("/babe/")[-1]
@@ -46,18 +57,27 @@ def make_babepedia_slug(full_url_or_name: str) -> str:
 
 def scrape_babepedia_galleries_single_page(slug: str):
     """
-    Fetch the single Babepedia page for the performer (no pagination).
-    Returns a list of galleries, each with 'title', 'url', 'images', 'id'.
+    For a single babe 'slug' (e.g. 'Abella_Danger'), fetch the single
+    Babepedia page. Return a list of galleries:
+      [
+        {
+          "title": ...,
+          "url": ...,
+          "images": [...],
+          "id": "380682"  (the numeric part from /gallery/Name/380682)
+        },
+        ...
+      ]
     """
     page_url = f"{BASE_URL}/babe/{slug}"
     resp = requests.get(page_url, headers=HEADERS)
-    time.sleep(random.uniform(1.0, 2.0))
+    time.sleep(random.uniform(1,2))
 
     if resp.status_code != 200:
         return []
 
     soup = BeautifulSoup(resp.text, "html.parser")
-    thumbs_block = soup.find("div", {"id": "thumbs"})
+    thumbs_block = soup.find("div", id="thumbs")
     if not thumbs_block:
         return []
 
@@ -74,7 +94,7 @@ def scrape_babepedia_galleries_single_page(slug: str):
         relative_url = a_tag.get("href", "")
         gallery_url = BASE_URL + relative_url
 
-        # Babepedia galleries often look like /gallery/Abella_Danger/380682
+        # e.g. /gallery/Abella_Danger/380682 => "380682"
         match = re.search(r'/gallery/[^/]+/(\d+)', relative_url)
         if match:
             gallery_id = match.group(1)
@@ -95,9 +115,13 @@ def scrape_babepedia_galleries_single_page(slug: str):
     return galleries
 
 def scrape_babepedia_gallery_page(gallery_url: str):
+    """
+    Given a single gallery page's URL, fetch all image links from
+    <a class="img" rel="gallery">. Return list of direct image URLs.
+    """
     image_links = []
     resp = requests.get(gallery_url, headers=HEADERS)
-    time.sleep(random.uniform(1.0, 2.0))
+    time.sleep(random.uniform(1,2))
 
     if resp.status_code != 200:
         return image_links
@@ -114,7 +138,6 @@ def scrape_babepedia_gallery_page(gallery_url: str):
             full_image_url = BASE_URL + rel_link
         else:
             full_image_url = rel_link
-
         image_links.append(full_image_url)
 
     return image_links
@@ -123,7 +146,6 @@ def scrape_babepedia_gallery_page(gallery_url: str):
 # Plugin main code
 # --------------------------------
 
-# fallback: script directory
 default_dlpath = Path(__file__).resolve().parent
 
 def post_graphql(server_url, api_key, query, variables=None, session=None):
@@ -138,7 +160,8 @@ def post_graphql(server_url, api_key, query, variables=None, session=None):
     if api_key:
         headers["ApiKey"] = api_key
 
-    resp = session.post(graphql_url, json={"query": query, "variables": variables or {}}, headers=headers)
+    payload = {"query": query, "variables": variables or {}}
+    resp = session.post(graphql_url, json=payload, headers=headers)
     if resp.status_code != 200:
         raise RuntimeError(f"GraphQL request failed: HTTP {resp.status_code}")
 
@@ -149,8 +172,8 @@ def post_graphql(server_url, api_key, query, variables=None, session=None):
 
 def get_plugin_download_path(server_url, api_key, stash_session):
     """
-    Reads our plugin’s Download Path from Stash’s configuration,
-    logs the entire 'plugins' dict so we can debug any mismatches.
+    Reads our plugin's "Download Path" from Stash’s configuration,
+    specifically under 'babepediaGalleryScraper'.
     """
     try:
         log.info("Querying plugin configuration for Download Path…")
@@ -203,6 +226,14 @@ def get_download_path(server_url, api_key, stash_session=None):
 def get_stash_connection_info():
     """
     Reads plugin JSON from stdin (the 'server_connection') and obtains local_api_key.
+    Example single-performer query for reference:
+      query FindPerformer {
+        findPerformer(id: 3283) {
+          id
+          name
+          urls
+        }
+      }
     """
     try:
         raw_stdin = sys.stdin.read()
@@ -225,9 +256,10 @@ def get_stash_connection_info():
             if cookie_info and "Name" in cookie_info and "Value" in cookie_info:
                 stash_session.cookies.set(cookie_info["Name"], cookie_info["Value"])
         else:
+            # if just a string
             server_url = fragment_server
 
-        # attempt to get local API key
+        # attempt to get local API key from Stash
         query = """
         query GetConfig {
           configuration {
@@ -246,7 +278,7 @@ def get_stash_connection_info():
 
 def find_all_performers(server_url, api_key, stash_session=None):
     """
-    Query Stash for all performers (the plugin's scope).
+    Query Stash for all performers.
     """
     q = """
     query AllPerformers {
@@ -292,16 +324,22 @@ def download_image(image_url, out_folder: Path):
 
 def download_performer(performer, dlpath: Path):
     """
-    For each performer, check for Babepedia URL, scrape single page,
-    subfolders named by gallery ID, then zip, then remove subfolders.
+    For each performer, check for Babepedia URL, skip if zip exists,
+    scrape single page => subfolders named by gallery ID => zip => remove folder.
     """
     performer_name = performer["name"]
-    log.info(f"Downloading performer: {performer_name}...")
+    # if a zip already exists for this performer, skip
+    zip_path = dlpath / f"{performer_name.replace(' ', '_')}.zip"
+    if zip_path.exists():
+        log.info(f"Skipping '{performer_name}' => zip file already exists.")
+        return
 
     babepedia_url = get_babepedia_url_from_stash(performer.get("urls", []))
     if not babepedia_url:
-        log.info("  -> No Babepedia URL found; skipping.")
+        # no babepedia => skip
         return
+
+    log.info(f"Downloading performer: {performer_name}... (Babepedia URL found)")
 
     slug = make_babepedia_slug(babepedia_url)
     galleries = scrape_babepedia_galleries_single_page(slug)
@@ -320,11 +358,9 @@ def download_performer(performer, dlpath: Path):
         gallery_folder.mkdir(parents=True, exist_ok=True)
 
         for img_url in g["images"]:
-            result = download_image(img_url, gallery_folder)
-            if result:
+            if download_image(img_url, gallery_folder):
                 total_images_downloaded += 1
 
-    zip_path = dlpath / f"{performer_name.replace(' ', '_')}.zip"
     try:
         shutil.make_archive(str(zip_path.with_suffix("")), "zip", str(performer_folder))
         shutil.rmtree(performer_folder, ignore_errors=True)
@@ -335,10 +371,11 @@ def download_performer(performer, dlpath: Path):
 def run_scraping_task():
     """
     Main routine:
-    - read server_connection from JSON,
-    - retrieve user "Download Path" from plugin config (if valid),
-    - loop over all performers, download any Babepedia galleries to subfolders,
-    - zip, remove folders.
+      - read server_connection from JSON
+      - retrieve user "Download Path" from plugin config (if valid)
+      - loop over all performers, but only process those that have a Babepedia URL
+        and do not already have a .zip in dlpath.
+      - download, zip, delete subfolders.
     """
     server_url, api_key, stash_session = get_stash_connection_info()
     if not server_url:
@@ -350,13 +387,13 @@ def run_scraping_task():
 
     log.info(f"Images will be downloaded and zipped into: {dlpath}")
 
-    performers = find_all_performers(server_url, api_key, stash_session)
-    if not performers:
-        log.info("No performers returned from Stash; exiting.")
-        return
+    # Fetch all performers
+    all_performers = find_all_performers(server_url, api_key, stash_session)
+    # Optionally, you can filter out those w/o Babepedia in run_scraping_task,
+    # or just let download_performer skip them.
 
-    total = len(performers)
-    for index, performer in enumerate(performers, start=1):
+    total = len(all_performers)
+    for index, performer in enumerate(all_performers, start=1):
         log.progress(index / total)
         download_performer(performer, dlpath)
 

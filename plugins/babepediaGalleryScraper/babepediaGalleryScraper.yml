@@ -1,6 +1,6 @@
 name: BabePedia Gallery Scraper
 description: Scans your Performer Gallery for any BabePedia URLs and scrapes the related galleries for that performer.
-version: 1.0
+version: 1.1
 exec:
   - python
   - "{pluginDir}/babepediaGalleryScraper.py"
