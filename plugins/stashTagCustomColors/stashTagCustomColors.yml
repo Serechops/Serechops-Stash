@@ -1,6 +1,6 @@
 name: Stash Tag Custom Colors
 description: Adds a custom button in the navbar to stylize tag chips based on CSS snippets, regex patterns, or basic color-coding.
-version: 1.0
+version: 1.1
 ui:
   javascript:
     - stashTagCustomColors.js
