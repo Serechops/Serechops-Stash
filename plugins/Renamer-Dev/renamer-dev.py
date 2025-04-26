@@ -261,6 +261,12 @@ def form_new_filename(scene):
         elif key == 'performers':
             performers = sort_performers(value)
             value = config['separator'].join(performer['name'] for performer in performers)
+        elif key in ['stash_id']:
+            stash_id_value = next((stash_id.get(key) for stash_id in scene.get('stash_ids', [])), '') 
+            if key == 'stash_id' and stash_id_value:
+                value = str(stash_id_value)
+        # elif isinstance(value, dict) and 'stash_id' in value: 
+            # value = value.get('stash_id')
         elif key == 'date' and value:
             value = apply_date_format(value)
         elif key in ['studio', 'title']:
@@ -403,6 +409,9 @@ def find_scene_by_id(scene_id):
             }
             tags {
                 name
+            }
+            stash_ids {
+                stash_id
             }
         }
     }
