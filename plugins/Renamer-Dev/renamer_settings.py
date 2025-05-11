@@ -12,7 +12,8 @@ config = {
         "height": ('[', ']'),
         "video_codec": ('[', ']'),
         "frame_rate": ('[', ']'),
-        "tag": ('[', ']')
+        "tag": ('[', ']'),
+        "stash_id": ('[', ']')
     },
     "separator": '-',  # Separator used in filenames
     "key_order": [
@@ -32,6 +33,7 @@ config = {
     "max_tag_keys": 5,  # Maximum number of tag keys in filename
     "tag_whitelist": [],  # List of tags to include in filename
     "exclude_paths": [],  # Paths to exclude from processing
+    "stashbox_endpoints": ["https://stashdb.org/graphql"],
     "tag_specific_paths": {
         "Movie": r"E:\Movies"  # Specific paths based on tags
     },
