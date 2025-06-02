@@ -1,0 +1,7 @@
+name: stashAnnotate
+description: Allows users to create a custom annotation and highlight field on images similar to popular Booru sites.
+url: https://github.com/Serechops/Serechops-Stash
+version: 1.0
+ui:
+  javascript:
+    - stashAnnotate.js
