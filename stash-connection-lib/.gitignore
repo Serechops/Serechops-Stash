@@ -1,0 +1,46 @@
+# ─── Python cache / build artifacts ──────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.so
+*.pyd
+
+# Compiled C‑extensions
+build/
+dist/
+*.egg-info/
+*.egg
+*.whl
+
+# Installer logs / metadata
+pip-delete-this-directory.txt
+pip-log.txt
+
+# ─── Virtual‑envs ────────────────────────────────────────────────────────────
+.env
+.venv
+env/
+venv/
+
+# ─── Test / coverage / tooling cache ────────────────────────────────────────
+.coverage
+coverage.xml
+htmlcov/
+.tox/
+.nox/
+.pytest_cache/
+.cache/
+.mypy_cache/
+.dmypy.json
+
+# ─── Editor / IDE folders ───────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+
+# ─── OS / misc cruft ────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+
+# ─── Logs / secrets ─────────────────────────────────────────────────────────
+*.log
+*.env

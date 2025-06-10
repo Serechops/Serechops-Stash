@@ -1,0 +1,16 @@
+[build-system]
+requires = ["setuptools>=42", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "stash-connection-lib"
+version = "0.1.0"
+description = "Beginner-friendly Stash GraphQL connection helpers"
+readme = "README.md"
+requires-python = ">=3.7"
+license = {text = "MIT"}
+authors = [{name="Serechops", email="serechops@github.com"}]
+dependencies = ["requests>=2.0"]
+
+[project.urls]
+"Homepage" = "https://github.com/Serechops/Serechops-Stash"
