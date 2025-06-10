@@ -3,3 +3,4 @@ node_modules/
 _site/
 stashaid/app.log
 __pycache__/
+.vscode/settings.json
