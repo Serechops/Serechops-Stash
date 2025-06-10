@@ -4,3 +4,28 @@ _site/
 stashaid/app.log
 __pycache__/
 .vscode/settings.json
+
+# Python packaging
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# PyPI credentials
+.pypirc
+
+# Virtual environments
+venv/
+env/
+.env
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+
+# IDE
+.idea/
+*.swp
+*.swo
+*~
