@@ -62,6 +62,9 @@ def find_image(session, api_url, image_id):
             files {
                 path
             }
+            performers {
+                id
+            }
         }
     }
     """
@@ -82,6 +85,22 @@ def find_performers(session, api_url, parent_path):
     }
     """
     variables = {"parent_path": parent_path}
+    results_by_name = graphql_request(session, api_url, query_find_performers, variables)
+    if results_by_name and results_by_name.get('findPerformers') and results_by_name['findPerformers']['performers']:
+        return results_by_name
+    
+    query_find_performers = """
+    query FindPerformers($parent_path: String!) {
+        findPerformers(
+            performer_filter: { aliases: { value: $parent_path, modifier: EQUALS } }
+        ) {
+            performers {
+                id
+                name
+            }
+        }
+    }
+    """
     return graphql_request(session, api_url, query_find_performers, variables)
 
 def update_image(session, api_url, image_id, performer_id):
@@ -136,17 +155,14 @@ def main():
 
     # If the host is 0.0.0.0, set it to localhost
     if host == '0.0.0.0':
-        log.info("Host is set to 0.0.0.0, changing it to 'localhost'.")
-        external_logger.info("Host is set to 0.0.0.0, changing it to 'localhost'.")
+        log.trace("Host is set to 0.0.0.0, changing it to 'localhost'.")
+        external_logger.trace("Host is set to 0.0.0.0, changing it to 'localhost'.")
         host = 'localhost'
 
     api_url = f"{scheme}://{host}:{port}/graphql"
 
     session = requests.Session()
     session.cookies.set(session_cookie['Name'], api_key)
-
-    log.info(f"Processing image ID: {image_id}")
-    external_logger.info(f"Processing image ID: {image_id}")
 
     image_data = find_image(session, api_url, image_id)
     if not image_data or not image_data.get('findImage'):
@@ -160,11 +176,22 @@ def main():
         external_logger.error(f"No files found for image ID: {image_id}")
         return
 
-    image_path = image_info['files'][0]['path']
-    parent_directory = Path(image_path).parent.name
+    if image_info.get('performers') and len(image_info['performers']) > 0:
+        log.trace(f"Image ID {image_id} already has a performer assigned. Skipping update.")
+        external_logger.trace(f"Image ID {image_id} already has a performer assigned. Skipping update.")
+        return
 
-    log.info(f"Parent directory of the image: {parent_directory}")
-    external_logger.info(f"Parent directory of the image: {parent_directory}")
+    image_path = image_info['files'][0]['path']
+    try:
+        parent_directory = Path(image_path).relative_to('/data/performers').parts[0]
+    except ValueError:
+        return
+
+    log.trace(f"Processing image ID: {image_id}")
+    external_logger.trace(f"Processing image ID: {image_id}")
+
+    log.trace(f"Parent directory of the image: {parent_directory}")
+    external_logger.trace(f"Parent directory of the image: {parent_directory}")
 
     performers_data = find_performers(session, api_url, parent_directory)
     if not performers_data or not performers_data.get('findPerformers'):
@@ -174,8 +201,8 @@ def main():
 
     performers = performers_data['findPerformers']['performers']
     if not performers:
-        log.info(f"No performers found matching the directory name: {parent_directory}")
-        external_logger.info(f"No performers found matching the directory name: {parent_directory}")
+        log.info(f"No performers found for image ID {image_id} matching the directory name: {parent_directory}")
+        external_logger.info(f"No performers found for image ID {image_id} matching the directory name: {parent_directory}")
         return
 
     performer_id = performers[0]['id']  # Assuming the first match is the correct one
