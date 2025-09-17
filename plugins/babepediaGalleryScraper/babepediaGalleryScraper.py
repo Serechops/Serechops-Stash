@@ -9,6 +9,12 @@ from pathlib import Path
 from bs4 import BeautifulSoup
 import stashapi.log as log
 
+try:
+    import cloudscraper  # pip install cloudscraper
+    MODULE_CLOUDSCRAPER = True
+except Exception:
+    MODULE_CLOUDSCRAPER = False
+
 # --------------------------------
 # Babepedia scraper code
 # --------------------------------
@@ -16,14 +22,98 @@ import stashapi.log as log
 BASE_URL = "https://www.babepedia.com"
 HEADERS = {
     "User-Agent": (
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:108.0) "
-        "Gecko/20100101 Firefox/108.0"
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:143.0) "
+        "Gecko/20100101 Firefox/143.0"
     ),
     "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
     "Accept-Language": "en-US,en;q=0.5",
+    "Accept-Encoding": "gzip, deflate, br, zstd",
     "Connection": "keep-alive",
     "Upgrade-Insecure-Requests": "1",
+    "Sec-GPC": "1",
+    "TE": "trailers",
 }
+
+# A small pool of common User-Agents to rotate if a request gets blocked
+_UA_POOL = [
+    HEADERS["User-Agent"],
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:143.0) Gecko/20100101 Firefox/143.0",
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.5845.96 Safari/537.36",
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.1 Safari/605.1.15",
+]
+
+def fetch_with_retries(url: str, session: requests.Session = None, max_attempts: int = 3):
+    """Fetch URL with a small retry loop and browser-like fallbacks.
+
+    Returns the Response or None on fatal failure.
+    """
+    if session is None:
+        session = requests.Session()
+
+    # Warm-up: hit the site root once to get cookies / any basic protections out of the way
+    try:
+        wu_headers = HEADERS.copy()
+        wu_headers["User-Agent"] = random.choice(_UA_POOL)
+        session.get(BASE_URL + '/', headers=wu_headers, timeout=10)
+    except Exception:
+        # non-fatal; continue to attempts
+        pass
+
+    last_exc = None
+    for attempt in range(1, max_attempts + 1):
+        try:
+            headers = HEADERS.copy()
+            # If cloudscraper is available, try it first on the first attempt
+            if MODULE_CLOUDSCRAPER and attempt == 1:
+                try:
+                    cs = cloudscraper.create_scraper()
+                    resp = cs.get(url, headers=headers, timeout=20)
+                    if resp.status_code == 200:
+                        return resp
+                    else:
+                        log.debug(f"Cloudscraper returned {resp.status_code} for {url}")
+                except Exception as e:
+                    log.debug(f"Cloudscraper attempt failed for {url}: {e}")
+                    # fall through to session-based attempts
+            # Always include additional browser-like headers to avoid simple bot detection
+            headers.update({
+                "Referer": BASE_URL + "/",
+                "Origin": BASE_URL,
+                "Accept-Encoding": "gzip, deflate, br",
+                "Sec-Fetch-Mode": "navigate",
+                "Sec-Fetch-Site": "same-origin",
+                "Sec-Fetch-Dest": "document",
+                "Sec-Fetch-User": "?1",
+                "sec-ch-ua": '"Chromium";v="116", "Not)A;Brand";v="24", "Google Chrome";v="116"',
+                "sec-ch-ua-mobile": "?0",
+                "sec-ch-ua-platform": '"Windows"',
+            })
+            # rotate UA on each attempt
+            headers["User-Agent"] = random.choice(_UA_POOL)
+
+            resp = session.get(url, headers=headers, timeout=20)
+            if resp.status_code == 200:
+                return resp
+            else:
+                log.debug(f"Fetch attempt {attempt} for {url} returned status {resp.status_code}")
+                # small backoff
+                time.sleep(0.5 * attempt)
+                last_resp = resp
+                continue
+        except Exception as e:
+            last_exc = e
+            log.debug(f"Fetch attempt {attempt} for {url} raised: {e}")
+            time.sleep(0.5 * attempt)
+
+    if last_exc:
+        log.error(f"Failed to fetch {url}: {last_exc}")
+    else:
+        # If we have a last_resp it likely had a non-200 status
+        try:
+            log.error(f"Failed to fetch {url}, last status: {last_resp.status_code}")
+        except Exception:
+            log.error(f"Failed to fetch {url}, unknown error")
+    return None
 
 def get_babepedia_url_from_stash(performer_urls):
     """
@@ -55,7 +145,7 @@ def make_babepedia_slug(full_url_or_name: str) -> str:
     else:
         return full_url_or_name.replace(" ", "_")
 
-def scrape_babepedia_galleries_single_page(slug: str):
+def scrape_babepedia_galleries_single_page(slug: str, session: requests.Session = None):
     """
     For a single babe 'slug' (e.g. 'Abella_Danger'), fetch the single
     Babepedia page. Return a list of galleries:
@@ -70,75 +160,209 @@ def scrape_babepedia_galleries_single_page(slug: str):
       ]
     """
     page_url = f"{BASE_URL}/babe/{slug}"
-    resp = requests.get(page_url, headers=HEADERS)
-    time.sleep(random.uniform(1,2))
+    resp = fetch_with_retries(page_url, session=session)
+    # small pause
+    time.sleep(random.uniform(1, 2))
 
+    if not resp:
+        log.info(f"No response when fetching performer page for slug {slug}")
+        return []
     if resp.status_code != 200:
+        log.info(f"Non-200 ({resp.status_code}) when fetching performer page for slug {slug}")
         return []
 
     soup = BeautifulSoup(resp.text, "html.parser")
+
+    # Primary attempt: container with id="thumbs" or the whole page.
     thumbs_block = soup.find("div", id="thumbs")
-    if not thumbs_block:
-        return []
-
-    thumbshots = thumbs_block.find_all("div", class_="thumbshot")
-    if not thumbshots:
-        return []
-
     galleries = []
-    for shot in thumbshots:
-        a_tag = shot.find("a")
-        if not a_tag:
+
+    # Collect direct /galleries/.../NN.jpg links on the performer page and group by base path.
+    galleries_by_base = {}
+
+    def abs_url(u):
+        if not u:
+            return None
+        u = u.strip()
+        if u.startswith('//'):
+            return 'https:' + u
+        if u.startswith('/'):
+            return BASE_URL + u
+        if re.match(r'^https?://', u):
+            return u
+        return BASE_URL + '/' + u.lstrip('/')
+
+    # helper to add a gallery page link (/gallery/...) and try to fetch images from its page
+    def add_gallery_from_href(href, title_hint=None):
+        if not href:
+            return
+        # Skip external URLs that aren't Babepedia galleries
+        if href.startswith('http') and not href.startswith(BASE_URL):
+            return
+            
+        relative_url = href
+        if href.startswith(BASE_URL):
+            relative_url = href[len(BASE_URL):]
+        # prefer /gallery/ page links
+        if '/gallery/' in relative_url:
+            gallery_url = BASE_URL + relative_url if relative_url.startswith('/') else BASE_URL + '/' + relative_url
+            match = re.search(r'/gallery/[^/]+/(\d+)', relative_url)
+            if match:
+                gallery_id = match.group(1)
+            else:
+                # Create a safe gallery ID from the URL path
+                safe_id = re.sub(r'[^\w\-_]', '_', relative_url.split('/')[-1] or 'gallery')
+                gallery_id = safe_id[:50]  # Limit length for Windows filesystem
+            gallery_title = title_hint or f"gallery_{gallery_id}"
+            images = scrape_babepedia_gallery_page(gallery_url, session=session)
+            galleries.append({"title": gallery_title, "url": gallery_url, "images": images, "id": gallery_id})
+
+    # Search in the thumbs block first, but also collect any direct gallery image links
+    search_scope = thumbs_block if thumbs_block else soup
+    for a in search_scope.find_all('a', href=True):
+        href = a['href']
+        # Skip external URLs that aren't Babepedia
+        if href.startswith('http') and not href.startswith(BASE_URL):
             continue
+        # direct full-size images use /galleries/.../NN.jpg
+        if '/galleries/' in href and re.search(r'\.(jpe?g|png|webp|gif)$', href, re.IGNORECASE):
+            base = href.rsplit('/', 1)[0]
+            base_abs = abs_url(base)
+            img_abs = abs_url(href)
+            if base_abs and img_abs:
+                galleries_by_base.setdefault(base_abs, []).append(img_abs)
+            continue
+        # user uploads are in /user-uploads/
+        if '/user-uploads/' in href and re.search(r'\.(jpe?g|png|webp|gif)$', href, re.IGNORECASE):
+            base = href.rsplit('/', 1)[0]  # Get the user-uploads base path
+            base_abs = abs_url(base)
+            img_abs = abs_url(href)
+            if base_abs and img_abs:
+                galleries_by_base.setdefault(base_abs, []).append(img_abs)
+            continue
+        # otherwise, a link to a /gallery/ page
+        if '/gallery/' in href:
+            span = a.find("span", class_="thumbtext")
+            title_hint = span.get_text(strip=True) if span else (a.get_text(strip=True) or None)
+            add_gallery_from_href(href, title_hint)
 
-        relative_url = a_tag.get("href", "")
-        gallery_url = BASE_URL + relative_url
-
-        # e.g. /gallery/Abella_Danger/380682 => "380682"
-        match = re.search(r'/gallery/[^/]+/(\d+)', relative_url)
-        if match:
-            gallery_id = match.group(1)
+    # If we collected direct galleries (galleries_by_base), convert them to gallery entries
+    for base, imgs in galleries_by_base.items():
+        # create a safe id from the base path
+        base_path = base.rstrip('/').split('/')[-1]
+        if 'user-uploads' in base:
+            # For user uploads, create a more descriptive ID
+            gid = "user_uploads"
+            title = f"User Uploads ({len(imgs)} photos)"
         else:
-            gallery_id = "unknown_id"
+            gid = re.sub(r'[^\w\-_]', '_', base_path)[:50]  # Create safe directory name
+            if not gid:
+                gid = f"gallery_{int(time.time())}"  # fallback if no valid chars
+            title = imgs[0].split('/')[-2] if imgs else gid
+        # dedupe image list while preserving order
+        seen_imgs = set()
+        final_imgs = []
+        for u in imgs:
+            if u not in seen_imgs:
+                final_imgs.append(u)
+                seen_imgs.add(u)
+        galleries.append({"title": title, "url": base, "images": final_imgs, "id": gid})
 
-        span = a_tag.find("span", class_="thumbtext")
-        gallery_title = span.get_text(strip=True) if span else "Untitled_Gallery"
+    # Fallback: if no galleries found yet, scan whole page for /gallery/ or /galleries/ links
+    if not galleries:
+        for a in soup.find_all('a', href=True):
+            href = a['href']
+            # Skip external URLs that aren't Babepedia
+            if href.startswith('http') and not href.startswith(BASE_URL):
+                continue
+            if '/galleries/' in href and re.search(r'\.(jpe?g|png|webp|gif)$', href, re.IGNORECASE):
+                base = href.rsplit('/', 1)[0]
+                img_abs = abs_url(href)
+                base_abs = abs_url(base)
+                if base_abs and img_abs:
+                    galleries_by_base.setdefault(base_abs, []).append(img_abs)
+            elif '/user-uploads/' in href and re.search(r'\.(jpe?g|png|webp|gif)$', href, re.IGNORECASE):
+                base = href.rsplit('/', 1)[0]  # Get the user-uploads base path
+                img_abs = abs_url(href)
+                base_abs = abs_url(base)
+                if base_abs and img_abs:
+                    galleries_by_base.setdefault(base_abs, []).append(img_abs)
+            elif '/gallery/' in href:
+                title_hint = a.get_text(strip=True) or None
+                add_gallery_from_href(href, title_hint)
 
-        images = scrape_babepedia_gallery_page(gallery_url)
-        galleries.append({
-            "title": gallery_title,
-            "url": gallery_url,
-            "images": images,
-            "id": gallery_id
-        })
+    # Deduplicate by id while preserving order
+    seen = set()
+    deduped = []
+    for g in galleries:
+        if g['id'] not in seen:
+            deduped.append(g)
+            seen.add(g['id'])
 
-    return galleries
+    return deduped
 
-def scrape_babepedia_gallery_page(gallery_url: str):
+def scrape_babepedia_gallery_page(gallery_url: str, session: requests.Session = None):
     """
     Given a single gallery page's URL, fetch all image links from
     <a class="img" rel="gallery">. Return list of direct image URLs.
     """
     image_links = []
-    resp = requests.get(gallery_url, headers=HEADERS)
-    time.sleep(random.uniform(1,2))
-
+    resp = fetch_with_retries(gallery_url, session=session)
+    time.sleep(random.uniform(1, 2))
+    if not resp:
+        log.info(f"No response when fetching gallery page: {gallery_url}")
+        return image_links
     if resp.status_code != 200:
+        log.info(f"Non-200 ({resp.status_code}) when fetching gallery page: {gallery_url}")
         return image_links
 
     soup = BeautifulSoup(resp.text, "html.parser")
-    gallery_div = soup.find("div", id="gallery")
-    if not gallery_div:
-        return image_links
 
-    a_tags = gallery_div.find_all("a", class_="img", rel="gallery")
-    for a in a_tags:
-        rel_link = a.get("href")
-        if rel_link and rel_link.startswith("/"):
-            full_image_url = BASE_URL + rel_link
-        else:
-            full_image_url = rel_link
-        image_links.append(full_image_url)
+    # Try multiple ways to find images. Babepedia sometimes uses a div#gallery
+    # with <a class="img" rel="gallery"> but may also use <img> tags or lazy-loaded data-src attributes.
+    # 1) find anchors with image hrefs
+    candidates = []
+    for a in soup.find_all('a', href=True):
+        href = a['href']
+        if re.search(r'\.(jpe?g|png|webp|gif)$', href, re.IGNORECASE):
+            candidates.append(href)
+
+    # 2) images inside the gallery div
+    gallery_div = soup.find("div", id="gallery")
+    if gallery_div:
+        # anchors with class img or rel=gallery
+        for a in gallery_div.find_all('a', href=True):
+            href = a['href']
+            if href:
+                candidates.append(href)
+        # img tags
+        for img in gallery_div.find_all('img'):
+            src = img.get('src') or img.get('data-src') or img.get('data-lazy')
+            if src:
+                candidates.append(src)
+
+    # 3) fallback: any img on page
+    if not candidates:
+        for img in soup.find_all('img'):
+            src = img.get('src') or img.get('data-src') or img.get('data-lazy')
+            if src and re.search(r'\.(jpe?g|png|webp|gif)$', src, re.IGNORECASE):
+                candidates.append(src)
+
+    # normalize urls and dedupe preserving order
+    for src in candidates:
+        if not src:
+            continue
+        src = src.strip()
+        if src.startswith('//'):
+            src = 'https:' + src
+        elif src.startswith('/'):
+            src = BASE_URL + src
+        elif not re.match(r'^https?://', src):
+            # relative link
+            src = gallery_url.rstrip('/') + '/' + src.lstrip('/')
+
+        if src not in image_links:
+            image_links.append(src)
 
     return image_links
 
@@ -273,7 +497,8 @@ def get_stash_connection_info():
         local_api_key = data["data"]["configuration"]["general"].get("apiKey", "")
         return server_url, local_api_key, stash_session
 
-    except:
+    except Exception as e:
+        log.error(f"Error reading server_connection from stdin: {e}")
         return None, None, None
 
 def find_all_performers(server_url, api_key, stash_session=None):
@@ -294,14 +519,46 @@ def find_all_performers(server_url, api_key, stash_session=None):
     try:
         data = post_graphql(server_url, api_key, q, session=stash_session)
         return data["data"]["findPerformers"]["performers"]
-    except:
+    except Exception as e:
+        log.error(f"Error fetching performers: {e}")
         return []
 
 def download_image(image_url, out_folder: Path):
     """
     Download one image into 'out_folder'.
     """
-    filename = image_url.split("/")[-1] or f"img_{int(time.time())}.jpg"
+    # Extract filename from URL, handling query parameters and creating safe filenames
+    try:
+        from urllib.parse import urlparse, parse_qs
+        parsed = urlparse(image_url)
+        
+        # Try to get original filename from path
+        path_filename = parsed.path.split("/")[-1] if parsed.path else ""
+        
+        # If there's no proper filename from path or it has no extension, create one
+        if not path_filename or not re.search(r'\.(jpe?g|png|webp|gif)$', path_filename, re.IGNORECASE):
+            # Try to get an ID from query parameters
+            query_params = parse_qs(parsed.query)
+            file_id = None
+            for param in ['g', 'id', 'image', 'img']:
+                if param in query_params:
+                    file_id = query_params[param][0]
+                    break
+            
+            if not file_id:
+                file_id = str(int(time.time()))
+            
+            # Create safe filename with proper extension
+            safe_id = re.sub(r'[^\w\-_]', '_', file_id)
+            filename = f"{safe_id}.jpg"
+        else:
+            # Clean the existing filename
+            filename = re.sub(r'[^\w\-_.]', '_', path_filename)
+            
+    except Exception:
+        # Fallback to timestamp-based filename
+        filename = f"img_{int(time.time())}.jpg"
+    
     local_path = out_folder / filename
 
     if local_path.exists():
@@ -317,12 +574,13 @@ def download_image(image_url, out_folder: Path):
                 for chunk in resp.iter_content(chunk_size=8192):
                     f.write(chunk)
             return local_path
-    except:
+    except Exception as e:
+        log.error(f"Error downloading image {image_url}: {e}")
         pass
 
     return None
 
-def download_performer(performer, dlpath: Path):
+def download_performer(performer, dlpath: Path, session: requests.Session = None):
     """
     For each performer, check for Babepedia URL, skip if zip exists,
     scrape single page => subfolders named by gallery ID => zip => remove folder.
@@ -342,7 +600,7 @@ def download_performer(performer, dlpath: Path):
     log.info(f"Downloading performer: {performer_name}... (Babepedia URL found)")
 
     slug = make_babepedia_slug(babepedia_url)
-    galleries = scrape_babepedia_galleries_single_page(slug)
+    galleries = scrape_babepedia_galleries_single_page(slug, session=session)
     if not galleries:
         log.info("  -> No galleries on Babepedia.")
         return
@@ -366,7 +624,7 @@ def download_performer(performer, dlpath: Path):
         shutil.rmtree(performer_folder, ignore_errors=True)
         log.info(f"  -> Zipped {total_images_downloaded} images for {performer_name} into: {zip_path}")
     except Exception as e:
-        log.info(f"  -> Failed to zip {performer_name} folder: {e}")
+        log.error(f"  -> Failed to zip {performer_name} folder: {e}")
 
 def run_scraping_task():
     """
@@ -395,9 +653,49 @@ def run_scraping_task():
     total = len(all_performers)
     for index, performer in enumerate(all_performers, start=1):
         log.progress(index / total)
-        download_performer(performer, dlpath)
+        download_performer(performer, dlpath, session=stash_session)
 
 def main():
+    # If URLs are provided on the command line, run test mode.
+    cli_urls = sys.argv[1:]
+    
+    # Check for explicit test mode flag
+    if "--test" in cli_urls:
+        cli_urls.remove("--test")
+        # In test mode, read URLs from remaining args or stdin
+        if not cli_urls and not sys.stdin.isatty():
+            raw = sys.stdin.read().strip()
+            if raw:
+                cli_urls = [line.strip() for line in raw.splitlines() if line.strip()]
+    
+    if cli_urls:
+        # Run quick test harness using the same session/warmup logic
+        session = requests.Session()
+        results = []
+        for url in cli_urls:
+            try:
+                if "/gallery/" in url:
+                    imgs = scrape_babepedia_gallery_page(url, session=session)
+                    results.append({"url": url, "type": "gallery", "count": len(imgs), "sample": imgs[:10]})
+                else:
+                    # treat as performer URL or name
+                    slug = make_babepedia_slug(url)
+                    galls = scrape_babepedia_galleries_single_page(slug, session=session)
+                    results.append({
+                        "url": url,
+                        "type": "performer",
+                        "galleries": [
+                            {"id": g.get("id"), "title": g.get("title"), "count": len(g.get("images", [])), "sample": g.get("images", [])[:5]}
+                            for g in galls
+                        ],
+                    })
+            except Exception as e:
+                results.append({"url": url, "error": str(e)})
+
+        print(json.dumps(results, indent=2))
+        return
+
+    # Default behavior: run as plugin invoked by Stash (expects JSON on stdin)
     run_scraping_task()
 
 if __name__ == "__main__":
