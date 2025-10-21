@@ -133,6 +133,12 @@ div.markdown,
 div.modal-header,
 div.modal-footer,
 div.modal-body,
+div.scene-list-header,
+div.scene-list-toolbar,
+div.sidebar-pane,
+div.list-results-header.btn-toolbar,
+div.scene-list-toolbar.filtered-list-toolbar.btn-toolbar,
+.item-list-container.scene-list > .sidebar-pane > .sidebar,
 div.modal-content {
 	background: rgba(0, 0, 0, 0.3);
 	/* Darker background for dark mode, adjust opacity as needed */

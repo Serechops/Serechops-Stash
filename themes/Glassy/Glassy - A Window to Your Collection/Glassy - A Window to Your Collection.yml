@@ -1,6 +1,6 @@
 name: Glassy - A Window to Your Collection
 description: A Stash Theme
-version: 0.97b
+version: 0.99
 ui:
   css:
     - Glassy - A Window to Your Collection.css
