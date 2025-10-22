@@ -1,13 +1,13 @@
 import os
 import requests
-import stashapi.log as log  # Using stashapi log for structured logging
+import stashapi.log as log # Using stashapi log for structured logging
 from stashapi.stashapp import StashInterface
 import json
 import sys
 
 # Constants
-TARGET_GRAPHQL_URL = "http://localhost:9999/graphql"  # Default target GraphQL endpoint
-PER_PAGE = 25  # Number of tags per page as per StashDB's pagination
+TARGET_GRAPHQL_URL = "http://localhost:9999/graphql" # Default target GraphQL endpoint
+PER_PAGE = 25 # Number of tags per page as per StashDB's pagination
 
 
 def get_stash_connection_info():
@@ -66,7 +66,7 @@ def fetch_all_stashdb_tags(stashdb_endpoint, api_key=None):
     log.info("Fetching tags from StashDB...")
     all_tags = []
     page = 1
-    total_pages = 1  # Initialize to enter the loop
+    total_pages = 1 # Initialize to enter the loop
 
     query = """
     query QueryTags($per_page: Int!, $page: Int!) {
@@ -112,10 +112,10 @@ def fetch_all_stashdb_tags(stashdb_endpoint, api_key=None):
                 # Calculate total pages based on count
                 if page == 1:
                     total_count = tag_data.get("count", 0)
-                    total_pages = (total_count + PER_PAGE - 1) // PER_PAGE  # Ceiling division
+                    total_pages = (total_count + PER_PAGE - 1) // PER_PAGE # Ceiling division
                     log.info(f"Total tags to fetch: {total_count} across {total_pages} pages.")
 
-                log.progress(page / total_pages)  # Update progress
+                log.progress(page / total_pages) # Update progress
                 page += 1
             else:
                 log.error(f"Failed to fetch tags from StashDB. HTTP {response.status_code}: {response.text}")
@@ -130,20 +130,23 @@ def fetch_all_stashdb_tags(stashdb_endpoint, api_key=None):
 
 def get_existing_tags(target_graphql_url, local_api_key=None):
     """
-    Fetch existing tags from the target system to avoid duplicates.
-    Returns a set of existing tag names in lowercase.
+    Fetch existing tags (ID, Name, and Aliases) from the target system.
+    Returns a dictionary mapping lowercase tag name OR alias to {id, name}.
+    This is crucial for detecting conflicts where a StashDB name is a local alias.
     """
-    log.info("Fetching existing tags from the target system...")
+    log.info("Fetching existing tags (including aliases) from the target system...")
 
     headers = {"Content-Type": "application/json"}
     if local_api_key:
         headers["ApiKey"] = local_api_key
 
+    # Query for all tags, including their ID and Aliases
     query = """
     query {
         allTags {
             id
             name
+            aliases  # <-- Included aliases to check for conflicts
         }
     }
     """
@@ -152,15 +155,30 @@ def get_existing_tags(target_graphql_url, local_api_key=None):
         if response.status_code == 200:
             data = response.json()
             tags = data.get("data", {}).get("allTags", [])
-            existing_tag_set = {tag["name"].lower() for tag in tags}
-            log.info(f"Existing tags fetched: {len(existing_tag_set)}.")
-            return existing_tag_set
+            
+            # Map: lowercase_name_or_alias -> {id, name}
+            existing_tag_map = {}
+            for tag in tags:
+                tag_id = tag["id"]
+                tag_name = tag["name"]
+                
+                # 1. Map the primary name
+                existing_tag_map[tag_name.lower()] = {"id": tag_id, "name": tag_name}
+                
+                # 2. Map all aliases to the same tag ID
+                for alias in tag.get("aliases", []):
+                    # Only map the alias if it hasn't already been mapped as a primary name
+                    if alias.lower() not in existing_tag_map:
+                        existing_tag_map[alias.lower()] = {"id": tag_id, "name": tag_name} 
+
+            log.info(f"Existing names and aliases mapped: {len(existing_tag_map)}.")
+            return existing_tag_map
         else:
             log.error(f"Failed to fetch existing tags. HTTP {response.status_code}: {response.text}")
-            return set()
+            return {}
     except requests.exceptions.RequestException as e:
         log.error(f"Error fetching existing tags: {e}")
-        return set()
+        return {}
 
 
 def create_tags_in_target(tags, target_graphql_url, local_api_key=None):
@@ -223,6 +241,73 @@ def create_tags_in_target(tags, target_graphql_url, local_api_key=None):
     log.info(f"Tag creation process completed. Total tags processed: {total_tags}, Tags created: {created_count}.")
 
 
+def update_tags_in_target(tags_to_update, target_graphql_url, local_api_key=None):
+    """
+    Update existing tags in the target system using the TagUpdate mutation,
+    updating the alias and description.
+    """
+    log.info("Starting tag update process in the target system...")
+
+    mutation = """
+    mutation TagUpdate($input: TagUpdateInput!) {
+        tagUpdate(input: $input) {
+            id
+            name
+            description
+            aliases
+        }
+    }
+    """
+
+    headers = {"Content-Type": "application/json"}
+    if local_api_key:
+        headers["ApiKey"] = local_api_key
+
+    total_tags = len(tags_to_update)
+    updated_count = 0
+
+    for index, tag_data in enumerate(tags_to_update, 1):
+        stashdb_tag = tag_data["stashdb_tag"]
+        existing_info = tag_data["existing_info"]
+        tag_name = existing_info["name"] # Use the existing local name for logging
+        tag_id = existing_info["id"]
+
+        description = stashdb_tag.get("description", "")
+        aliases = stashdb_tag.get("aliases", [])
+
+        input_data = {
+            "id": tag_id,
+            "description": description,
+            # Note: This will OVERWRITE existing aliases with StashDB's aliases.
+            "aliases": aliases, 
+        }
+
+        variables = {"input": input_data}
+        try:
+            response = requests.post(
+                target_graphql_url,
+                json={"query": mutation, "variables": variables},
+                headers=headers,
+            )
+            if response.status_code == 200:
+                result = response.json()
+                if "errors" in result:
+                    log.warning(f"[{index}/{total_tags}] Failed to update tag '{tag_name}' (ID: {tag_id}). Errors: {result['errors']}")
+                else:
+                    updated_count += 1
+                    # Log the name that triggered the update (which might be an alias)
+                    log.info(f"[{index}/{total_tags}] Local tag '{tag_name}' (via StashDB tag '{stashdb_tag['name']}') updated successfully.")
+            else:
+                log.warning(f"[{index}/{total_tags}] Failed to update tag '{tag_name}' (ID: {tag_id}). HTTP {response.status_code}: {response.text}")
+        except requests.exceptions.RequestException as e:
+            log.warning(f"[{index}/{total_tags}] Exception while updating tag '{tag_name}' (ID: {tag_id}): {e}")
+
+        # Progress update
+        log.progress(index / total_tags)
+
+    log.info(f"Tag update process completed. Total tags processed: {total_tags}, Tags updated: {updated_count}.")
+
+
 def main():
     # Step 1: Retrieve StashDB and local connection info
     stashdb_endpoint, stashdb_api_key, local_api_key = get_stash_connection_info()
@@ -237,19 +322,40 @@ def main():
         log.error("No tags fetched from StashDB. Exiting.")
         return
 
-    # Step 3: Fetch existing tags from the target system
-    existing_tags = get_existing_tags(TARGET_GRAPHQL_URL, local_api_key)
+    # Step 3: Fetch existing tags (name, id, and aliases) from the target system
+    # existing_tags_map: {lowercase_name_or_alias: {id: <tag_id>, name: <tag_name>}}
+    existing_tags_map = get_existing_tags(TARGET_GRAPHQL_URL, local_api_key)
 
-    # Step 4: Filter out tags that already exist
-    new_tags = [tag for tag in stashdb_tags if tag["name"].lower() not in existing_tags]
+    # Step 4: Separate tags into new (create) and existing (update) lists
+    new_tags = []
+    tags_to_update = []
+
+    for tag in stashdb_tags:
+        tag_name_lower = tag["name"].lower()
+        if tag_name_lower in existing_tags_map:
+            # Tag exists, prepare for update
+            tags_to_update.append({
+                "stashdb_tag": tag,
+                "existing_info": existing_tags_map[tag_name_lower]
+            })
+        else:
+            # Tag is new, prepare for creation
+            new_tags.append(tag)
+
+    log.info(f"Tags to be updated: {len(tags_to_update)}.")
     log.info(f"New tags to be created: {len(new_tags)}.")
 
-    if not new_tags:
-        log.info("No new tags to create. Exiting.")
+    if not tags_to_update and not new_tags:
+        log.info("No tags to create or update. Exiting.")
         return
 
-    # Step 5: Create new tags in the target system
-    create_tags_in_target(new_tags, TARGET_GRAPHQL_URL, local_api_key)
+    # Step 5: Update existing tags in the target system
+    if tags_to_update:
+        update_tags_in_target(tags_to_update, TARGET_GRAPHQL_URL, local_api_key)
+
+    # Step 6: Create new tags in the target system
+    if new_tags:
+        create_tags_in_target(new_tags, TARGET_GRAPHQL_URL, local_api_key)
 
 
 if __name__ == "__main__":
