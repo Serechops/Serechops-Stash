@@ -131,8 +131,8 @@ def fetch_all_stashdb_tags(stashdb_endpoint, api_key=None):
 def get_existing_tags(target_graphql_url, local_api_key=None):
     """
     Fetch existing tags (ID, Name, and Aliases) from the target system.
-    Returns a dictionary mapping lowercase tag name OR alias to {id, name}.
-    This is crucial for detecting conflicts where a StashDB name is a local alias.
+    Returns a dictionary mapping lowercase tag name OR alias to {id, name, aliases}.
+    This is crucial for preventing conflicts AND for preserving existing aliases during update.
     """
     log.info("Fetching existing tags (including aliases) from the target system...")
 
@@ -146,7 +146,7 @@ def get_existing_tags(target_graphql_url, local_api_key=None):
         allTags {
             id
             name
-            aliases  # <-- Included aliases to check for conflicts
+            aliases  # <-- Fetch aliases to preserve them
         }
     }
     """
@@ -156,20 +156,23 @@ def get_existing_tags(target_graphql_url, local_api_key=None):
             data = response.json()
             tags = data.get("data", {}).get("allTags", [])
             
-            # Map: lowercase_name_or_alias -> {id, name}
+            # Map: lowercase_name_or_alias -> {id, name, aliases}
             existing_tag_map = {}
             for tag in tags:
                 tag_id = tag["id"]
                 tag_name = tag["name"]
+                tag_aliases = tag.get("aliases", []) # Get existing aliases
+                
+                tag_info = {"id": tag_id, "name": tag_name, "aliases": tag_aliases}
                 
                 # 1. Map the primary name
-                existing_tag_map[tag_name.lower()] = {"id": tag_id, "name": tag_name}
+                existing_tag_map[tag_name.lower()] = tag_info
                 
-                # 2. Map all aliases to the same tag ID
-                for alias in tag.get("aliases", []):
+                # 2. Map all aliases to the same tag ID and info
+                for alias in tag_aliases:
                     # Only map the alias if it hasn't already been mapped as a primary name
                     if alias.lower() not in existing_tag_map:
-                        existing_tag_map[alias.lower()] = {"id": tag_id, "name": tag_name} 
+                        existing_tag_map[alias.lower()] = tag_info
 
             log.info(f"Existing names and aliases mapped: {len(existing_tag_map)}.")
             return existing_tag_map
@@ -243,8 +246,8 @@ def create_tags_in_target(tags, target_graphql_url, local_api_key=None):
 
 def update_tags_in_target(tags_to_update, target_graphql_url, local_api_key=None):
     """
-    Update existing tags in the target system using the TagUpdate mutation,
-    updating the alias and description.
+    Update existing tags in the target system using the TagUpdate mutation.
+    It merges existing local aliases with new StashDB aliases.
     """
     log.info("Starting tag update process in the target system...")
 
@@ -269,17 +272,28 @@ def update_tags_in_target(tags_to_update, target_graphql_url, local_api_key=None
     for index, tag_data in enumerate(tags_to_update, 1):
         stashdb_tag = tag_data["stashdb_tag"]
         existing_info = tag_data["existing_info"]
-        tag_name = existing_info["name"] # Use the existing local name for logging
+        tag_name = existing_info["name"]
         tag_id = existing_info["id"]
 
+        # Preserve Aliases Logic
+        # 1. Get existing aliases from the target tag (fetched in get_existing_tags)
+        local_aliases = set(existing_info.get("aliases", []))
+        
+        # 2. Get new aliases from StashDB
+        stashdb_aliases = set(stashdb_tag.get("aliases", []))
+        
+        # 3. Merge and deduplicate the lists
+        merged_aliases = list(local_aliases.union(stashdb_aliases))
+        
+        # 4. Use StashDB's description
         description = stashdb_tag.get("description", "")
-        aliases = stashdb_tag.get("aliases", [])
+        
+        log.debug(f"Updating '{tag_name}'. Merged aliases: {merged_aliases}")
 
         input_data = {
             "id": tag_id,
             "description": description,
-            # Note: This will OVERWRITE existing aliases with StashDB's aliases.
-            "aliases": aliases, 
+            "aliases": merged_aliases, # Use the merged list
         }
 
         variables = {"input": input_data}
@@ -295,8 +309,7 @@ def update_tags_in_target(tags_to_update, target_graphql_url, local_api_key=None
                     log.warning(f"[{index}/{total_tags}] Failed to update tag '{tag_name}' (ID: {tag_id}). Errors: {result['errors']}")
                 else:
                     updated_count += 1
-                    # Log the name that triggered the update (which might be an alias)
-                    log.info(f"[{index}/{total_tags}] Local tag '{tag_name}' (via StashDB tag '{stashdb_tag['name']}') updated successfully.")
+                    log.info(f"[{index}/{total_tags}] Local tag '{tag_name}' (via StashDB tag '{stashdb_tag['name']}') updated successfully. Aliases merged.")
             else:
                 log.warning(f"[{index}/{total_tags}] Failed to update tag '{tag_name}' (ID: {tag_id}). HTTP {response.status_code}: {response.text}")
         except requests.exceptions.RequestException as e:
@@ -323,7 +336,7 @@ def main():
         return
 
     # Step 3: Fetch existing tags (name, id, and aliases) from the target system
-    # existing_tags_map: {lowercase_name_or_alias: {id: <tag_id>, name: <tag_name>}}
+    # existing_tags_map: {lowercase_name_or_alias: {id: <tag_id>, name: <tag_name>, aliases: [<alias1>, ...]}}
     existing_tags_map = get_existing_tags(TARGET_GRAPHQL_URL, local_api_key)
 
     # Step 4: Separate tags into new (create) and existing (update) lists
@@ -333,7 +346,7 @@ def main():
     for tag in stashdb_tags:
         tag_name_lower = tag["name"].lower()
         if tag_name_lower in existing_tags_map:
-            # Tag exists, prepare for update
+            # Tag exists (either by name or alias), prepare for update
             tags_to_update.append({
                 "stashdb_tag": tag,
                 "existing_info": existing_tags_map[tag_name_lower]
@@ -349,7 +362,7 @@ def main():
         log.info("No tags to create or update. Exiting.")
         return
 
-    # Step 5: Update existing tags in the target system
+    # Step 5: Update existing tags in the target system (merges aliases)
     if tags_to_update:
         update_tags_in_target(tags_to_update, TARGET_GRAPHQL_URL, local_api_key)
 
