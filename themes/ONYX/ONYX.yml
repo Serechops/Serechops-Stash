@@ -1,0 +1,11 @@
+name: ONYX
+description: A Stash Material Design 3 Modern Dark Theme
+version: 0.1
+ui:
+  css:
+    - ONYX.css
+  
+  javascript:
+    - ONYX.js
+    - ONYXEffects.js
+   
