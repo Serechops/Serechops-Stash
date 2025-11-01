@@ -1,0 +1,14 @@
+name: Stash Batch Save
+description: Adds a batch save button to scenes tagger
+version: 0.6
+url: https://github.com/7dJx1qP/stash-plugins#stash-batch-save
+ui:
+  requires: 
+  - stashUserscriptLibrary7dJx1qPFork
+  javascript:
+  - https://cdn.jsdelivr.net/npm/localforage@1.10.0/dist/localforage.min.js
+  - stashBatchSave.js
+settings:
+  enableFingerprints:
+    displayName: Enable fingerprint submission of batch saved scenes
+    type: BOOLEAN

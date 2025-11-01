@@ -1,123 +1,122 @@
 (function () {
-    'use strict';
+  'use strict';
 
-    console.log("Script started");
+  const stash = window.stash || { setProgress: () => {} };
+  console.log("🚀 BatchCreateAll ⚡ Ultra Speed Mode Initialized");
 
-    const DEFAULT_DELAY = 100; 
-    let delay = DEFAULT_DELAY;
-    let running = false;
-    let maxCreateCount = 0;
-    let maxTagCount = 0;
+  const SHORT_DELAY = 10;
+  let running = false;
+  const createQueue = [];
+  const tagQueue = [];
 
-    async function run() {
-        if (!running) return;
+  const btnId = 'batch-create';
+  const startLabel = 'Create All';
+  const stopLabel = 'Stop';
 
-        const createButtons = document.querySelectorAll('.btn-group');
-        const tagButtons = document.querySelectorAll('.search-item button.minimal.ml-2.btn.btn-primary');
-        maxCreateCount = createButtons.length;
-        maxTagCount = tagButtons.length;
+  const btn = document.createElement("button");
+  btn.id = btnId;
+  btn.classList.add('btn', 'btn-primary', 'ml-3');
+  btn.innerHTML = startLabel;
+  btn.onclick = () => (running ? stop() : start());
 
-        // Process 'Create' buttons
-        for (const createButtonGroup of createButtons) {
-            const selectPlaceholder = createButtonGroup.querySelector('.react-select__placeholder');
-            const buttons = createButtonGroup.querySelectorAll('button.btn.btn-secondary');
+  function getElementByXpath(path) {
+    return document.evaluate(path, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+  }
 
-            for (const button of buttons) {
-                if (selectPlaceholder && (selectPlaceholder.textContent.trim() === 'Select Performer' || selectPlaceholder.textContent.trim() === 'Select Studio')) {
-                    if (!button.disabled && button.textContent.trim() === 'Create') {
-                        button.click();
-                        await delayAction(delay); // Wait for the specified delay
+  function sortElementChildren(container) {
+    const children = Array.from(container.children);
+    children.sort((a, b) => a.textContent.localeCompare(b.textContent));
+    children.forEach(child => container.appendChild(child));
+  }
 
-                        // Click the 'Save' button in the modal footer of the new window
-                        const saveButton = document.querySelector('.ModalFooter.modal-footer button.btn.btn-primary');
-                        if (saveButton) {
-                            saveButton.click();
-                            await delayAction(delay); // Wait for the specified delay
-                        }
-                    }
-                }
-            }
-        }
-
-        // Process tags independently
-        for (const tagbutton of tagButtons) {
-            tagbutton.click();
-            await delayAction(delay); // Wait for the specified delay
-        }
-
-        stop();
+  function placeButton() {
+    const el = getElementByXpath("//button[text()='Scrape All']");
+    if (el && !document.getElementById(btnId)) {
+      const container = el.parentElement;
+      container.appendChild(btn);
+      sortElementChildren(container);
+      el.classList.add('ml-3');
     }
+  }
 
-    // Function to delay actions
-    async function delayAction(ms) {
-        return new Promise(resolve => setTimeout(resolve, ms));
-    }
+  const observer = new MutationObserver(placeButton);
+  observer.observe(document.body, { childList: true, subtree: true });
 
-    const btnId = 'batch-create';
-    const startLabel = 'Create All';
-    const stopLabel = 'Stop Create All';
-    const btn = document.createElement("button");
-    btn.setAttribute("id", btnId);
-    btn.classList.add('btn', 'btn-primary', 'ml-3');
+  function start() {
+    if (!confirm("Run ultra-fast Create + Tag?")) return;
+    running = true;
+    btn.innerHTML = stopLabel;
+    btn.classList.replace('btn-primary', 'btn-danger');
+    stash.setProgress(0);
+    buildQueues();
+    processInParallel();
+  }
+
+  function stop() {
+    running = false;
     btn.innerHTML = startLabel;
-    btn.onclick = () => {
-        if (running) {
-            stop();
-        }
-        else {
-            start();
-        }
-    };
+    btn.classList.replace('btn-danger', 'btn-primary');
+    stash.setProgress(0);
+    createQueue.length = 0;
+    tagQueue.length = 0;
+  }
 
-    // Function to place the button using custom event logic
-    function placeButton() {
-        const el = getElementByXpath("//button[text()='Scrape All']");
-        if (el && !document.getElementById(btnId)) {
-            const container = el.parentElement;
-            container.appendChild(btn);
-            sortElementChildren(container);
-            el.classList.add('ml-3');
-        }
-    }
+  function buildQueues() {
+    createQueue.length = 0;
+    tagQueue.length = 0;
 
-    // Mutation observer to watch for changes in the DOM and place the button
-    const observer = new MutationObserver(() => {
-        placeButton();
+    document.querySelectorAll('.btn-group').forEach(group => {
+      const placeholder = group.querySelector('.react-select__placeholder');
+      if (!placeholder) return;
+
+      const txt = placeholder.textContent.trim();
+      if (txt === 'Select Performer' || txt === 'Select Studio') {
+        const button = group.querySelector('button.btn.btn-secondary');
+        if (button && button.textContent.trim() === 'Create' && !button.disabled) {
+          createQueue.push(button);
+        }
+      }
     });
 
-    observer.observe(document.body, { childList: true, subtree: true });
+    document.querySelectorAll('.search-item button.minimal.ml-2.btn.btn-primary')
+      .forEach(btn => tagQueue.push(btn));
+  }
 
-    function start() {
-        btn.innerHTML = stopLabel;
-        btn.classList.remove('btn-primary');
-        btn.classList.add('btn-danger');
-        running = true;
-        run();
-    }
+  async function processInParallel() {
+    const total = createQueue.length + tagQueue.length;
+    let processed = 0;
 
-    function stop() {
-        btn.innerHTML = startLabel;
-        btn.classList.remove('btn-danger');
-        btn.classList.add('btn-primary');
-        running = false;
-    }
+    const processCreate = async () => {
+      while (running && createQueue.length) {
+        const btn = createQueue.shift();
+        if (!btn) break;
+        btn.click();
 
-    loadSettings(); // Initialize settings
+        await delay(SHORT_DELAY); // let modal open
+        const saveBtn = document.querySelector('.ModalFooter.modal-footer button.btn.btn-primary');
+        if (saveBtn) saveBtn.click();
+        processed++;
+        stash.setProgress((processed / total) * 100);
+        await delay(SHORT_DELAY);
+      }
+    };
 
-    // Function to load settings if needed
-    async function loadSettings() {
-        // Add any logic if settings need to be loaded
-    }
+    const processTags = async () => {
+      while (running && tagQueue.length) {
+        const tagBtn = tagQueue.shift();
+        if (!tagBtn) break;
+        tagBtn.click();
+        processed++;
+        stash.setProgress((processed / total) * 100);
+        await delay(SHORT_DELAY);
+      }
+    };
 
-    // Function to get an element by XPath
-    function getElementByXpath(path) {
-        return document.evaluate(path, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
-    }
+    await Promise.all([processCreate(), processTags()]);
+    stop();
+  }
 
-    // Function to sort children of a container element
-    function sortElementChildren(container) {
-        const children = Array.from(container.children);
-        children.sort((a, b) => a.textContent.localeCompare(b.textContent));
-        children.forEach(child => container.appendChild(child));
-    }
+  function delay(ms) {
+    return new Promise(res => setTimeout(res, ms));
+  }
 })();
