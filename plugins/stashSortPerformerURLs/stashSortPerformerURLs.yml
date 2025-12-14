@@ -1,0 +1,15 @@
+name: Sort Performer URLs
+description: Alphabetically sorts performer URLs using normalized domain comparison
+version: 1.0.0
+url: https://github.com/yourname/stash-sort-performer-urls
+
+exec: 
+  - python
+  - "{pluginDir}/stashSortPerformerURLs.py"
+interface: raw
+
+tasks:
+  - name: Sort Performer URLs
+    description: Normalize and alphabetize performer URLs
+    defaultArgs: 
+      mode: sort_performer_urls.py
