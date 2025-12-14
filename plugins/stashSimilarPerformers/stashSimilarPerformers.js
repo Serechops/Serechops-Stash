@@ -196,121 +196,103 @@
      Scoring
      ============================ */
   function scorePerformer(candidate, base) {
-    let score = 0;
-    const reasons = [];
-
-    if (candidate.favorite) {
-      score += 100;
-      reasons.push("⭐ Favorite performer");
-    }
-
-    if (candidate.ethnicity && base.ethnicity && candidate.ethnicity === base.ethnicity) {
-      score += 40;
-      reasons.push("Same ethnicity");
-    }
-
-    if (candidate.hair_color && base.hair_color && candidate.hair_color === base.hair_color) {
-      score += 30;
-      reasons.push("Same hair color");
-    }
-
-    if (candidate.eye_color && base.eye_color && candidate.eye_color === base.eye_color) {
-      score += 25;
-      reasons.push("Same eye color");
-    }
-
-    if (candidate.country && base.country && candidate.country === base.country) {
-      score += 20;
-      reasons.push("Same country");
-    }
-
-    /* Height */
-    if (typeof base.height_cm === "number" && typeof candidate.height_cm === "number") {
-      const diff = Math.abs(candidate.height_cm - base.height_cm);
-      if (diff <= HEIGHT_WINDOW_CM) {
-        const pts = Math.round(22 * clamp(1 - diff / HEIGHT_WINDOW_CM, 0, 1));
-        score += pts;
-        reasons.push(`Height within ${diff} cm`);
-      }
-    }
-
-    /* Age */
-    const baseAge = ageYearsFromBirthdate(base.birthdate);
-    const candAge = ageYearsFromBirthdate(candidate.birthdate);
-    if (baseAge != null && candAge != null) {
-      const diff = Math.abs(candAge - baseAge);
-      if (diff <= AGE_WINDOW_YEARS) {
-        const pts = Math.round(35 * clamp(1 - diff / AGE_WINDOW_YEARS, 0, 1));
-        score += pts;
-        reasons.push(`Age within ${diff.toFixed(1)} years`);
-      }
-    }
-
-    /* Weight */
-    const bw = normalizeWeightKg(base.weight);
-    const cw = normalizeWeightKg(candidate.weight);
-    if (bw != null && cw != null) {
-      const diff = Math.abs(bw - cw);
-      if (diff <= WEIGHT_WINDOW_KG) {
-        const pts = Math.round(18 * clamp(1 - diff / WEIGHT_WINDOW_KG, 0, 1));
-        score += pts;
-        reasons.push(`Weight within ${diff.toFixed(1)} kg`);
-      }
-    }
-
-    /* Measurements */
-    const bm = parseMeasurements(base.measurements);
-    const cm = parseMeasurements(candidate.measurements);
-
-    if (bm && cm) {
-      if (bm.band && cm.band) {
-        const diff = Math.abs(bm.band - cm.band);
-        if (diff <= 2) {
-          score += 10;
-          reasons.push(`Bust band within ${diff.toFixed(1)}"`);
-        }
-      }
-
-      const bi = cupIndex(bm.cup);
-      const ci = cupIndex(cm.cup);
-      if (bi != null && ci != null) {
-        const diff = Math.abs(bi - ci);
-        if (diff === 0) {
-          score += 10;
-          reasons.push("Same cup size");
-        } else if (diff === 1) {
-          score += 5;
-          reasons.push("Similar cup size");
-        }
-      }
-
-      if (bm.waist && cm.waist) {
-        const diff = Math.abs(bm.waist - cm.waist);
-        if (diff <= 2) {
-          score += 8;
-          reasons.push(`Waist within ${diff.toFixed(1)}"`);
-        }
-      }
-
-      if (bm.hips && cm.hips) {
-        const diff = Math.abs(bm.hips - cm.hips);
-        if (diff <= 3) {
-          score += 8;
-          reasons.push(`Hips within ${diff.toFixed(1)}"`);
-        }
-      }
-    }
-
-    /* Fake tits (fixed) */
-    const bFT = normalizeFakeTits(base.fake_tits);
-    const cFT = normalizeFakeTits(candidate.fake_tits);
-    if (bFT != null && cFT != null && bFT === cFT) {
-      score += 15;
-      reasons.push(`Both ${fakeTitsLabel(bFT)}`);
-    }
-
-    return { score, reasons };
-  }
+	let score = 0;
+	const reasons = [];
+	
+	/* ============================
+		Tier 1: Identity & Preference
+		============================ */
+	
+	if (candidate.favorite) {
+		score += 120;
+		reasons.push("⭐ Favorite performer");
+	}
+	
+	if (candidate.ethnicity && base.ethnicity && candidate.ethnicity === base.ethnicity) {
+		score += 80;
+		reasons.push("Same ethnicity");
+	}
+	
+	/* ============================
+		Tier 2: Visual Traits
+		============================ */
+	
+	if (candidate.hair_color && base.hair_color && candidate.hair_color === base.hair_color) {
+		score += 45;
+		reasons.push("Same hair color");
+	}
+	
+	if (candidate.eye_color && base.eye_color && candidate.eye_color === base.eye_color) {
+		score += 35;
+		reasons.push("Same eye color");
+	}
+	
+	/* ============================
+		Tier 3: Measurements (Primary body similarity)
+		============================ */
+	
+	const bm = parseMeasurements(base.measurements);
+	const cm = parseMeasurements(candidate.measurements);
+	
+	if (bm && cm) {
+		// Bust band
+		if (bm.band && cm.band) {
+		const diff = Math.abs(bm.band - cm.band);
+		if (diff <= 2) {
+			const pts = Math.round(30 * (1 - diff / 2));
+			score += pts;
+			reasons.push(`Bust band within ${diff.toFixed(1)}"`);
+		}
+		}
+	
+		// Cup size
+		const bi = cupIndex(bm.cup);
+		const ci = cupIndex(cm.cup);
+		if (bi != null && ci != null) {
+		const diff = Math.abs(bi - ci);
+		if (diff === 0) {
+			score += 25;
+			reasons.push("Same cup size");
+		} else if (diff === 1) {
+			score += 15;
+			reasons.push("Similar cup size");
+		}
+		}
+	
+		// Waist
+		if (bm.waist && cm.waist) {
+		const diff = Math.abs(bm.waist - cm.waist);
+		if (diff <= 2) {
+			const pts = Math.round(25 * (1 - diff / 2));
+			score += pts;
+			reasons.push(`Waist within ${diff.toFixed(1)}"`);
+		}
+		}
+	
+		// Hips
+		if (bm.hips && cm.hips) {
+		const diff = Math.abs(bm.hips - cm.hips);
+		if (diff <= 3) {
+			const pts = Math.round(25 * (1 - diff / 3));
+			score += pts;
+			reasons.push(`Hips within ${diff.toFixed(1)}"`);
+		}
+		}
+	}
+	
+	/* ============================
+		Tier 4: Augmentation Type
+		============================ */
+	
+	const bFT = normalizeFakeTits(base.fake_tits);
+	const cFT = normalizeFakeTits(candidate.fake_tits);
+	if (bFT != null && cFT != null && bFT === cFT) {
+		score += 30;
+		reasons.push(`Both ${fakeTitsLabel(bFT)}`);
+	}
+	
+	return { score, reasons };
+	}
 
   /* ============================
      UI helpers (tooltip only)
