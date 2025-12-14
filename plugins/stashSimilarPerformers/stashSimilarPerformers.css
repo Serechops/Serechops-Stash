@@ -1,0 +1,87 @@
+/* ============================
+   Similar Performers – Layout
+   ============================ */
+
+.similar-performers-grid-wrapper {
+  padding: 20px 12px;
+}
+
+.similar-performers-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 14px;
+}
+
+/* ============================
+   Similar Performer Card
+   ============================ */
+
+.similar-performer-card {
+  display: block;
+  background: #1e1e1e;
+  border: 1px solid #333;
+  border-radius: 6px;
+  overflow: hidden;
+  text-decoration: none !important;
+  color: inherit;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s;
+}
+
+.similar-performer-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.6);
+  border-color: #4a4a4a;
+}
+
+/* ============================
+   Performer Image
+   ============================ */
+
+.similar-performer-thumb {
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  background: #000;
+  position: relative;
+}
+
+.similar-performer-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* ============================
+   Score Badge
+   ============================ */
+
+.similar-performer-score {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  background: rgba(0, 0, 0, 0.8);
+  color: #ffd966;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 4px 7px;
+  border-radius: 4px;
+  pointer-events: none;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.7);
+}
+
+/* ============================
+   Performer Meta
+   ============================ */
+
+.similar-performer-meta {
+  padding: 10px 8px;
+  text-align: center;
+}
+
+.similar-performer-name {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #f0f0f0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

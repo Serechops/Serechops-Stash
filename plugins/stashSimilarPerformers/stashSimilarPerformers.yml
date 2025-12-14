@@ -1,0 +1,8 @@
+name: Stash Similar Performers
+description: Displays 10 random suggested performers.
+version: 1.0
+ui:
+  javascript:
+    - stashSimilarPerformers.js
+  css:
+    - stashSimilarPerformers.css

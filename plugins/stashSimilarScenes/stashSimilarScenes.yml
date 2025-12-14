@@ -1,0 +1,8 @@
+name: Stash Similar Scenes
+description: Displays Similar sscenes weighted against similar performers and tags.
+version: 1.0
+ui:
+  javascript:
+    - stashSimilarScenes.js
+  css:
+    - stashSimilarScenes.css
