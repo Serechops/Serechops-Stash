@@ -1,7 +1,7 @@
 name: Sort Performer URLs
 description: Alphabetically sorts performer URLs using normalized domain comparison
-version: 1.0.0
-url: https://github.com/yourname/stash-sort-performer-urls
+version: 1.1
+url: https://github.com/Serechops/Serechops-Stash/tree/main/plugins/stashSortPerformerURLs
 
 exec: 
   - python
@@ -13,3 +13,9 @@ tasks:
     description: Normalize and alphabetize performer URLs
     defaultArgs: 
       mode: sort_performer_urls.py
+hooks:
+  - name: Auto-sort performer URLs
+    description: Automatically re-sorts performer URLs after performer updates
+    triggeredBy:
+      - Performer.Update.Post
+      - Performer.Create.Post
