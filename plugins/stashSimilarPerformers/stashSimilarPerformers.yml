@@ -1,8 +1,75 @@
 name: Stash Similar Performers
-description: Displays 10 random suggested performers.
-version: 1.1
+description: Displays weighted similar performers based on configurable visual and physical criteria.
+version: 1.2
+
 ui:
   javascript:
     - stashSimilarPerformers.js
   css:
     - stashSimilarPerformers.css
+
+settings:
+  favoriteWeight:
+    displayName: Favorite performer bonus
+    description: Strongly boosts performers marked as favorites.
+    type: NUMBER
+
+  ethnicityWeight:
+    displayName: Ethnicity match
+    description: Rewards performers sharing the same ethnicity.
+    type: NUMBER
+
+  hairColorWeight:
+    displayName: Hair color match
+    description: Adds similarity weight when hair color matches.
+    type: NUMBER
+
+  eyeColorWeight:
+    displayName: Eye color match
+    description: Adds weight when eye color matches.
+    type: NUMBER
+
+  heightWeight:
+    displayName: Height similarity
+    description: Rewards performers with similar height within a defined range.
+    type: NUMBER
+
+  bustBandWeight:
+    displayName: Bust band similarity
+    description: Adds weight when bust band measurements are close.
+    type: NUMBER
+
+  cupSameWeight:
+    displayName: Same cup size
+    description: Strong bonus when cup size matches exactly.
+    type: NUMBER
+
+  cupNearWeight:
+    displayName: Adjacent cup size
+    description: Smaller bonus when cup size is one step away.
+    type: NUMBER
+
+  waistWeight:
+    displayName: Waist similarity
+    description: Adds similarity weight for close waist measurements.
+    type: NUMBER
+
+  hipsWeight:
+    displayName: Hips similarity
+    description: Adds similarity weight for close hip measurements.
+    type: NUMBER
+
+  fakeTitsWeight:
+    displayName: Fake/Natural match
+    description: Rewards matching augmentation type (natural vs enhanced).
+    type: NUMBER
+
+  pageLimit:
+    displayName: Candidate pool size
+    description: Limits how many performers are scanned (-1 = unlimited).
+    type: NUMBER
+    
+  performerResults:
+    displayName: Number of similar performers
+    description: Changes the number of similar performers returned.
+    type: NUMBER
