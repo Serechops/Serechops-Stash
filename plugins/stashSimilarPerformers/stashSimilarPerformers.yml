@@ -1,6 +1,6 @@
 name: Stash Similar Performers
 description: Displays weighted similar performers based on configurable visual and physical criteria.
-version: 1.2
+version: 1.3
 
 ui:
   javascript:
