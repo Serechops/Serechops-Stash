@@ -8,7 +8,7 @@ import stashapi.log as log
 # Configure external logger
 external_logger = logging.getLogger('external_logger')
 external_logger.setLevel(logging.DEBUG)
-log_handler = logging.FileHandler('./external_debug.log')
+log_handler = logging.FileHandler('/config/external_debug.log')
 log_formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
 log_handler.setFormatter(log_formatter)
 external_logger.addHandler(log_handler)
