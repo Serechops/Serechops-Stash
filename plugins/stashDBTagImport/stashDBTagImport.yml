@@ -1,6 +1,6 @@
 name: StashDB Tag Import
 description: Import StashDB's list of Tags for your Stash.
-version: 1.0
+version: 1.1
 url: https://github.com/Serechops/Serechops-Stash
 exec:
   - python
