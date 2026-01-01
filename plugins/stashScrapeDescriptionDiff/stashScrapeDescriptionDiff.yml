@@ -1,0 +1,10 @@
+name: Stash Scrape Description Diff
+description: Enables a diff of scene description whitespace and text between an existing scene and a scraped scene within the scrape dialog.
+version: 1.0
+url: https://github.com/Serechops/Serechops-Stash
+ui:
+  javascript:
+  - https://cdnjs.cloudflare.com/ajax/libs/jsdiff/2.0.2/diff.min.js
+  - stashScrapeDescriptionDiff.js
+  css:
+  - stashScrapeDescriptionDiff.css

@@ -1,0 +1,17 @@
+.stash-diff-content diff-ins,
+.stash-diff-content diff-del {
+  display: inline;
+  padding: 0 2px;
+  border-radius: 3px;
+}
+
+.stash-diff-content diff-ins {
+  background-color: rgba(40, 167, 69, 0.55); /* green */
+  color: #fff;
+}
+
+.stash-diff-content diff-del {
+  background-color: rgba(220, 53, 69, 0.55); /* red */
+  color: #fff;
+  text-decoration: line-through;
+}
