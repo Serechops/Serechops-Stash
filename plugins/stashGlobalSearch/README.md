@@ -10,9 +10,8 @@ A fast, keyboard-driven global search modal for [Stash](https://github.com/stash
 - A magnifying glass button is injected into the top navbar as an alternative trigger
 - **Single batched GraphQL query** — all five entity types fetched in one round-trip
 - **Magazine grid layout**
-  - Scenes & Galleries — 5-column 16:9 cards
-  - Performers — 6-column 2:3 portrait cards
-  - Studios — 5-column logo cards (`contain` fit, never cropped)
+  - Performers
+  - Studios
   - Tags & Navigation — flowing chip pills
 - **Scene hover preview** — plays the sprite/preview video on hover; falls back to the static screenshot if no preview is available or the video fails to load
 - **System navigation** — pages and settings tabs are matched client-side instantly (no API call)
