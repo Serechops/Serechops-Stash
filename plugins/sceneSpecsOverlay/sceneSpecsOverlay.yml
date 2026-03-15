@@ -1,6 +1,8 @@
 name: Stash Scene Specs Overlay
-description: Hides all the scene specs overlay within the scene card and reveals them on hover.
-version: 0.2
+description: Replaces the native scene specs overlay with a rich at-a-glance panel on hover. Shows resolution, duration, file size, codec, bitrate, FPS.
+version: 1.0
 ui:
   javascript:
     - sceneSpecsOverlay.js
+  css:
+    - sceneSpecsOverlay.css
