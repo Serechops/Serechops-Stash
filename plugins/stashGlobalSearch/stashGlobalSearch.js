@@ -45,23 +45,23 @@
   // ─── GraphQL ─────────────────────────────────────────────────────────────────
   const SEARCH_QUERY = `
     query GlobalSearch($q: String!) {
-      scenes: findScenes(filter: { q: $q, per_page: 8, sort: "created_at", direction: DESC }) {
+      scenes: findScenes(filter: { q: $q, per_page: 25, sort: "created_at", direction: DESC }) {
         count
         scenes { id title date files { path } studio { name } paths { screenshot preview } }
       }
-      performers: findPerformers(filter: { q: $q, per_page: 8, sort: "rating", direction: DESC }) {
+      performers: findPerformers(filter: { q: $q, per_page: 25, sort: "rating", direction: DESC }) {
         count
         performers { id name disambiguation alias_list image_path }
       }
-      studios: findStudios(filter: { q: $q, per_page: 8, sort: "name", direction: ASC }) {
+      studios: findStudios(filter: { q: $q, per_page: 25, sort: "name", direction: ASC }) {
         count
         studios { id name image_path }
       }
-      tags: findTags(filter: { q: $q, per_page: 8, sort: "name", direction: ASC }) {
+      tags: findTags(filter: { q: $q, per_page: 25, sort: "name", direction: ASC }) {
         count
         tags { id name image_path }
       }
-      galleries: findGalleries(filter: { q: $q, per_page: 8, sort: "created_at", direction: DESC }) {
+      galleries: findGalleries(filter: { q: $q, per_page: 25, sort: "created_at", direction: DESC }) {
         count
         galleries { id title date paths { cover } }
       }

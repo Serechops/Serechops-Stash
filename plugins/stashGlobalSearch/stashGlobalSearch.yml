@@ -1,6 +1,6 @@
 name: Stash Global Search
 description: Adds a full-screen global search modal (Ctrl+K) that searches scenes, performers, studios, tags, and galleries simultaneously. Results are keyboard-navigable.
-version: 1.0
+version: 1.1
 url: https://github.com/Serechops/Serechops-Stash
 ui:
   javascript:
