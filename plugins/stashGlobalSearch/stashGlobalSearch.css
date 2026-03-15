@@ -1,0 +1,429 @@
+/* ─── Modal shell ─────────────────────────────────────────────────────────── */
+
+.gs-modal .modal-content {
+  background: #1a1a1a;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.7);
+  overflow: hidden;
+}
+/* Widen beyond Bootstrap's xl cap so grids have room to breathe */
+.gs-modal.modal .modal-xl {
+  max-width: min(1080px, 92vw);
+}
+.gs-modal .modal-body.gs-body {
+  padding: 0;
+}
+
+/* ─── Input row ───────────────────────────────────────────────────────────── */
+
+.gs-input-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.875rem 1.125rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.gs-input-icon {
+  color: #888;
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+.gs-input.form-control {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  box-shadow: none;
+  color: #f0f0f0;
+  font-size: 1.05rem;
+  padding: 0;
+  min-width: 0;
+}
+
+.gs-input.form-control:focus {
+  background: transparent;
+  border: none;
+  outline: none;
+  box-shadow: none;
+  color: #f0f0f0;
+}
+
+.gs-input.form-control::placeholder {
+  color: #555;
+}
+
+.gs-loading {
+  color: #888;
+  flex-shrink: 0;
+}
+
+.gs-clear {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  background: transparent;
+  border: none;
+  color: #666;
+  cursor: pointer;
+  padding: 0;
+  flex-shrink: 0;
+  transition: color 0.12s;
+}
+
+.gs-clear:hover {
+  color: #ccc;
+}
+
+/* ─── Hint ────────────────────────────────────────────────────────────────── */
+
+.gs-hint {
+  padding: 1.25rem 1.25rem;
+  color: #666;
+  font-size: 0.8rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.gs-hint-keys {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+  color: #555;
+}
+
+kbd {
+  padding: 1px 5px;
+  border-radius: 3px;
+  border: 1px solid #444;
+  background: #2a2a2a;
+  color: #888;
+  font-size: 0.72rem;
+  font-family: inherit;
+  line-height: 1.5;
+}
+
+/* ─── Empty state ─────────────────────────────────────────────────────────── */
+
+.gs-empty {
+  padding: 2rem 1.25rem;
+  text-align: center;
+  color: #666;
+  font-size: 0.9rem;
+}
+
+/* ─── Results area ────────────────────────────────────────────────────────── */
+
+.gs-results {
+  max-height: 520px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 0.25rem 0 0.25rem;
+}
+
+.gs-results::-webkit-scrollbar {
+  width: 5px;
+}
+.gs-results::-webkit-scrollbar-track {
+  background: transparent;
+}
+.gs-results::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 3px;
+}
+
+/* ─── Section header ──────────────────────────────────────────────────────── */
+
+.gs-section-header {
+  display: flex;
+  align-items: center;
+  padding: 0.35rem 0.875rem 0.2rem;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: #555;
+  margin-top: 0.3rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  margin-bottom: 0.1rem;
+}
+
+/* ─── Result grids ────────────────────────────────────────────────────────── */
+
+.gs-grid {
+  display: grid;
+  gap: 0.3rem;
+  padding: 0.3rem 0.875rem;
+}
+
+/* Scenes & Galleries: 5-column */
+.gs-grid--scene,
+.gs-grid--gallery {
+  grid-template-columns: repeat(5, 1fr);
+}
+
+/* Performers: 6-column portrait */
+.gs-grid--performer {
+  grid-template-columns: repeat(6, 1fr);
+}
+
+/* Studios: 5-column logo cards */
+.gs-grid--studio {
+  grid-template-columns: repeat(5, 1fr);
+}
+
+/* Tags & Navigation: flowing chips */
+.gs-grid--tag,
+.gs-grid--navigation {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  padding: 0.3rem 0.875rem;
+}
+
+/* ─── Card ────────────────────────────────────────────────────────────────── */
+
+.gs-card {
+  display: flex;
+  flex-direction: column;
+  border-radius: 6px;
+  overflow: hidden;
+  background: #1f1f1f;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  cursor: pointer;
+  transition: background 0.1s, border-color 0.1s;
+}
+
+.gs-card:hover {
+  background: #252525;
+  border-color: rgba(255, 255, 255, 0.14);
+}
+
+.gs-card.gs-focused {
+  border-color: #5b9bd5;
+  background: #1d2a38;
+}
+
+/* ─── Card thumbnail ──────────────────────────────────────────────────────── */
+
+.gs-card__thumb {
+  width: 100%;
+  overflow: hidden;
+  background: #111;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* Scene / Gallery: 16:9 */
+.gs-card--scene .gs-card__thumb,
+.gs-card--gallery .gs-card__thumb {
+  aspect-ratio: 16 / 9;
+}
+
+/* Scene hover-preview overlay */
+.gs-scene-thumb {
+  position: relative;
+}
+
+.gs-scene-thumb__img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: opacity 0.2s;
+}
+
+.gs-scene-preview {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: opacity 0.2s;
+}
+
+/* Performer: 2:3 portrait */
+.gs-card--performer .gs-card__thumb {
+  aspect-ratio: 2 / 3;
+}
+
+/* Studio: landscape with contained logo */
+.gs-card--studio .gs-card__thumb {
+  aspect-ratio: 16 / 9;
+  background: #0d0d0d;
+}
+
+.gs-card__thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.gs-card--studio .gs-card__thumb img {
+  object-fit: contain;
+  padding: 10px;
+}
+
+.gs-card__thumb-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #2e2e2e;
+  font-size: 0.9rem;
+}
+
+.gs-card--performer .gs-card__thumb-placeholder {
+  font-size: 1.2rem;
+  color: #2a2a2a;
+}
+
+/* ─── Card body ───────────────────────────────────────────────────────────── */
+
+.gs-card__body {
+  padding: 0.2rem 0.3rem 0.25rem;
+  min-width: 0;
+}
+
+.gs-card__name {
+  font-size: 0.65rem;
+  font-weight: 500;
+  color: #ccc;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.3;
+}
+
+.gs-card.gs-focused .gs-card__name {
+  color: #fff;
+}
+
+.gs-card__sub {
+  font-size: 0.58rem;
+  color: #555;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-top: 1px;
+}
+
+.gs-card.gs-focused .gs-card__sub {
+  color: #888;
+}
+
+/* ─── Chips (tags + navigation) ──────────────────────────────────────────── */
+
+.gs-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.18rem 0.5rem;
+  border-radius: 20px;
+  font-size: 0.65rem;
+  color: #aaa;
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  cursor: pointer;
+  transition: background 0.1s, color 0.1s;
+  white-space: nowrap;
+}
+
+.gs-chip:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #ddd;
+}
+
+.gs-chip.gs-focused {
+  background: rgba(91, 155, 213, 0.2);
+  border-color: #5b9bd5;
+  color: #fff;
+}
+
+.gs-chip__img {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+/* ─── Navbar trigger button ───────────────────────────────────────────────── */
+
+.gs-trigger {
+  color: rgba(255, 255, 255, 0.7);
+  padding: 0 0.5rem;
+  transition: color 0.12s;
+  text-decoration: none;
+}
+
+.gs-trigger:hover {
+  color: #fff;
+}
+
+/* ─── Section count badge ─────────────────────────────────────────────────── */
+
+.gs-section-count {
+  margin-left: auto;
+  font-size: 0.65rem;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #888;
+  letter-spacing: 0.02em;
+}
+
+/* ─── See all results row ─────────────────────────────────────────────────── */
+
+.gs-see-all {
+  padding: 0.35rem 1.125rem 0.5rem;
+  font-size: 0.75rem;
+  color: #5b9bd5;
+  cursor: pointer;
+  transition: color 0.12s;
+  text-align: right;
+}
+
+.gs-see-all:hover {
+  color: #7db8f0;
+  text-decoration: underline;
+}
+
+/* ─── Footer ──────────────────────────────────────────────────────────────── */
+
+.gs-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.35rem;
+  padding: 0.45rem 1.125rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.gs-footer-heart {
+  font-size: 0.6rem;
+  color: #c0392b;
+  opacity: 0.6;
+}
+
+.gs-footer-link {
+  font-size: 0.65rem;
+  color: #555;
+  text-decoration: none;
+  transition: color 0.15s;
+}
+
+.gs-footer-link:hover {
+  color: #f96854;
+  text-decoration: none;
+}
