@@ -80,7 +80,7 @@
     if (file) {
       if (file.width && file.height) {
         const label = resLabel(file.width, file.height);
-        if (label) line1.push(label);
+        if (label) line1.push([label, 'sso-value--res']);
       }
       const dur = fmtDuration(file.duration);
       if (dur) line1.push(dur);
@@ -101,11 +101,13 @@
 
     if (line1.length === 0 && line2.length === 0) return null;
 
-    function renderLine(items) {
+    function renderLine(items, lineClass) {
       return React.createElement(
-        'div', { className: 'sso-line' },
-        items.map(function (v, i) {
-          return React.createElement('span', { className: 'sso-value', key: i }, v);
+        'div', { className: 'sso-line' + (lineClass ? ' ' + lineClass : '') },
+        items.map(function (item, i) {
+          var text = Array.isArray(item) ? item[0] : item;
+          var cls  = Array.isArray(item) ? 'sso-value ' + item[1] : 'sso-value';
+          return React.createElement('span', { className: cls, key: i }, text);
         })
       );
     }
@@ -114,8 +116,8 @@
       'div', { className: 'sso-panel' },
       React.createElement(
         'div', { className: 'sso-specs' },
-        line1.length > 0 && renderLine(line1),
-        line2.length > 0 && renderLine(line2)
+        line1.length > 0 && renderLine(line1, ''),
+        line2.length > 0 && renderLine(line2, 'sso-line--secondary')
       )
     );
   }
