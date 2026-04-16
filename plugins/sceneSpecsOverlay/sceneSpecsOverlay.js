@@ -152,34 +152,62 @@
     return overlayFormat;
   }
 
+  function parseSingleTokenExpr(tokenExpr) {
+    const tm = tokenExpr.match(
+      /^([A-Za-z]+)(?:\(\s*=\s*('([^']*)'|"([^"]*)")\s*\))?$/
+    );
+    if (!tm) {
+      throw new Error('Invalid token syntax: ' + tokenExpr);
+    }
+    const token = tm[1];
+    if (!VALID_TOKENS.has(token)) {
+      throw new Error('Unknown token: ' + token);
+    }
+    const suppressValue =
+      tm[3] != null ? tm[3] : tm[4] != null ? tm[4] : null;
+    return { token: token, suppressValue: suppressValue };
+  }
+
   function parseOverlayFormat(raw) {
     const input = String(raw || '').trim();
-    const re = /\[([^\]]+)\]/g;
-    const tokenExprs = [];
-    let m;
+    const normalized = input.replace(/\\n/g, '\n').replace(/\[BR\]/gi, '\n');
+    const lineTexts = normalized
+      .split(/\r?\n/)
+      .map(function (s) {
+        return s.trim();
+      })
+      .filter(Boolean);
 
-    while ((m = re.exec(input)) !== null) {
-      tokenExprs.push(m[1].trim());
-    }
-
-    if (tokenExprs.length === 0) {
+    if (lineTexts.length === 0) {
       throw new Error('No bracketed tokens found.');
     }
 
-    return tokenExprs.map(function (tokenExpr) {
-      const tm = tokenExpr.match(
-        /^([A-Za-z]+)(?:\(\s*=\s*('([^']*)'|"([^"]*)")\s*\))?$/
-      );
-      if (!tm) {
-        throw new Error('Invalid token syntax: ' + tokenExpr);
+    return lineTexts.map(function (lineText) {
+      const re = /\[([^\]]+)\]/g;
+      const groups = [];
+      let m;
+
+      while ((m = re.exec(lineText)) !== null) {
+        const groupExpr = m[1].trim();
+        const partExprs = groupExpr
+          .split('/')
+          .map(function (p) {
+            return p.trim();
+          })
+          .filter(Boolean);
+        if (partExprs.length === 0) {
+          throw new Error('Empty token group: ' + groupExpr);
+        }
+        groups.push({
+          parts: partExprs.map(parseSingleTokenExpr),
+        });
       }
-      const token = tm[1];
-      if (!VALID_TOKENS.has(token)) {
-        throw new Error('Unknown token: ' + token);
+
+      if (groups.length === 0) {
+        throw new Error('No bracketed tokens found on line: ' + lineText);
       }
-      const suppressValue =
-        tm[3] != null ? tm[3] : tm[4] != null ? tm[4] : null;
-      return { token: token, suppressValue: suppressValue };
+
+      return groups;
     });
   }
 
@@ -216,25 +244,43 @@
     return lines;
   }
 
-  function buildCustomLine(file, overlayFormat) {
+  function buildCustomLines(file, overlayFormat) {
     const valueMap = buildValueMap(file);
-    const specs = parseOverlayFormat(overlayFormat);
-    return specs
-      .map(function (spec) {
-        const value = valueMap[spec.token];
-        if (!value) return null;
-        if (
-          spec.suppressValue != null &&
-          String(value).trim() === String(spec.suppressValue).trim()
-        ) {
-          return null;
-        }
-        return {
-          text: value,
-          className: spec.token === 'Resolution' ? 'sso-value sso-value--res' : 'sso-value',
-        };
+    const parsedLines = parseOverlayFormat(overlayFormat);
+    return parsedLines
+      .map(function (lineGroups) {
+        return lineGroups
+          .map(function (group) {
+            const values = group.parts
+              .map(function (part) {
+                const value = valueMap[part.token];
+                if (!value) return null;
+                if (
+                  part.suppressValue != null &&
+                  String(value).trim() === String(part.suppressValue).trim()
+                ) {
+                  return null;
+                }
+                return value;
+              })
+              .filter(Boolean);
+
+            if (values.length === 0) return null;
+
+            const firstToken = group.parts[0] && group.parts[0].token;
+            return {
+              text: values.join(' / '),
+              className:
+                group.parts.length === 1 && firstToken === 'Resolution'
+                  ? 'sso-value sso-value--res'
+                  : 'sso-value',
+            };
+          })
+          .filter(Boolean);
       })
-      .filter(Boolean);
+      .filter(function (line) {
+        return line.length > 0;
+      });
   }
 
   function renderLines(lines) {
@@ -262,8 +308,7 @@
       lines = buildLegacyLines(file);
     } else {
       try {
-        const customLine = buildCustomLine(file, formatInput);
-        lines = customLine.length > 0 ? [customLine] : [];
+        lines = buildCustomLines(file, formatInput);
       } catch (err) {
         console.warn('[sceneSpecsOverlay] Invalid Overlay Format, using default two-line layout.', {
           overlayFormat: overlayFormat,

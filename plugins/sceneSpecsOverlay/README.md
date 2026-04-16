@@ -19,16 +19,17 @@ A [Stash](https://github.com/stashapp/stash) plugin that keeps the native scene 
 
 ---
 
-## Preview
+## Preview (default)
 
 ```
 ┌─────────────────────────────────────────────────────┐
 │  [scene thumbnail]                                  │
 │                                                     │
-│  [1080p][1:23:45][4.20 GB]                             │
-│  [H264 / AAC][8.5 Mbps][29.97 fps]                     │
+│  [1080p][1:23:45][4.20 GB]                          │
+│  [H264 / AAC][8.5 Mbps][29.97 fps]                  │
 └─────────────────────────────────────────────────────┘
 ```
+
 
 Panel fades in on hover, fades out on mouse leave. Native specs are visible when not hovered.
 
@@ -67,18 +68,36 @@ The CSS positions the panel absolutely at the bottom of `.thumbnail-section` and
   - Line 2: `VideoCodec/AudioCodec`, `BitRate`, `FPS`
 - Supported tokens:
   - `Resolution`, `Duration`, `FileSize`, `VideoCodec`, `AudioCodec`, `BitRate`, `FPS`
+- Combine values in one chip with `/`:
+  - `[VideoCodec/AudioCodec]` -> `H264 / AAC`
+- Add a line break with either:
+  - `\\n` (escaped newline in a single-line input), or
+  - `[BR]`
 - Suppress token when equal to a value:
   - `[VideoCodec(='AV1')]`
   - `[AudioCodec(='AAC')]`
 
-Examples:
+### Pre-formatted examples
 
-- One-line override:
+- **Default two-line (leave setting blank)**
+  - Line 1: `[Resolution][Duration][FileSize]`
+  - Line 2: `[VideoCodec/AudioCodec][BitRate][FPS]`
+
+- **One-line compact**
   - `[Resolution][Duration][FileSize][VideoCodec][BitRate][FPS]`
-- Hide AV1 codec:
-  - `[Resolution][Duration][FileSize][VideoCodec(='AV1')][BitRate][FPS]`
-- Include audio codec too:
-  - `[Resolution][Duration][FileSize][VideoCodec][AudioCodec][BitRate][FPS]`
+
+- **One-line with codec combo chip**
+  - `[Resolution][Duration][FileSize][VideoCodec/AudioCodec][BitRate][FPS]`
+
+- **Two-line explicit with `\\n`**
+  - `[Resolution][Duration][FileSize]\\n[VideoCodec/AudioCodec][BitRate][FPS]`
+
+- **Two-line explicit with `[BR]`**
+  - `[Resolution][Duration][FileSize][BR][VideoCodec/AudioCodec][BitRate][FPS]`
+
+- **Hide AV1 while keeping audio in combo**
+  - `[Resolution][Duration][FileSize][VideoCodec(='AV1')/AudioCodec][BitRate][FPS]`
+
 
 If any token is invalid, the plugin logs a warning (`console.warn`) and falls back to the default two-line layout.
 
