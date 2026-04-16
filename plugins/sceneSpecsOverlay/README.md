@@ -1,6 +1,6 @@
 # sceneSpecsOverlay
 
-A [Stash](https://github.com/stashapp/stash) plugin that keeps the native scene specs overlay by default, then swaps to a custom one-line panel on scene-card hover.
+A [Stash](https://github.com/stashapp/stash) plugin that keeps the native scene specs overlay by default, then swaps to a custom panel on scene-card hover.
 
 ---
 
@@ -9,8 +9,10 @@ A [Stash](https://github.com/stashapp/stash) plugin that keeps the native scene 
 - Built entirely with the **PluginApi** — no DOM scraping, no MutationObserver
 - Fades in smoothly on scene card hover via CSS
 - Keeps Stash's built-in overlay visible until hover, then swaps to the plugin overlay
-- **One-line layout** for dense, glanceable metrics:
-  - `Resolution · Duration · File Size · Video Codec · Bitrate · FPS`
+- Default plugin panel keeps the original two-line grouping:
+  - **Line 1** — Resolution · Duration · File Size
+  - **Line 2** — Video/Audio Codec · Bitrate · FPS
+- `Overlay Format` can override this to one-line (or any supported token order)
 - All data comes directly from `props.scene.files[0]` — no extra GraphQL requests needed
 - Resolution labels match Stash's native conventions (`360p` → `1080p` → `4K` → `8K`)
 - Supports configurable token-based ordering/suppression via `Overlay Format`
@@ -23,7 +25,8 @@ A [Stash](https://github.com/stashapp/stash) plugin that keeps the native scene 
 ┌─────────────────────────────────────────────────────┐
 │  [scene thumbnail]                                  │
 │                                                     │
-│  [1080p][1:23:45][4.20 GB][H264][8.5 Mbps][29.97 fps] │
+│  [1080p][1:23:45][4.20 GB]                             │
+│  [H264 / AAC][8.5 Mbps][29.97 fps]                     │
 └─────────────────────────────────────────────────────┘
 ```
 
@@ -59,8 +62,9 @@ The CSS positions the panel absolutely at the bottom of `.thumbnail-section` and
 
 `Overlay Format` is a string setting that defines chip order and optional suppression rules.
 
-- If blank, default format is used:
-  - `[Resolution][Duration][FileSize][VideoCodec][BitRate][FPS]`
+- If blank, plugin uses default two-line layout:
+  - Line 1: `Resolution`, `Duration`, `FileSize`
+  - Line 2: `VideoCodec/AudioCodec`, `BitRate`, `FPS`
 - Supported tokens:
   - `Resolution`, `Duration`, `FileSize`, `VideoCodec`, `AudioCodec`, `BitRate`, `FPS`
 - Suppress token when equal to a value:
@@ -69,14 +73,14 @@ The CSS positions the panel absolutely at the bottom of `.thumbnail-section` and
 
 Examples:
 
-- Default one-line:
+- One-line override:
   - `[Resolution][Duration][FileSize][VideoCodec][BitRate][FPS]`
 - Hide AV1 codec:
   - `[Resolution][Duration][FileSize][VideoCodec(='AV1')][BitRate][FPS]`
 - Include audio codec too:
   - `[Resolution][Duration][FileSize][VideoCodec][AudioCodec][BitRate][FPS]`
 
-If any token is invalid, the plugin logs a warning (`console.warn`) and falls back to default format.
+If any token is invalid, the plugin logs a warning (`console.warn`) and falls back to the default two-line layout.
 
 ---
 

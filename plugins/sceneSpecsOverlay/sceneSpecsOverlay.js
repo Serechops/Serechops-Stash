@@ -28,10 +28,6 @@
   // Helpers — match Stash's own formatting conventions where possible
   // ---------------------------------------------------------------------------
 
-  /**
-   * Resolution label matching Stash's TextUtils.resolution() (text.ts).
-   * Uses min(width, height) — same as upstream.
-   */
   function resLabel(w, h) {
     if (!w || !h) return null;
     const n = Math.min(w, h);
@@ -50,7 +46,6 @@
     return `${n}p`;
   }
 
-  /** HH:MM:SS or MM:SS */
   function fmtDuration(secs) {
     if (!secs || secs < 1) return null;
     const h = Math.floor(secs / 3600);
@@ -62,7 +57,6 @@
     return `${m}:${String(s).padStart(2, '0')}`;
   }
 
-  /** Human-readable file size (binary, same as Stash's FileSize component) */
   function fmtSize(bytes) {
     if (!bytes) return null;
     if (bytes >= 1073741824) return `${(bytes / 1073741824).toFixed(2)} GB`;
@@ -70,14 +64,12 @@
     return `${Math.round(bytes / 1024)} KB`;
   }
 
-  /** Bitrate in Mbps / Kbps */
   function fmtBitrate(bps) {
     if (!bps) return null;
     if (bps >= 1e6) return `${(bps / 1e6).toFixed(1)} Mbps`;
     return `${Math.round(bps / 1000)} Kbps`;
   }
 
-  /** Frame rate with up to 2 significant decimals */
   function fmtFPS(fps) {
     if (!fps) return null;
     return `${parseFloat(fps.toFixed(2))} fps`;
@@ -162,12 +154,11 @@
 
   function parseOverlayFormat(raw) {
     const input = String(raw || '').trim();
-    const format = input || DEFAULT_FORMAT;
     const re = /\[([^\]]+)\]/g;
     const tokenExprs = [];
     let m;
 
-    while ((m = re.exec(format)) !== null) {
+    while ((m = re.exec(input)) !== null) {
       tokenExprs.push(m[1].trim());
     }
 
@@ -204,7 +195,28 @@
     };
   }
 
-  function buildItemsFromFormat(file, overlayFormat) {
+  function buildLegacyLines(file) {
+    const line1 = [];
+    const line2 = [];
+    if (!file) return [];
+
+    const map = buildValueMap(file);
+    if (map.Resolution) line1.push({ text: map.Resolution, className: 'sso-value sso-value--res' });
+    if (map.Duration) line1.push({ text: map.Duration, className: 'sso-value' });
+    if (map.FileSize) line1.push({ text: map.FileSize, className: 'sso-value' });
+
+    const codecParts = [map.VideoCodec, map.AudioCodec].filter(Boolean);
+    if (codecParts.length) line2.push({ text: codecParts.join(' / '), className: 'sso-value' });
+    if (map.BitRate) line2.push({ text: map.BitRate, className: 'sso-value' });
+    if (map.FPS) line2.push({ text: map.FPS, className: 'sso-value' });
+
+    const lines = [];
+    if (line1.length) lines.push(line1);
+    if (line2.length) lines.push(line2);
+    return lines;
+  }
+
+  function buildCustomLine(file, overlayFormat) {
     const valueMap = buildValueMap(file);
     const specs = parseOverlayFormat(overlayFormat);
     return specs
@@ -225,47 +237,51 @@
       .filter(Boolean);
   }
 
-  // ---------------------------------------------------------------------------
-  // React component
-  // ---------------------------------------------------------------------------
+  function renderLines(lines) {
+    return lines.map(function (line, idx) {
+      const lineCls = idx === 1 ? 'sso-line sso-line--secondary' : 'sso-line';
+      return React.createElement(
+        'div',
+        { className: lineCls, key: idx },
+        line.map(function (item, i) {
+          return React.createElement('span', { className: item.className, key: i }, item.text);
+        })
+      );
+    });
+  }
 
   function SceneSpecsPanel({ scene }) {
     const overlayFormat = useOverlayFormat();
     const file = scene && scene.files && scene.files[0];
     if (!file) return null;
 
-    let items = [];
-    try {
-      items = buildItemsFromFormat(file, overlayFormat);
-    } catch (err) {
-      if (String(overlayFormat || '').trim().length > 0) {
-        console.warn('[sceneSpecsOverlay] Invalid Overlay Format, using default layout.', {
+    let lines = [];
+    const formatInput = String(overlayFormat || '').trim();
+
+    if (formatInput.length === 0) {
+      lines = buildLegacyLines(file);
+    } else {
+      try {
+        const customLine = buildCustomLine(file, formatInput);
+        lines = customLine.length > 0 ? [customLine] : [];
+      } catch (err) {
+        console.warn('[sceneSpecsOverlay] Invalid Overlay Format, using default two-line layout.', {
           overlayFormat: overlayFormat,
           error: err && err.message ? err.message : String(err),
           defaultFormat: DEFAULT_FORMAT,
         });
+        lines = buildLegacyLines(file);
       }
-      items = buildItemsFromFormat(file, DEFAULT_FORMAT);
     }
 
-    if (items.length === 0) return null;
+    if (lines.length === 0) return null;
 
     return React.createElement(
       'div',
       { className: 'sso-panel' },
-      React.createElement(
-        'div',
-        { className: 'sso-specs' },
-        items.map(function (item, i) {
-          return React.createElement('span', { className: item.className, key: i }, item.text);
-        })
-      )
+      React.createElement('div', { className: 'sso-specs' }, renderLines(lines))
     );
   }
-
-  // ---------------------------------------------------------------------------
-  // Patch
-  // ---------------------------------------------------------------------------
 
   PluginApi.patch.after('SceneCard.Overlays', function () {
     var props = arguments[0];

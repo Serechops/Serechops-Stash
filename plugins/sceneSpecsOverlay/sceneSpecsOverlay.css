@@ -41,9 +41,17 @@
 }
 
 /* ---------------------------------------------------------------------------
-   Spec area — one line
+   Spec area
+   - default (blank Overlay Format): two lines
+   - custom Overlay Format: one line
    --------------------------------------------------------------------------- */
 .sso-specs {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.sso-line {
   display: flex;
   flex-wrap: nowrap;
   gap: 3px;
@@ -52,7 +60,7 @@
   scrollbar-width: none;
 }
 
-.sso-specs::-webkit-scrollbar {
+.sso-line::-webkit-scrollbar {
   display: none;
 }
 
@@ -76,5 +84,12 @@
   border-color: rgba(100, 180, 255, 0.3);
   color: #90c8f0;
   font-weight: 700;
+}
+
+.sso-line--secondary .sso-value {
+  font-size: 10px;
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.04);
+  opacity: 0.75;
 }
 
