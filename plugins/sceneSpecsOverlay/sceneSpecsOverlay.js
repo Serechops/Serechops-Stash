@@ -11,6 +11,7 @@
     'Resolution',
     'Duration',
     'FileSize',
+    'FileCount',
     'VideoCodec',
     'AudioCodec',
     'BitRate',
@@ -73,6 +74,12 @@
   function fmtFPS(fps) {
     if (!fps) return null;
     return `${parseFloat(fps.toFixed(2))} fps`;
+  }
+
+  function fmtFileCount(count) {
+    const n = Number(count);
+    if (!Number.isFinite(n) || n < 1) return null;
+    return `${n} ${n === 1 ? 'File' : 'Files'}`;
   }
 
   function normalizeCodec(codec) {
@@ -154,7 +161,7 @@
 
   function parseSingleTokenExpr(tokenExpr) {
     const tm = tokenExpr.match(
-      /^([A-Za-z]+)(?:\(\s*=\s*('([^']*)'|"([^"]*)")\s*\))?$/
+      /^([A-Za-z]+)(?:\(\s*=\s*(?:'([^']*)'|"([^"]*)"|([^)]+?))\s*\))?$/
     );
     if (!tm) {
       throw new Error('Invalid token syntax: ' + tokenExpr);
@@ -164,7 +171,13 @@
       throw new Error('Unknown token: ' + token);
     }
     const suppressValue =
-      tm[3] != null ? tm[3] : tm[4] != null ? tm[4] : null;
+      tm[2] != null
+        ? tm[2]
+        : tm[3] != null
+          ? tm[3]
+          : tm[4] != null
+            ? String(tm[4]).trim()
+            : null;
     return { token: token, suppressValue: suppressValue };
   }
 
@@ -211,11 +224,13 @@
     });
   }
 
-  function buildValueMap(file) {
+  function buildValueMap(scene, file) {
+    const fileCount = Array.isArray(scene && scene.files) ? scene.files.length : 0;
     return {
       Resolution: file && file.width && file.height ? resLabel(file.width, file.height) : null,
       Duration: file ? fmtDuration(file.duration) : null,
       FileSize: file ? fmtSize(file.size) : null,
+      FileCount: fmtFileCount(fileCount),
       VideoCodec: file ? normalizeCodec(file.video_codec) : null,
       AudioCodec: file ? normalizeCodec(file.audio_codec) : null,
       BitRate: file ? fmtBitrate(file.bit_rate) : null,
@@ -228,7 +243,7 @@
     const line2 = [];
     if (!file) return [];
 
-    const map = buildValueMap(file);
+    const map = buildValueMap(null, file);
     if (map.Resolution) line1.push({ text: map.Resolution, className: 'sso-value sso-value--res' });
     if (map.Duration) line1.push({ text: map.Duration, className: 'sso-value' });
     if (map.FileSize) line1.push({ text: map.FileSize, className: 'sso-value' });
@@ -244,8 +259,10 @@
     return lines;
   }
 
-  function buildCustomLines(file, overlayFormat) {
-    const valueMap = buildValueMap(file);
+  function buildCustomLines(scene, file, overlayFormat) {
+    const valueMap = buildValueMap(scene, file);
+    const fileCount =
+      Array.isArray(scene && scene.files) ? scene.files.length : 0;
     const parsedLines = parseOverlayFormat(overlayFormat);
     return parsedLines
       .map(function (lineGroups) {
@@ -255,11 +272,15 @@
               .map(function (part) {
                 const value = valueMap[part.token];
                 if (!value) return null;
-                if (
-                  part.suppressValue != null &&
-                  String(value).trim() === String(part.suppressValue).trim()
-                ) {
-                  return null;
+                if (part.suppressValue != null) {
+                  const suppress = String(part.suppressValue).trim();
+                  if (part.token === 'FileCount') {
+                    if (String(fileCount) === suppress || String(value).trim() === suppress) {
+                      return null;
+                    }
+                  } else if (String(value).trim() === suppress) {
+                    return null;
+                  }
                 }
                 return value;
               })
@@ -308,7 +329,7 @@
       lines = buildLegacyLines(file);
     } else {
       try {
-        lines = buildCustomLines(file, formatInput);
+        lines = buildCustomLines(scene, file, formatInput);
       } catch (err) {
         console.warn('[sceneSpecsOverlay] Invalid Overlay Format, using default two-line layout.', {
           overlayFormat: overlayFormat,

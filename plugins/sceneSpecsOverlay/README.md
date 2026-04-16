@@ -67,7 +67,7 @@ The CSS positions the panel absolutely at the bottom of `.thumbnail-section` and
   - Line 1: `Resolution`, `Duration`, `FileSize`
   - Line 2: `VideoCodec/AudioCodec`, `BitRate`, `FPS`
 - Supported tokens:
-  - `Resolution`, `Duration`, `FileSize`, `VideoCodec`, `AudioCodec`, `BitRate`, `FPS`
+  - `Resolution`, `Duration`, `FileSize`, `FileCount`, `VideoCodec`, `AudioCodec`, `BitRate`, `FPS`
 - Combine values in one chip with `/`:
   - `[VideoCodec/AudioCodec]` -> `H264 / AAC`
 - Add a line break with either:
@@ -76,6 +76,7 @@ The CSS positions the panel absolutely at the bottom of `.thumbnail-section` and
 - Suppress token when equal to a value:
   - `[VideoCodec(='AV1')]`
   - `[AudioCodec(='AAC')]`
+  - `[FileCount(=1)]`
 
 ### Pre-formatted examples
 
@@ -111,14 +112,24 @@ The CSS positions the panel absolutely at the bottom of `.thumbnail-section` and
 ```
 
 **Two-line explicit with `[BR]`**
-`[Resolution][Duration][FileSize][BR][VideoCodec/AudioCodec][BitRate][FPS]`
+`[Resolution][Duration][FileSize][FileCount][BR][VideoCodec/AudioCodec][BitRate][FPS]`
 ```
 ┌─────────────────────────────────────────────────────┐
 │  scene thumbnail                                    │
 │                                                     │
-│  [1080p][1:23:45][4.20 GB]                          │
+│  [1080p][1:23:45][4.20 GB][2 Files]                 │
 │  [H264 / AAC][8.5 Mbps][29.97 fps]                  │
 └─────────────────────────────────────────────────────┘
+```
+
+**Suppress FileCount when only one file**
+`[Resolution][Duration][FileSize][FileCount(=1)][VideoCodec][BitRate][FPS]`
+```
+With 1 file:
+[1080p][1:23:45][4.20 GB][H264][8.5 Mbps][29.97 fps]
+
+With 2 files:
+[1080p][1:23:45][4.20 GB][2 Files][H264][8.5 Mbps][29.97 fps]
 ```
 
 **Hide default codecs in combo**
