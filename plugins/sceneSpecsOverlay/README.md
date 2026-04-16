@@ -91,27 +91,27 @@ The CSS positions the panel absolutely at the bottom of `.thumbnail-section` and
 ```
 
 **One-line compact**
-  - `[Resolution][Duration][FileSize][VideoCodec][BitRate][FPS]`
+`[Resolution][Duration][FileSize][VideoCodec][BitRate][FPS]`
 ```
 ┌─────────────────────────────────────────────────────┐
 │  scene thumbnail                                    │
 │                                                     │
-│  [1080p][1:23:45][4.20 GB][H264][8.5 Mbps][29.97 fps] │
+│ [1080p][1:23:45][4.20 GB][H264][8.5 Mbps][29.97 fps]│
 └─────────────────────────────────────────────────────┘
 ```
 
 **One-line with codec combo chip**
 `[Resolution][Duration][FileSize][VideoCodec/AudioCodec][BitRate][FPS]`
 ```
-┌─────────────────────────────────────────────────────┐
-│  scene thumbnail                                    │
-│                                                     │
+┌─────────────────────────────────────────────────────────────┐
+│  scene thumbnail                                            │
+│                                                             │
 │  [1080p][1:23:45][4.20 GB][H264 / AAC][8.5 Mbps][29.97 fps] │
-└─────────────────────────────────────────────────────┘
+└─────────────────────────────────────────────────────────────┘
 ```
 
 **Two-line explicit with `[BR]`**
-  - `[Resolution][Duration][FileSize][BR][VideoCodec/AudioCodec][BitRate][FPS]`
+`[Resolution][Duration][FileSize][BR][VideoCodec/AudioCodec][BitRate][FPS]`
 ```
 ┌─────────────────────────────────────────────────────┐
 │  scene thumbnail                                    │
@@ -122,7 +122,7 @@ The CSS positions the panel absolutely at the bottom of `.thumbnail-section` and
 ```
 
 **Hide default codecs in combo**
-  - `[Resolution][Duration][FileSize][VideoCodec(='AV1')/AudioCodec(='AAC')][BitRate][FPS]`
+`[Resolution][Duration][FileSize][VideoCodec(='AV1')/AudioCodec(='AAC')][BitRate][FPS]`
 ```
 ┌─────────────────────────────────────────────────────┐
 │  scene thumbnail                                    │
