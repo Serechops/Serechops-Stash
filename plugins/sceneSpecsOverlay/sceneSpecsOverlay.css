@@ -1,12 +1,7 @@
 /* =============================================================================
    Scene Specs Overlay — CSS
-   Replaces the native .scene-specs-overlay with a richer slide-up panel.
+   Keeps native specs by default; swaps to custom panel on hover.
    ============================================================================= */
-
-/* Hide Stash's built-in specs overlay (we fully replace it) */
-.scene-specs-overlay {
-  display: none !important;
-}
 
 /* ---------------------------------------------------------------------------
    Panel container
@@ -30,15 +25,29 @@
   pointer-events: none;
   opacity: 0;
   transition: opacity 0.25s ease;
+  overflow: hidden;
 }
 
-/* Trigger: parent thumbnail-section hover */
+.sso-panel.sso-panel--no-shadow {
+  background: none;
+}
+
+/* Hover swap:
+   - default: native specs visible, custom hidden
+   - hover: native hidden, custom shown */
 .thumbnail-section:hover .sso-panel {
   opacity: 1;
 }
 
+:root:not(.sso-display-native-specs) .thumbnail-section:hover .scene-specs-overlay {
+  opacity: 0 !important;
+  transition: opacity 0.15s ease;
+}
+
 /* ---------------------------------------------------------------------------
-   Spec area — two lines
+   Spec area
+   - default (blank Overlay Format): two lines
+   - custom Overlay Format: one line
    --------------------------------------------------------------------------- */
 .sso-specs {
   display: flex;
@@ -48,8 +57,15 @@
 
 .sso-line {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   gap: 3px;
+  align-items: center;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.sso-line::-webkit-scrollbar {
+  display: none;
 }
 
 .sso-value {
@@ -62,22 +78,21 @@
   line-height: 1.6;
   padding: 1px 6px;
   border-radius: 3px;
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.4);
   border: 1px solid rgba(255, 255, 255, 0.07);
 }
 
 /* Resolution chip — blue accent */
 .sso-value--res {
-  background: rgba(100, 180, 255, 0.18);
+  background: rgba(0, 0, 0, 0.4);
   border-color: rgba(100, 180, 255, 0.3);
   color: #90c8f0;
   font-weight: 700;
 }
 
-/* Technical line — slightly smaller and subdued */
 .sso-line--secondary .sso-value {
   font-size: 10px;
-  background: rgba(255, 255, 255, 0.06);
+  background: rgba(0, 0, 0, 0.4);
   border-color: rgba(255, 255, 255, 0.04);
   opacity: 0.75;
 }

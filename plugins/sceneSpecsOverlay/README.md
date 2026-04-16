@@ -1,6 +1,6 @@
 # sceneSpecsOverlay
 
-A [Stash](https://github.com/stashapp/stash) plugin that replaces the native scene specs overlay with a clean, compact at-a-glance panel that fades in when you hover over a scene card.
+A [Stash](https://github.com/stashapp/stash) plugin that keeps the native scene specs overlay by default, then swaps to a custom panel on scene-card hover.
 
 ---
 
@@ -8,36 +8,38 @@ A [Stash](https://github.com/stashapp/stash) plugin that replaces the native sce
 
 - Built entirely with the **PluginApi** — no DOM scraping, no MutationObserver
 - Fades in smoothly on scene card hover via CSS
-- Hides Stash's built-in overlay and renders its own richer replacement
-- **Two-line layout** keeps information dense without clutter:
-  - **Line 1** — Resolution label · Duration · File size
-  - **Line 2** — Video/Audio codec · Bitrate · Frame rate
+- Keeps Stash's built-in overlay visible until hover, then swaps to the plugin overlay
+- Default plugin panel keeps the original two-line grouping:
+  - **Line 1** — Resolution · Duration · File Size
+  - **Line 2** — Video/Audio Codec · Bitrate · FPS
+- `Overlay Format` can override this to one-line (or any supported token order)
 - All data comes directly from `props.scene.files[0]` — no extra GraphQL requests needed
 - Resolution labels match Stash's native conventions (`360p` → `1080p` → `4K` → `8K`)
+- Supports configurable token-based ordering/suppression via `Overlay Format`
 
 ---
 
-## Preview
+## Preview (default)
 
 ```
-┌─────────────────────────────┐
-│  [scene thumbnail]          │
-│                             │
-│                             │
-│  1080p · 1:23:45 · 4.20 GB  │  ← Line 1
-│  H264 / AAC · 8.5 Mbps · 29.97 fps │  ← Line 2
-└─────────────────────────────┘
+┌─────────────────────────────────────────────────────┐
+│  [scene thumbnail]                                  │
+│                                                     │
+│  [1080p][1:23:45][4.20 GB]                          │
+│  [H264 / AAC][8.5 Mbps][29.97 fps]                  │
+└─────────────────────────────────────────────────────┘
 ```
 
-Panel fades in on hover, fades out on mouse leave.
+
+Panel fades in on hover, fades out on mouse leave. Native specs are visible when not hovered.
 
 ---
 
 ## Installation
 
 1. Add this index as a new source in your Stash Settings > Plugins > Add Source: [Index](https://serechops.github.io/Serechops-Stash/index.yml)
-
-No configuration required — the plugin works immediately after enabling.
+2. Enable **Stash Scene Specs Overlay**
+3. (Optional) Set `Overlay Format` in plugin settings
 
 ---
 
@@ -55,7 +57,92 @@ No configuration required — the plugin works immediately after enabling.
 
 The plugin uses `PluginApi.patch.after('SceneCard.Overlays', ...)` to append a `SceneSpecsPanel` React component alongside the existing card overlays. The component reads directly from the scene object already present in the card props — specifically `scene.files[0]` which contains all `VideoFile` fields (`video_codec`, `audio_codec`, `frame_rate`, `bit_rate`, `width`, `height`, `duration`, `size`) as part of Stash's standard `SlimSceneData` fragment.
 
-The CSS positions the panel absolutely at the bottom of `.thumbnail-section` and uses `opacity` transition triggered by `.thumbnail-section:hover` — no JavaScript event listeners involved.
+The CSS positions the panel absolutely at the bottom of `.thumbnail-section` and uses `opacity` transition triggered by `.thumbnail-section:hover` — no JavaScript event listeners involved. On hover, native `.scene-specs-overlay` is hidden and the plugin panel is shown.
+
+## Overlay Format setting
+
+`Overlay Format` is a string setting that defines chip order and optional suppression rules.
+
+- If blank, plugin uses default two-line layout:
+  - Line 1: `Resolution`, `Duration`, `FileSize`
+  - Line 2: `VideoCodec/AudioCodec`, `BitRate`, `FPS`
+- Supported tokens:
+  - `Resolution`, `Duration`, `FileSize`, `FileCount`, `VideoCodec`, `AudioCodec`, `BitRate`, `FPS`
+- Combine values in one chip with `/`:
+  - `[VideoCodec/AudioCodec]` -> `H264 / AAC`
+- Add a line break with either:
+  - `\\n` (escaped newline in a single-line input), or
+  - `[BR]`
+- Suppress token when equal to a value:
+  - `[VideoCodec(='AV1')]`
+  - `[AudioCodec(='AAC')]`
+  - `[FileCount(=1)]`
+
+### Pre-formatted examples
+
+**Default two-line (leave setting blank)**
+  `Overlay Format`: *null*
+```
+┌─────────────────────────────────────────────────────┐
+│  scene thumbnail                                    │
+│                                                     │
+│  [1080p][1:23:45][4.20 GB]                          │
+│  [H264 / AAC][8.5 Mbps][29.97 fps]                  │
+└─────────────────────────────────────────────────────┘
+```
+
+**One-line compact**
+`[Resolution][Duration][FileSize][VideoCodec][BitRate][FPS]`
+```
+┌─────────────────────────────────────────────────────┐
+│  scene thumbnail                                    │
+│                                                     │
+│ [1080p][1:23:45][4.20 GB][H264][8.5 Mbps][29.97 fps]│
+└─────────────────────────────────────────────────────┘
+```
+
+**One-line with codec combo chip**
+`[Resolution][Duration][FileSize][VideoCodec/AudioCodec][BitRate][FPS]`
+```
+┌─────────────────────────────────────────────────────────────┐
+│  scene thumbnail                                            │
+│                                                             │
+│  [1080p][1:23:45][4.20 GB][H264 / AAC][8.5 Mbps][29.97 fps] │
+└─────────────────────────────────────────────────────────────┘
+```
+
+**Two-line explicit with `[BR]`**
+`[Resolution][Duration][FileSize][FileCount][BR][VideoCodec/AudioCodec][BitRate][FPS]`
+```
+┌─────────────────────────────────────────────────────┐
+│  scene thumbnail                                    │
+│                                                     │
+│  [1080p][1:23:45][4.20 GB][2 Files]                 │
+│  [H264 / AAC][8.5 Mbps][29.97 fps]                  │
+└─────────────────────────────────────────────────────┘
+```
+
+**Suppress FileCount when only one file**
+`[Resolution][Duration][FileSize][FileCount(=1)][VideoCodec][BitRate][FPS]`
+```
+With 1 file:
+[1080p][1:23:45][4.20 GB][H264][8.5 Mbps][29.97 fps]
+
+With 2 files:
+[1080p][1:23:45][4.20 GB][2 Files][H264][8.5 Mbps][29.97 fps]
+```
+
+**Hide default codecs in combo**
+`[Resolution][Duration][FileSize][VideoCodec(='AV1')/AudioCodec(='AAC')][BitRate][FPS]`
+```
+┌─────────────────────────────────────────────────────┐
+│  scene thumbnail                                    │
+│                                                     │
+│  [1080p][1:23:45][4.20 GB][8.5 Mbps][29.97 fps]     │
+└─────────────────────────────────────────────────────┘
+```
+
+If any token is invalid, the plugin logs a warning (`console.warn`) and falls back to the default two-line layout.
 
 ---
 
