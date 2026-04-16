@@ -21,6 +21,7 @@
   const settingsState = {
     overlayFormat: '',
     suppressShadow: false,
+    displayNativeSpecs: false,
     listeners: new Set(),
     loaded: false,
     loading: false,
@@ -91,6 +92,7 @@
     const out = {
       overlayFormat: '',
       suppressShadow: false,
+      displayNativeSpecs: false,
     };
     if (!pluginsObj || typeof pluginsObj !== 'object') return out;
     const direct = pluginsObj[PLUGIN_ID];
@@ -98,6 +100,7 @@
       const v = direct.overlayFormat;
       out.overlayFormat = v == null ? '' : String(v);
       out.suppressShadow = Boolean(direct.suppressShadow);
+      out.displayNativeSpecs = Boolean(direct.displayNativeSpecs);
       return out;
     }
     const key = Object.keys(pluginsObj).find(function (k) {
@@ -108,6 +111,7 @@
     if (!cfg || typeof cfg !== 'object') return out;
     out.overlayFormat = cfg.overlayFormat == null ? '' : String(cfg.overlayFormat);
     out.suppressShadow = Boolean(cfg.suppressShadow);
+    out.displayNativeSpecs = Boolean(cfg.displayNativeSpecs);
     return out;
   }
 
@@ -117,6 +121,7 @@
         fn({
           overlayFormat: settingsState.overlayFormat,
           suppressShadow: settingsState.suppressShadow,
+          displayNativeSpecs: settingsState.displayNativeSpecs,
         });
       } catch (e) {
         // Keep plugin resilient.
@@ -141,10 +146,12 @@
       if (
         next.overlayFormat !== settingsState.overlayFormat ||
         next.suppressShadow !== settingsState.suppressShadow ||
+        next.displayNativeSpecs !== settingsState.displayNativeSpecs ||
         !settingsState.loaded
       ) {
         settingsState.overlayFormat = next.overlayFormat;
         settingsState.suppressShadow = next.suppressShadow;
+        settingsState.displayNativeSpecs = next.displayNativeSpecs;
         notifySettingsListeners();
       }
       settingsState.loaded = true;
@@ -161,6 +168,7 @@
     const state = useState({
       overlayFormat: settingsState.overlayFormat,
       suppressShadow: settingsState.suppressShadow,
+      displayNativeSpecs: settingsState.displayNativeSpecs,
     });
     const overlaySettings = state[0];
     const setOverlaySettings = state[1];
@@ -341,8 +349,26 @@
     const overlaySettings = useOverlaySettings();
     const overlayFormat = overlaySettings.overlayFormat;
     const suppressShadow = overlaySettings.suppressShadow;
+    const displayNativeSpecs = overlaySettings.displayNativeSpecs;
+    const useEffect = React.useEffect;
     const file = scene && scene.files && scene.files[0];
     if (!file) return null;
+
+    useEffect(
+      function () {
+        const root = document.documentElement;
+        if (!root) return;
+        if (displayNativeSpecs) {
+          root.classList.add('sso-display-native-specs');
+        } else {
+          root.classList.remove('sso-display-native-specs');
+        }
+        return function () {
+          root.classList.remove('sso-display-native-specs');
+        };
+      },
+      [displayNativeSpecs]
+    );
 
     let lines = [];
     const formatInput = String(overlayFormat || '').trim();

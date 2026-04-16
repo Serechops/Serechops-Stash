@@ -39,7 +39,7 @@
   opacity: 1;
 }
 
-.thumbnail-section:hover .scene-specs-overlay {
+:root:not(.sso-display-native-specs) .thumbnail-section:hover .scene-specs-overlay {
   opacity: 0 !important;
   transition: opacity 0.15s ease;
 }

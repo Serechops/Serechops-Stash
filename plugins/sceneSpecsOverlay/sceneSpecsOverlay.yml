@@ -1,6 +1,6 @@
 name: Stash Scene Specs Overlay
 description: Replaces the native scene specs overlay with a rich at-a-glance panel on hover. Shows resolution, duration, file size, codec, bitrate, FPS.
-version: 1.2.8
+version: 1.2.9
 ui:
   javascript:
     - sceneSpecsOverlay.js
@@ -17,4 +17,9 @@ settings:
     displayName: Suppress Shadow
     description: >-
       Removes the dark background gradient behind the custom overlay chips.
+    type: BOOLEAN
+  displayNativeSpecs:
+    displayName: Display Native Resolution and Duration
+    description: >-
+      Keep Stash's native scene resolution/duration overlay visible on hover.
     type: BOOLEAN
