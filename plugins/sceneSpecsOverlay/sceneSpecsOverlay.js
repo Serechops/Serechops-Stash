@@ -20,6 +20,7 @@
 
   const settingsState = {
     overlayFormat: '',
+    suppressShadow: false,
     listeners: new Set(),
     loaded: false,
     loading: false,
@@ -86,26 +87,37 @@
     return codec ? String(codec).trim().toUpperCase() : null;
   }
 
-  function readOverlayFormatFromPlugins(pluginsObj) {
-    if (!pluginsObj || typeof pluginsObj !== 'object') return '';
+  function readSettingsFromPlugins(pluginsObj) {
+    const out = {
+      overlayFormat: '',
+      suppressShadow: false,
+    };
+    if (!pluginsObj || typeof pluginsObj !== 'object') return out;
     const direct = pluginsObj[PLUGIN_ID];
     if (direct && typeof direct === 'object') {
       const v = direct.overlayFormat;
-      return v == null ? '' : String(v);
+      out.overlayFormat = v == null ? '' : String(v);
+      out.suppressShadow = Boolean(direct.suppressShadow);
+      return out;
     }
     const key = Object.keys(pluginsObj).find(function (k) {
       return String(k).toLowerCase() === PLUGIN_ID.toLowerCase();
     });
-    if (!key) return '';
+    if (!key) return out;
     const cfg = pluginsObj[key];
-    if (!cfg || typeof cfg !== 'object') return '';
-    return cfg.overlayFormat == null ? '' : String(cfg.overlayFormat);
+    if (!cfg || typeof cfg !== 'object') return out;
+    out.overlayFormat = cfg.overlayFormat == null ? '' : String(cfg.overlayFormat);
+    out.suppressShadow = Boolean(cfg.suppressShadow);
+    return out;
   }
 
   function notifySettingsListeners() {
     settingsState.listeners.forEach(function (fn) {
       try {
-        fn(settingsState.overlayFormat);
+        fn({
+          overlayFormat: settingsState.overlayFormat,
+          suppressShadow: settingsState.suppressShadow,
+        });
       } catch (e) {
         // Keep plugin resilient.
       }
@@ -125,9 +137,14 @@
       const json = await res.json();
       const pluginsObj =
         json && json.data && json.data.configuration && json.data.configuration.plugins;
-      const next = readOverlayFormatFromPlugins(pluginsObj);
-      if (next !== settingsState.overlayFormat || !settingsState.loaded) {
-        settingsState.overlayFormat = next;
+      const next = readSettingsFromPlugins(pluginsObj);
+      if (
+        next.overlayFormat !== settingsState.overlayFormat ||
+        next.suppressShadow !== settingsState.suppressShadow ||
+        !settingsState.loaded
+      ) {
+        settingsState.overlayFormat = next.overlayFormat;
+        settingsState.suppressShadow = next.suppressShadow;
         notifySettingsListeners();
       }
       settingsState.loaded = true;
@@ -138,16 +155,19 @@
     }
   }
 
-  function useOverlayFormat() {
+  function useOverlaySettings() {
     const useEffect = React.useEffect;
     const useState = React.useState;
-    const state = useState(settingsState.overlayFormat);
-    const overlayFormat = state[0];
-    const setOverlayFormat = state[1];
+    const state = useState({
+      overlayFormat: settingsState.overlayFormat,
+      suppressShadow: settingsState.suppressShadow,
+    });
+    const overlaySettings = state[0];
+    const setOverlaySettings = state[1];
 
     useEffect(function () {
       function listener(next) {
-        setOverlayFormat(next);
+        setOverlaySettings(next);
       }
       settingsState.listeners.add(listener);
       if (!settingsState.loaded) loadSettings();
@@ -156,7 +176,7 @@
       };
     }, []);
 
-    return overlayFormat;
+    return overlaySettings;
   }
 
   function parseSingleTokenExpr(tokenExpr) {
@@ -318,7 +338,9 @@
   }
 
   function SceneSpecsPanel({ scene }) {
-    const overlayFormat = useOverlayFormat();
+    const overlaySettings = useOverlaySettings();
+    const overlayFormat = overlaySettings.overlayFormat;
+    const suppressShadow = overlaySettings.suppressShadow;
     const file = scene && scene.files && scene.files[0];
     if (!file) return null;
 
@@ -344,7 +366,7 @@
 
     return React.createElement(
       'div',
-      { className: 'sso-panel' },
+      { className: suppressShadow ? 'sso-panel sso-panel--no-shadow' : 'sso-panel' },
       React.createElement('div', { className: 'sso-specs' }, renderLines(lines))
     );
   }

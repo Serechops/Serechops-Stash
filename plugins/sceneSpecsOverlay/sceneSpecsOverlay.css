@@ -28,6 +28,10 @@
   overflow: hidden;
 }
 
+.sso-panel.sso-panel--no-shadow {
+  background: none;
+}
+
 /* Hover swap:
    - default: native specs visible, custom hidden
    - hover: native hidden, custom shown */
