@@ -84,7 +84,7 @@
 
 /* Resolution chip — blue accent */
 .sso-value--res {
-  background: rgba(100, 180, 255, 0.18);
+  background: rgba(0, 0, 0, 0.6);
   border-color: rgba(100, 180, 255, 0.3);
   color: #90c8f0;
   font-weight: 700;
