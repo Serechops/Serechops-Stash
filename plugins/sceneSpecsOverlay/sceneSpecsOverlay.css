@@ -78,13 +78,13 @@
   line-height: 1.6;
   padding: 1px 6px;
   border-radius: 3px;
-  background: rgba(0, 0, 0, 0.6);
+  background: rgba(0, 0, 0, 0.4);
   border: 1px solid rgba(255, 255, 255, 0.07);
 }
 
 /* Resolution chip — blue accent */
 .sso-value--res {
-  background: rgba(0, 0, 0, 0.6);
+  background: rgba(0, 0, 0, 0.4);
   border-color: rgba(100, 180, 255, 0.3);
   color: #90c8f0;
   font-weight: 700;
@@ -92,7 +92,7 @@
 
 .sso-line--secondary .sso-value {
   font-size: 10px;
-  background: rgba(0, 0, 0, 0.6);
+  background: rgba(0, 0, 0, 0.4);
   border-color: rgba(255, 255, 255, 0.04);
   opacity: 0.75;
 }
