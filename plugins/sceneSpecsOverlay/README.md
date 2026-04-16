@@ -79,25 +79,57 @@ The CSS positions the panel absolutely at the bottom of `.thumbnail-section` and
 
 ### Pre-formatted examples
 
-- **Default two-line (leave setting blank)**
-  - Line 1: `[Resolution][Duration][FileSize]`
-  - Line 2: `[VideoCodec/AudioCodec][BitRate][FPS]`
+**Default two-line (leave setting blank)**
+  `Overlay Format`: *null*
+```
+┌─────────────────────────────────────────────────────┐
+│  scene thumbnail                                    │
+│                                                     │
+│  [1080p][1:23:45][4.20 GB]                          │
+│  [H264 / AAC][8.5 Mbps][29.97 fps]                  │
+└─────────────────────────────────────────────────────┘
+```
 
-- **One-line compact**
+**One-line compact**
   - `[Resolution][Duration][FileSize][VideoCodec][BitRate][FPS]`
+```
+┌─────────────────────────────────────────────────────┐
+│  scene thumbnail                                    │
+│                                                     │
+│  [1080p][1:23:45][4.20 GB][H264][8.5 Mbps][29.97 fps] │
+└─────────────────────────────────────────────────────┘
+```
 
-- **One-line with codec combo chip**
-  - `[Resolution][Duration][FileSize][VideoCodec/AudioCodec][BitRate][FPS]`
+**One-line with codec combo chip**
+`[Resolution][Duration][FileSize][VideoCodec/AudioCodec][BitRate][FPS]`
+```
+┌─────────────────────────────────────────────────────┐
+│  scene thumbnail                                    │
+│                                                     │
+│  [1080p][1:23:45][4.20 GB][H264 / AAC][8.5 Mbps][29.97 fps] │
+└─────────────────────────────────────────────────────┘
+```
 
-- **Two-line explicit with `\\n`**
-  - `[Resolution][Duration][FileSize]\\n[VideoCodec/AudioCodec][BitRate][FPS]`
-
-- **Two-line explicit with `[BR]`**
+**Two-line explicit with `[BR]`**
   - `[Resolution][Duration][FileSize][BR][VideoCodec/AudioCodec][BitRate][FPS]`
+```
+┌─────────────────────────────────────────────────────┐
+│  scene thumbnail                                    │
+│                                                     │
+│  [1080p][1:23:45][4.20 GB]                          │
+│  [H264 / AAC][8.5 Mbps][29.97 fps]                  │
+└─────────────────────────────────────────────────────┘
+```
 
-- **Hide AV1 while keeping audio in combo**
-  - `[Resolution][Duration][FileSize][VideoCodec(='AV1')/AudioCodec][BitRate][FPS]`
-
+**Hide default codecs in combo**
+  - `[Resolution][Duration][FileSize][VideoCodec(='AV1')/AudioCodec(='AAC')][BitRate][FPS]`
+```
+┌─────────────────────────────────────────────────────┐
+│  scene thumbnail                                    │
+│                                                     │
+│  [1080p][1:23:45][4.20 GB][8.5 Mbps][29.97 fps]     │
+└─────────────────────────────────────────────────────┘
+```
 
 If any token is invalid, the plugin logs a warning (`console.warn`) and falls back to the default two-line layout.
 
