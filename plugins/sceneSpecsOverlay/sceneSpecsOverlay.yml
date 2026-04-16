@@ -10,11 +10,6 @@ settings:
   overlayFormat:
     displayName: Overlay Format
     description: >-
-      Optional custom chip format (blank = default two-line layout). Use bracketed tokens like
-      [Resolution][Duration][FileSize][FileCount][VideoCodec][BitRate][FPS]. You can suppress
-      a token when its value matches using (='VALUE'), e.g. [VideoCodec(='AV1')].
-      For FileCount, [FileCount(=1)] suppresses when exactly one file is present.
-      Use / to combine values in one chip (example: [VideoCodec/AudioCodec]).
-      Use \n or [BR] to create a line break.
+      Optional custom chip format (blank = default). See README for examples.
       If any token is invalid, the default format is used.
     type: STRING
