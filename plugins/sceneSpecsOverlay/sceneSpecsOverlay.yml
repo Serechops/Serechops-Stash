@@ -1,8 +1,17 @@
 name: Stash Scene Specs Overlay
 description: Replaces the native scene specs overlay with a rich at-a-glance panel on hover. Shows resolution, duration, file size, codec, bitrate, FPS.
-version: 1.1
+version: 1.2
 ui:
   javascript:
     - sceneSpecsOverlay.js
   css:
     - sceneSpecsOverlay.css
+settings:
+  overlayFormat:
+    displayName: Overlay Format
+    description: >-
+      Optional one-line chip format (blank = default). Use bracketed tokens like
+      [Resolution][Duration][FileSize][VideoCodec][BitRate][FPS]. You can suppress
+      a token when its value matches using (='VALUE'), e.g. [VideoCodec(='AV1')].
+      If any token is invalid, the default format is used.
+    type: STRING

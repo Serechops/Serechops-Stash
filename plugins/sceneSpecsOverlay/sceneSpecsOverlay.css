@@ -1,12 +1,7 @@
 /* =============================================================================
    Scene Specs Overlay — CSS
-   Replaces the native .scene-specs-overlay with a richer slide-up panel.
+   Keeps native specs by default; swaps to custom panel on hover.
    ============================================================================= */
-
-/* Hide Stash's built-in specs overlay (we fully replace it) */
-.scene-specs-overlay {
-  display: none !important;
-}
 
 /* ---------------------------------------------------------------------------
    Panel container
@@ -30,26 +25,35 @@
   pointer-events: none;
   opacity: 0;
   transition: opacity 0.25s ease;
+  overflow: hidden;
 }
 
-/* Trigger: parent thumbnail-section hover */
+/* Hover swap:
+   - default: native specs visible, custom hidden
+   - hover: native hidden, custom shown */
 .thumbnail-section:hover .sso-panel {
   opacity: 1;
 }
 
+.thumbnail-section:hover .scene-specs-overlay {
+  opacity: 0 !important;
+  transition: opacity 0.15s ease;
+}
+
 /* ---------------------------------------------------------------------------
-   Spec area — two lines
+   Spec area — one line
    --------------------------------------------------------------------------- */
 .sso-specs {
   display: flex;
-  flex-direction: column;
-  gap: 4px;
+  flex-wrap: nowrap;
+  gap: 3px;
+  align-items: center;
+  overflow-x: auto;
+  scrollbar-width: none;
 }
 
-.sso-line {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 3px;
+.sso-specs::-webkit-scrollbar {
+  display: none;
 }
 
 .sso-value {
@@ -72,13 +76,5 @@
   border-color: rgba(100, 180, 255, 0.3);
   color: #90c8f0;
   font-weight: 700;
-}
-
-/* Technical line — slightly smaller and subdued */
-.sso-line--secondary .sso-value {
-  font-size: 10px;
-  background: rgba(255, 255, 255, 0.06);
-  border-color: rgba(255, 255, 255, 0.04);
-  opacity: 0.75;
 }
 
