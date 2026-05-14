@@ -5,15 +5,32 @@
   if (!PluginApi) return;
 
   const React = PluginApi.React;
+  const PLUGIN_ID = 'sceneSpecsOverlay';
+  const DEFAULT_FORMAT = '[Resolution][Duration][FileSize][VideoCodec][BitRate][FPS]';
+  const VALID_TOKENS = new Set([
+    'Resolution',
+    'Duration',
+    'FileSize',
+    'FileCount',
+    'VideoCodec',
+    'AudioCodec',
+    'BitRate',
+    'FPS',
+  ]);
+
+  const settingsState = {
+    overlayFormat: '',
+    suppressShadow: false,
+    displayNativeSpecs: false,
+    listeners: new Set(),
+    loaded: false,
+    loading: false,
+  };
 
   // ---------------------------------------------------------------------------
   // Helpers — match Stash's own formatting conventions where possible
   // ---------------------------------------------------------------------------
 
-  /**
-   * Resolution label matching Stash's TextUtils.resolution() (text.ts).
-   * Uses min(width, height) — same as upstream.
-   */
   function resLabel(w, h) {
     if (!w || !h) return null;
     const n = Math.min(w, h);
@@ -32,7 +49,6 @@
     return `${n}p`;
   }
 
-  /** HH:MM:SS or MM:SS */
   function fmtDuration(secs) {
     if (!secs || secs < 1) return null;
     const h = Math.floor(secs / 3600);
@@ -44,96 +60,353 @@
     return `${m}:${String(s).padStart(2, '0')}`;
   }
 
-  /** Human-readable file size (binary, same as Stash's FileSize component) */
   function fmtSize(bytes) {
     if (!bytes) return null;
     if (bytes >= 1073741824) return `${(bytes / 1073741824).toFixed(2)} GB`;
-    if (bytes >= 1048576)    return `${(bytes / 1048576).toFixed(1)} MB`;
+    if (bytes >= 1048576) return `${(bytes / 1048576).toFixed(1)} MB`;
     return `${Math.round(bytes / 1024)} KB`;
   }
 
-  /** Bitrate in Mbps / Kbps */
   function fmtBitrate(bps) {
     if (!bps) return null;
     if (bps >= 1e6) return `${(bps / 1e6).toFixed(1)} Mbps`;
     return `${Math.round(bps / 1000)} Kbps`;
   }
 
-  /** Frame rate with up to 2 significant decimals */
   function fmtFPS(fps) {
     if (!fps) return null;
     return `${parseFloat(fps.toFixed(2))} fps`;
   }
 
-  // ---------------------------------------------------------------------------
-  // React component
-  // ---------------------------------------------------------------------------
+  function fmtFileCount(count) {
+    const n = Number(count);
+    if (!Number.isFinite(n) || n < 1) return null;
+    return `${n} ${n === 1 ? 'File' : 'Files'}`;
+  }
 
-  function SceneSpecsPanel({ scene }) {
-    const file = scene && scene.files && scene.files[0];
+  function normalizeCodec(codec) {
+    return codec ? String(codec).trim().toUpperCase() : null;
+  }
 
-    // Line 1: resolution · duration · size
-    const line1 = [];
-    // Line 2: codec · bitrate · fps
-    const line2 = [];
+  function readSettingsFromPlugins(pluginsObj) {
+    const out = {
+      overlayFormat: '',
+      suppressShadow: false,
+      displayNativeSpecs: false,
+    };
+    if (!pluginsObj || typeof pluginsObj !== 'object') return out;
+    const direct = pluginsObj[PLUGIN_ID];
+    if (direct && typeof direct === 'object') {
+      const v = direct.overlayFormat;
+      out.overlayFormat = v == null ? '' : String(v);
+      out.suppressShadow = Boolean(direct.suppressShadow);
+      out.displayNativeSpecs = Boolean(direct.displayNativeSpecs);
+      return out;
+    }
+    const key = Object.keys(pluginsObj).find(function (k) {
+      return String(k).toLowerCase() === PLUGIN_ID.toLowerCase();
+    });
+    if (!key) return out;
+    const cfg = pluginsObj[key];
+    if (!cfg || typeof cfg !== 'object') return out;
+    out.overlayFormat = cfg.overlayFormat == null ? '' : String(cfg.overlayFormat);
+    out.suppressShadow = Boolean(cfg.suppressShadow);
+    out.displayNativeSpecs = Boolean(cfg.displayNativeSpecs);
+    return out;
+  }
 
-    if (file) {
-      if (file.width && file.height) {
-        const label = resLabel(file.width, file.height);
-        if (label) line1.push([label, 'sso-value--res']);
+  function notifySettingsListeners() {
+    settingsState.listeners.forEach(function (fn) {
+      try {
+        fn({
+          overlayFormat: settingsState.overlayFormat,
+          suppressShadow: settingsState.suppressShadow,
+          displayNativeSpecs: settingsState.displayNativeSpecs,
+        });
+      } catch (e) {
+        // Keep plugin resilient.
       }
-      const dur = fmtDuration(file.duration);
-      if (dur) line1.push(dur);
-      const sz = fmtSize(file.size);
-      if (sz) line1.push(sz);
+    });
+  }
 
-      if (file.video_codec) {
-        const parts = [file.video_codec, file.audio_codec]
-          .filter(Boolean)
-          .map(function (c) { return c.toUpperCase(); });
-        line2.push(parts.join(' / '));
+  async function loadSettings() {
+    if (settingsState.loading) return;
+    settingsState.loading = true;
+    try {
+      const res = await fetch('/graphql', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query: '{ configuration { plugins } }' }),
+      });
+      if (!res.ok) return;
+      const json = await res.json();
+      const pluginsObj =
+        json && json.data && json.data.configuration && json.data.configuration.plugins;
+      const next = readSettingsFromPlugins(pluginsObj);
+      if (
+        next.overlayFormat !== settingsState.overlayFormat ||
+        next.suppressShadow !== settingsState.suppressShadow ||
+        next.displayNativeSpecs !== settingsState.displayNativeSpecs ||
+        !settingsState.loaded
+      ) {
+        settingsState.overlayFormat = next.overlayFormat;
+        settingsState.suppressShadow = next.suppressShadow;
+        settingsState.displayNativeSpecs = next.displayNativeSpecs;
+        notifySettingsListeners();
       }
-      const br = fmtBitrate(file.bit_rate);
-      if (br) line2.push(br);
-      const fps = fmtFPS(file.frame_rate);
-      if (fps) line2.push(fps);
+      settingsState.loaded = true;
+    } catch (e) {
+      // Keep defaults; do not break UI if settings query fails.
+    } finally {
+      settingsState.loading = false;
+    }
+  }
+
+  function useOverlaySettings() {
+    const useEffect = React.useEffect;
+    const useState = React.useState;
+    const state = useState({
+      overlayFormat: settingsState.overlayFormat,
+      suppressShadow: settingsState.suppressShadow,
+      displayNativeSpecs: settingsState.displayNativeSpecs,
+    });
+    const overlaySettings = state[0];
+    const setOverlaySettings = state[1];
+
+    useEffect(function () {
+      function listener(next) {
+        setOverlaySettings(next);
+      }
+      settingsState.listeners.add(listener);
+      if (!settingsState.loaded) loadSettings();
+      return function () {
+        settingsState.listeners.delete(listener);
+      };
+    }, []);
+
+    return overlaySettings;
+  }
+
+  function parseSingleTokenExpr(tokenExpr) {
+    const tm = tokenExpr.match(
+      /^([A-Za-z]+)(?:\(\s*=\s*(?:'([^']*)'|"([^"]*)"|([^)]+?))\s*\))?$/
+    );
+    if (!tm) {
+      throw new Error('Invalid token syntax: ' + tokenExpr);
+    }
+    const token = tm[1];
+    if (!VALID_TOKENS.has(token)) {
+      throw new Error('Unknown token: ' + token);
+    }
+    const suppressValue =
+      tm[2] != null
+        ? tm[2]
+        : tm[3] != null
+          ? tm[3]
+          : tm[4] != null
+            ? String(tm[4]).trim()
+            : null;
+    return { token: token, suppressValue: suppressValue };
+  }
+
+  function parseOverlayFormat(raw) {
+    const input = String(raw || '').trim();
+    const normalized = input.replace(/\\n/g, '\n').replace(/\[BR\]/gi, '\n');
+    const lineTexts = normalized
+      .split(/\r?\n/)
+      .map(function (s) {
+        return s.trim();
+      })
+      .filter(Boolean);
+
+    if (lineTexts.length === 0) {
+      throw new Error('No bracketed tokens found.');
     }
 
-    if (line1.length === 0 && line2.length === 0) return null;
+    return lineTexts.map(function (lineText) {
+      const re = /\[([^\]]+)\]/g;
+      const groups = [];
+      let m;
 
-    function renderLine(items, lineClass) {
+      while ((m = re.exec(lineText)) !== null) {
+        const groupExpr = m[1].trim();
+        const partExprs = groupExpr
+          .split('/')
+          .map(function (p) {
+            return p.trim();
+          })
+          .filter(Boolean);
+        if (partExprs.length === 0) {
+          throw new Error('Empty token group: ' + groupExpr);
+        }
+        groups.push({
+          parts: partExprs.map(parseSingleTokenExpr),
+        });
+      }
+
+      if (groups.length === 0) {
+        throw new Error('No bracketed tokens found on line: ' + lineText);
+      }
+
+      return groups;
+    });
+  }
+
+  function buildValueMap(scene, file) {
+    const fileCount = Array.isArray(scene && scene.files) ? scene.files.length : 0;
+    return {
+      Resolution: file && file.width && file.height ? resLabel(file.width, file.height) : null,
+      Duration: file ? fmtDuration(file.duration) : null,
+      FileSize: file ? fmtSize(file.size) : null,
+      FileCount: fmtFileCount(fileCount),
+      VideoCodec: file ? normalizeCodec(file.video_codec) : null,
+      AudioCodec: file ? normalizeCodec(file.audio_codec) : null,
+      BitRate: file ? fmtBitrate(file.bit_rate) : null,
+      FPS: file ? fmtFPS(file.frame_rate) : null,
+    };
+  }
+
+  function buildLegacyLines(file) {
+    const line1 = [];
+    const line2 = [];
+    if (!file) return [];
+
+    const map = buildValueMap(null, file);
+    if (map.Resolution) line1.push({ text: map.Resolution, className: 'sso-value sso-value--res' });
+    if (map.Duration) line1.push({ text: map.Duration, className: 'sso-value' });
+    if (map.FileSize) line1.push({ text: map.FileSize, className: 'sso-value' });
+
+    const codecParts = [map.VideoCodec, map.AudioCodec].filter(Boolean);
+    if (codecParts.length) line2.push({ text: codecParts.join(' / '), className: 'sso-value' });
+    if (map.BitRate) line2.push({ text: map.BitRate, className: 'sso-value' });
+    if (map.FPS) line2.push({ text: map.FPS, className: 'sso-value' });
+
+    const lines = [];
+    if (line1.length) lines.push(line1);
+    if (line2.length) lines.push(line2);
+    return lines;
+  }
+
+  function buildCustomLines(scene, file, overlayFormat) {
+    const valueMap = buildValueMap(scene, file);
+    const fileCount =
+      Array.isArray(scene && scene.files) ? scene.files.length : 0;
+    const parsedLines = parseOverlayFormat(overlayFormat);
+    return parsedLines
+      .map(function (lineGroups) {
+        return lineGroups
+          .map(function (group) {
+            const values = group.parts
+              .map(function (part) {
+                const value = valueMap[part.token];
+                if (!value) return null;
+                if (part.suppressValue != null) {
+                  const suppress = String(part.suppressValue).trim();
+                  if (part.token === 'FileCount') {
+                    if (String(fileCount) === suppress || String(value).trim() === suppress) {
+                      return null;
+                    }
+                  } else if (String(value).trim() === suppress) {
+                    return null;
+                  }
+                }
+                return value;
+              })
+              .filter(Boolean);
+
+            if (values.length === 0) return null;
+
+            const firstToken = group.parts[0] && group.parts[0].token;
+            return {
+              text: values.join(' / '),
+              className:
+                group.parts.length === 1 && firstToken === 'Resolution'
+                  ? 'sso-value sso-value--res'
+                  : 'sso-value',
+            };
+          })
+          .filter(Boolean);
+      })
+      .filter(function (line) {
+        return line.length > 0;
+      });
+  }
+
+  function renderLines(lines) {
+    return lines.map(function (line, idx) {
+      const lineCls = idx === 1 ? 'sso-line sso-line--secondary' : 'sso-line';
       return React.createElement(
-        'div', { className: 'sso-line' + (lineClass ? ' ' + lineClass : '') },
-        items.map(function (item, i) {
-          var text = Array.isArray(item) ? item[0] : item;
-          var cls  = Array.isArray(item) ? 'sso-value ' + item[1] : 'sso-value';
-          return React.createElement('span', { className: cls, key: i }, text);
+        'div',
+        { className: lineCls, key: idx },
+        line.map(function (item, i) {
+          return React.createElement('span', { className: item.className, key: i }, item.text);
         })
       );
+    });
+  }
+
+  function SceneSpecsPanel({ scene }) {
+    const overlaySettings = useOverlaySettings();
+    const overlayFormat = overlaySettings.overlayFormat;
+    const suppressShadow = overlaySettings.suppressShadow;
+    const displayNativeSpecs = overlaySettings.displayNativeSpecs;
+    const useEffect = React.useEffect;
+    const file = scene && scene.files && scene.files[0];
+    if (!file) return null;
+
+    useEffect(
+      function () {
+        const root = document.documentElement;
+        if (!root) return;
+        if (displayNativeSpecs) {
+          root.classList.add('sso-display-native-specs');
+        } else {
+          root.classList.remove('sso-display-native-specs');
+        }
+        return function () {
+          root.classList.remove('sso-display-native-specs');
+        };
+      },
+      [displayNativeSpecs]
+    );
+
+    let lines = [];
+    const formatInput = String(overlayFormat || '').trim();
+
+    if (formatInput.length === 0) {
+      lines = buildLegacyLines(file);
+    } else {
+      try {
+        lines = buildCustomLines(scene, file, formatInput);
+      } catch (err) {
+        console.warn('[sceneSpecsOverlay] Invalid Overlay Format, using default two-line layout.', {
+          overlayFormat: overlayFormat,
+          error: err && err.message ? err.message : String(err),
+          defaultFormat: DEFAULT_FORMAT,
+        });
+        lines = buildLegacyLines(file);
+      }
     }
 
+    if (lines.length === 0) return null;
+
     return React.createElement(
-      'div', { className: 'sso-panel' },
-      React.createElement(
-        'div', { className: 'sso-specs' },
-        line1.length > 0 && renderLine(line1, ''),
-        line2.length > 0 && renderLine(line2, 'sso-line--secondary')
-      )
+      'div',
+      { className: suppressShadow ? 'sso-panel sso-panel--no-shadow' : 'sso-panel' },
+      React.createElement('div', { className: 'sso-specs' }, renderLines(lines))
     );
   }
 
-  // ---------------------------------------------------------------------------
-  // Patch
-  // ---------------------------------------------------------------------------
-
   PluginApi.patch.after('SceneCard.Overlays', function () {
-    var props  = arguments[0];
+    var props = arguments[0];
     var result = arguments[arguments.length - 1];
     return React.createElement(
-      React.Fragment, null,
+      React.Fragment,
+      null,
       result,
       React.createElement(SceneSpecsPanel, { scene: props.scene })
     );
   });
 
+  loadSettings();
 })();
