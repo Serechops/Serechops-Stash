@@ -1867,8 +1867,15 @@ input[type="range"].zoom-slider:focus::-moz-range-track {
 }
 
 @media (max-width: 576px) {
-  .video-js .vjs-control-bar .vjs-control {
+  .video-js .vjs-control-bar .vjs-control:not(.vjs-progress-control) {
     width: 2.5em;
+  }
+
+  /* The seek bar also carries the .vjs-control class, so the rule above must
+     exclude it -- otherwise it is shrunk to 2.5em and the playhead only spans
+     a fraction of the bar on mobile. Keep it full width. */
+  .video-js .vjs-control-bar .vjs-progress-control {
+    width: 100%;
   }
 
   .video-js .vjs-playback-rate {
