@@ -3858,7 +3858,11 @@ div.react-select__control .react-select__multi-value,
 /* === Material 3 Dark Theme Sidebar Styles === */
 
 .sidebar {
-  background-color: var(--m3-on-surface-container);
+  /* --m3-on-surface-container is not defined, so without a fallback this resolves
+     to transparent. On mobile the sidebar overlays the content and becomes
+     unreadable. Provide an opaque fallback; !important to win over the shared
+     overlay rule that also sets this background with !important. */
+  background-color: var(--m3-on-surface-container, #1e1e1e) !important;
   color: var(--m3-on-surface);
   padding: 1rem;
   border-right: 1px solid var(--m3-outline-variant);
